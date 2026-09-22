@@ -27,7 +27,7 @@ Glint 现已发布最新版本，免去源码编译，开箱即用：
 
 | 平台 | 架构 | 系统要求 | 下载链接 |
 |---|---|---|---|
-| **macOS** | Universal (Apple Silicon / Intel) | macOS 14.0 (Sonoma) 及以上 | [**下载 Glint.dmg (v0.0.341)**](./Glint.dmg) |
+| **macOS** | Universal (Apple Silicon / Intel) | macOS 14.0 (Sonoma) 及以上 | [**下载 Glint.dmg (v0.0.370)**](./Glint.dmg) |
 
 ---
 
