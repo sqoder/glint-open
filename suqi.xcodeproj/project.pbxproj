@@ -14,11 +14,12 @@
 		734CC4189FAB9FEE7A96BFD8 /* AppTerminalView+IME.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6710207CA0BD2C3E412175F8 /* AppTerminalView+IME.swift */; };
 		74DDB09A0FAC7C1DD4A1C9D9 /* SuqiTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A55F9B778CFADA8535586F9 /* SuqiTheme.swift */; };
 		7FABD35078400B22BF9A0571 /* SuqiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C68E7248FBDD6BCF85625B38 /* SuqiApp.swift */; };
+		8DC9CADBC8EA4BDAE2A26212 /* SuqiWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685F51842B1DB3E6E992F976 /* SuqiWindowManager.swift */; };
 		9B9B42DCF1ADAB43C96DFC7A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8100FEA1B96F6EC5FCCBBF21 /* SettingsView.swift */; };
 		A6264D803D40E6EA80C5E34C /* GhosttyConfigLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9A267F01646B2D48A9B39D8 /* GhosttyConfigLoader.swift */; };
+		B6F758DCA625FF92CB83A607 /* SuqiWindowModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE7F1F265537572EC00C0DF8 /* SuqiWindowModel.swift */; };
 		C444DC2163132C1A3CDD21C7 /* AppTerminalView+Paste.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A606433D31CF15D4E3070A /* AppTerminalView+Paste.swift */; };
 		D169B7676DA84876637D5D73 /* GhosttyTerminal in Frameworks */ = {isa = PBXBuildFile; productRef = 026D1368FE29CC719D26D23A /* GhosttyTerminal */; };
-		D61013A6024E5D1333EC965C /* SuqiSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 342DD4C8B5C4561B51F3C90A /* SuqiSessionManager.swift */; };
 		DF65D175EE3E7DEEC2067078 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE890933D9DF182030884D9 /* AppDelegate.swift */; };
 		E5372661C8D65B4E7EF15DCD /* GhosttyTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB61B0358E51D788578220F /* GhosttyTabBar.swift */; };
 		EC17C4A245342DEDC51BF192 /* SuqiTerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3117CFA51D306A25BED0B7 /* SuqiTerminalSession.swift */; };
@@ -32,11 +33,11 @@
 		0DB61B0358E51D788578220F /* GhosttyTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyTabBar.swift; sourceTree = "<group>"; };
 		288A5F9CEDCE4C5282866182 /* SuqiSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiSettings.swift; sourceTree = "<group>"; };
 		2A55F9B778CFADA8535586F9 /* SuqiTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTheme.swift; sourceTree = "<group>"; };
-		342DD4C8B5C4561B51F3C90A /* SuqiSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiSessionManager.swift; sourceTree = "<group>"; };
 		38356A190F4A4CB490BCBAF5 /* SuqiTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTerminalView.swift; sourceTree = "<group>"; };
 		4878471FB485E2C59461BA84 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		588B61BA645F396A9D2FF15E /* suqi.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = suqi.entitlements; sourceTree = "<group>"; };
 		6710207CA0BD2C3E412175F8 /* AppTerminalView+IME.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppTerminalView+IME.swift"; sourceTree = "<group>"; };
+		685F51842B1DB3E6E992F976 /* SuqiWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiWindowManager.swift; sourceTree = "<group>"; };
 		8100FEA1B96F6EC5FCCBBF21 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B9A267F01646B2D48A9B39D8 /* GhosttyConfigLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyConfigLoader.swift; sourceTree = "<group>"; };
 		BE3117CFA51D306A25BED0B7 /* SuqiTerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTerminalSession.swift; sourceTree = "<group>"; };
@@ -44,6 +45,7 @@
 		D65A5DFF5600AB429AE361CE /* TerminalWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalWindowController.swift; sourceTree = "<group>"; };
 		D6A606433D31CF15D4E3070A /* AppTerminalView+Paste.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppTerminalView+Paste.swift"; sourceTree = "<group>"; };
 		DBE890933D9DF182030884D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		EE7F1F265537572EC00C0DF8 /* SuqiWindowModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiWindowModel.swift; sourceTree = "<group>"; };
 		F3397A324463EA5C4DC2AACB /* suqi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = suqi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -86,6 +88,7 @@
 			children = (
 				B9A267F01646B2D48A9B39D8 /* GhosttyConfigLoader.swift */,
 				288A5F9CEDCE4C5282866182 /* SuqiSettings.swift */,
+				685F51842B1DB3E6E992F976 /* SuqiWindowManager.swift */,
 			);
 			path = Core;
 			sourceTree = "<group>";
@@ -119,9 +122,9 @@
 			children = (
 				6710207CA0BD2C3E412175F8 /* AppTerminalView+IME.swift */,
 				D6A606433D31CF15D4E3070A /* AppTerminalView+Paste.swift */,
-				342DD4C8B5C4561B51F3C90A /* SuqiSessionManager.swift */,
 				BE3117CFA51D306A25BED0B7 /* SuqiTerminalSession.swift */,
 				38356A190F4A4CB490BCBAF5 /* SuqiTerminalView.swift */,
+				EE7F1F265537572EC00C0DF8 /* SuqiWindowModel.swift */,
 			);
 			path = Terminal;
 			sourceTree = "<group>";
@@ -232,11 +235,12 @@
 				E5372661C8D65B4E7EF15DCD /* GhosttyTabBar.swift in Sources */,
 				9B9B42DCF1ADAB43C96DFC7A /* SettingsView.swift in Sources */,
 				7FABD35078400B22BF9A0571 /* SuqiApp.swift in Sources */,
-				D61013A6024E5D1333EC965C /* SuqiSessionManager.swift in Sources */,
 				5769423471533DE9D49292A0 /* SuqiSettings.swift in Sources */,
 				EC17C4A245342DEDC51BF192 /* SuqiTerminalSession.swift in Sources */,
 				EFB405AEDA97715249476B41 /* SuqiTerminalView.swift in Sources */,
 				74DDB09A0FAC7C1DD4A1C9D9 /* SuqiTheme.swift in Sources */,
+				8DC9CADBC8EA4BDAE2A26212 /* SuqiWindowManager.swift in Sources */,
+				B6F758DCA625FF92CB83A607 /* SuqiWindowModel.swift in Sources */,
 				F5BA4C34A9C33DB61CA89B1D /* TerminalWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

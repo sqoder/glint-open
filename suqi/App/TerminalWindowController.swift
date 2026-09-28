@@ -11,10 +11,12 @@ import GhosttyTerminal
 
 @MainActor
 public final class TerminalWindowController: NSWindowController, NSWindowDelegate {
-    public static let shared = TerminalWindowController()
+    public let model: SuqiWindowModel
     private var eventMonitor: Any?
 
-    private init() {
+    public init(model: SuqiWindowModel) {
+        self.model = model
+
         let (userConfig, _) = GhosttyUserConfig.load()
         let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
 
@@ -44,14 +46,19 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         }
         window.hasShadow = true
         window.minSize = NSSize(width: 480, height: 280)
-        window.setFrameAutosaveName("suqi.terminal.main.window")
+        window.isReleasedWhenClosed = false
 
-        let contentView = ContentView()
+        let contentView = ContentView(model: model)
         window.contentView = NSHostingView(rootView: contentView)
-        window.center()
 
         super.init(window: window)
         window.delegate = self
+
+        // 绑定窗口关闭请求（如最后一个标签页被 ⌘W 关闭时，平滑关闭本窗口）
+        model.onCloseWindowRequested = { [weak self] in
+            self?.closeWindow()
+        }
+
         setupKeyEventMonitor()
     }
 
@@ -61,120 +68,131 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
 
     private func setupKeyEventMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, let window = self.window, (window.isKeyWindow || window.isMainWindow || event.window === window) else {
+            guard let self, let window = self.window,
+                  (window.isKeyWindow || window.isMainWindow || event.window === window) else {
                 return event
             }
 
             let flags = event.modifierFlags.intersection([.command, .control, .option, .shift])
 
-            // 1. 处理 ⌘V (Cmd+V 粘贴图片/文本)
+            // 1. 处理 ⌘V (Cmd+V 粘贴图片/文本至本窗口当前活跃窗格)
             if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "v" {
                 self.handlePaste()
-                return nil // 消费此事件，拦截系统蜂鸣与默认冒泡
+                return nil
             }
 
             // 2. 处理 ⌘C (Cmd+C 复制选中文本)
             if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "c" {
-                if let session = SuqiSessionManager.shared.activeSession {
-                    _ = session.state.performBindingAction("copy_to_clipboard")
-                    return nil
-                }
-            }
-
-            // 3. 处理 ⌘1 .. ⌘9 (切换标签页)
-            if flags == .command, let char = event.charactersIgnoringModifiers?.first, char >= "1" && char <= "9" {
-                if let tabIndex = Int(String(char)) {
-                    SuqiSessionManager.shared.selectTab(at: tabIndex - 1)
-                    return nil
-                }
-            }
-
-            // 4. 处理 ⌘[ / ⌘] (标签页前后切换)
-            if flags == .command && event.charactersIgnoringModifiers == "[" {
-                SuqiSessionManager.shared.previousTab()
-                return nil
-            }
-            if flags == .command && event.charactersIgnoringModifiers == "]" {
-                SuqiSessionManager.shared.nextTab()
+                self.handleCopy()
                 return nil
             }
 
-            // 5. 处理 ⌘T (新建标签页)
+            // 3. 处理 ⌘N (新建独立窗口)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "n" {
+                SuqiWindowManager.shared.createWindow(workingDirectory: self.model.activeSession?.fullDirectory)
+                return nil
+            }
+
+            // 4. 处理 ⌘T (新建标签页)
             if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "t" {
-                SuqiSessionManager.shared.createNewSession()
+                self.model.createNewTab()
                 return nil
             }
 
-            // 5.1 处理 ⌘D (垂直分屏新建 Split Right)
+            // 5. 处理 ⌘D (垂直分屏 Split Right)
             if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "d" {
-                SuqiSessionManager.shared.splitRight()
+                self.model.splitRight()
                 return nil
             }
 
-            // 5.2 处理 ⌘Shift+D (水平分屏新建 Split Down)
+            // 6. 处理 ⌘Shift+D (水平分屏 Split Down)
             if flags == [.command, .shift] && event.charactersIgnoringModifiers?.lowercased() == "d" {
-                SuqiSessionManager.shared.splitDown()
+                self.model.splitDown()
                 return nil
             }
 
-            // 5.3 处理 ⌘Option+Left / ⌘Option+Right (分屏切换)
+            // 7. 处理 ⌘Option+Left / ⌘Option+Right (分屏切换)
             if flags == [.command, .option] {
                 if event.specialKey == .leftArrow || event.specialKey == .upArrow {
-                    SuqiSessionManager.shared.previousPane()
+                    self.model.previousPane()
                     return nil
                 }
                 if event.specialKey == .rightArrow || event.specialKey == .downArrow {
-                    SuqiSessionManager.shared.nextPane()
+                    self.model.nextPane()
                     return nil
                 }
             }
 
-            // 6. 处理 ⌘W (关闭当前分屏或标签页)
+            // 8. 处理 ⌘W (优先关闭当前分屏或当前 Tab；若全关则关闭本窗口)
             if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "w" {
-                SuqiSessionManager.shared.closeActiveSession()
+                self.closeCurrentTabOrWindow()
                 return nil
             }
 
-            // 7. 处理 ⌘K (清屏)
-            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "k" {
-                SuqiSessionManager.shared.clearActiveSession()
+            // 9. 处理 ⌘Shift+W (直接关闭整个窗口)
+            if flags == [.command, .shift] && event.charactersIgnoringModifiers?.lowercased() == "w" {
+                self.closeWindow()
                 return nil
             }
 
-            // 8. 处理 ⌘+ / ⌘= / ⌘- / ⌘0 (Ghostty 字号动态缩放)
-            if flags == .command || flags == [.command, .shift] {
-                let char = event.charactersIgnoringModifiers
-                if char == "=" || char == "+" {
-                    _ = SuqiSessionManager.shared.activeSession?.state.performBindingAction("increase_font_size:1")
-                    return nil
-                } else if char == "-" {
-                    _ = SuqiSessionManager.shared.activeSession?.state.performBindingAction("decrease_font_size:1")
-                    return nil
-                } else if char == "0" {
-                    _ = SuqiSessionManager.shared.activeSession?.state.performBindingAction("reset_font_size")
+            // 10. 处理 ⌘1 .. ⌘9 (切换标签页)
+            if flags == .command, let char = event.charactersIgnoringModifiers?.first, char >= "1" && char <= "9" {
+                if let tabIndex = Int(String(char)) {
+                    self.model.selectTab(at: tabIndex - 1)
                     return nil
                 }
             }
 
-            // 9. 处理 ⌘Shift+[ / ⌘Shift+] (标签页切换快捷键变体)
+            // 11. 处理 ⌘[ / ⌘] (标签页前后切换)
+            if flags == .command && event.charactersIgnoringModifiers == "[" {
+                self.model.previousTab()
+                return nil
+            }
+            if flags == .command && event.charactersIgnoringModifiers == "]" {
+                self.model.nextTab()
+                return nil
+            }
+
+            // 12. 处理 ⌘Shift+[ / ⌘Shift+] (标签页切换快捷键变体)
             if flags == [.command, .shift] {
                 if event.charactersIgnoringModifiers == "{" || event.charactersIgnoringModifiers == "[" {
-                    SuqiSessionManager.shared.previousTab()
+                    self.model.previousTab()
                     return nil
                 }
                 if event.charactersIgnoringModifiers == "}" || event.charactersIgnoringModifiers == "]" {
-                    SuqiSessionManager.shared.nextTab()
+                    self.model.nextTab()
                     return nil
                 }
             }
 
-            // 10. 处理 ⌘F (搜索)
-            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "f" {
-                _ = SuqiSessionManager.shared.activeSession?.state.performBindingAction("start_search")
+            // 13. 处理 ⌘K (清屏)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "k" {
+                self.model.clearActiveSession()
                 return nil
             }
 
-            // 11. 处理 ⌘, (打开配置文件)
+            // 14. 处理 ⌘+ / ⌘= / ⌘- / ⌘0 (Ghostty 字号动态缩放)
+            if flags == .command || flags == [.command, .shift] {
+                let char = event.charactersIgnoringModifiers
+                if char == "=" || char == "+" {
+                    _ = self.model.activeSession?.state.performBindingAction("increase_font_size:1")
+                    return nil
+                } else if char == "-" {
+                    _ = self.model.activeSession?.state.performBindingAction("decrease_font_size:1")
+                    return nil
+                } else if char == "0" {
+                    _ = self.model.activeSession?.state.performBindingAction("reset_font_size")
+                    return nil
+                }
+            }
+
+            // 15. 处理 ⌘F (搜索)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "f" {
+                _ = self.model.activeSession?.state.performBindingAction("start_search")
+                return nil
+            }
+
+            // 16. 处理 ⌘, (打开配置文件)
             if flags == .command && event.charactersIgnoringModifiers == "," {
                 let (_, path) = GhosttyUserConfig.load()
                 let target = path ?? NSString(string: "~/.config/ghostty/config").expandingTildeInPath
@@ -182,10 +200,9 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
                 return nil
             }
 
-            // 12. 处理 ⌘Shift+, (重载配置)
+            // 17. 处理 ⌘Shift+, (重载配置)
             if flags == [.command, .shift] && (event.charactersIgnoringModifiers == "<" || event.charactersIgnoringModifiers == ",") {
-                SuqiSessionManager.shared.reloadAllSessions()
-                self.updateThemeBackground()
+                SuqiWindowManager.shared.reloadAllWindows()
                 return nil
             }
 
@@ -205,7 +222,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         return nil
     }
 
-    private func getActiveTerminalView() -> AppTerminalView? {
+    public func getActiveTerminalView() -> AppTerminalView? {
         guard let window = self.window else { return nil }
         if let tv = window.firstResponder as? AppTerminalView {
             return tv
@@ -228,7 +245,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             }
         }
 
-        // 2. 无文件 URL 时，检查是否包含纯内存图片数据 (如浏览器右键复制图片、系统剪贴板原生截图等)
+        // 2. 无文件 URL 时，检查是否包含纯内存图片数据 (如系统原生截屏、浏览器复制图片等)
         if pb.canReadObject(forClasses: [NSImage.self], options: nil) {
             return true
         }
@@ -256,7 +273,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         let isImage = pasteboardContainsImage(pb)
 
         if isImage {
-            // 若从 Finder 复制了图片文件，补全内存 TIFF 格式，确保 CLI 都能无缝读取
+            // 若从 Finder 复制了图片文件，补全内存 TIFF 格式，确保 CLI 工具都能无缝读取
             if !pb.canReadObject(forClasses: [NSImage.self], options: nil) {
                 let imageExtensions: Set<String> = [
                     "png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "tiff", "svg", "ico"
@@ -273,10 +290,35 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
                 terminalView.triggerImagePasteShortcut()
             }
         } else {
-            if let session = SuqiSessionManager.shared.activeSession {
+            if let session = model.activeSession {
                 _ = session.state.performBindingAction("paste_from_clipboard")
             }
         }
+    }
+
+    public func handleCopy() {
+        if let session = model.activeSession {
+            _ = session.state.performBindingAction("copy_to_clipboard")
+        }
+    }
+
+    public func handleSelectAll() {
+        if let session = model.activeSession {
+            _ = session.state.performBindingAction("select_all")
+        }
+    }
+
+    public func closeCurrentTabOrWindow() {
+        model.closeActiveSession()
+    }
+
+    public func closeWindow() {
+        if let eventMonitor {
+            NSEvent.removeMonitor(eventMonitor)
+            self.eventMonitor = nil
+        }
+        SuqiWindowManager.shared.removeWindow(self)
+        window?.close()
     }
 
     public func updateThemeBackground() {
@@ -298,20 +340,19 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    public func toggleWindow() {
-        guard let window = self.window else { return }
-        if window.isVisible && window.isKeyWindow {
-            window.orderOut(nil)
-        } else {
-            showWindow()
-        }
-    }
-
     // MARK: - NSWindowDelegate
 
-    public func windowShouldClose(_ sender: NSWindow) -> Bool {
-        // 关闭窗口时隐藏，而非直接销毁进程（对齐 macOS 终端习惯）
-        sender.orderOut(nil)
-        return false
+    public func windowWillClose(_ notification: Notification) {
+        if let eventMonitor {
+            NSEvent.removeMonitor(eventMonitor)
+            self.eventMonitor = nil
+        }
+        SuqiWindowManager.shared.removeWindow(self)
+    }
+
+    public func windowDidBecomeKey(_ notification: Notification) {
+        if let terminalView = getActiveTerminalView() {
+            window?.makeFirstResponder(terminalView)
+        }
     }
 }

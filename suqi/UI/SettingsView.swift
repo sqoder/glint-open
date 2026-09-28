@@ -9,7 +9,6 @@ import SwiftUI
 
 public struct SettingsView: View {
     @ObservedObject private var settings = SuqiSettings.shared
-    @ObservedObject private var sessionManager = SuqiSessionManager.shared
 
     public init() {}
 
@@ -22,8 +21,7 @@ public struct SettingsView: View {
                     }
                 }
                 .onChange(of: settings.themeName) { _, _ in
-                    TerminalWindowController.shared.updateThemeBackground()
-                    sessionManager.restartActiveSession()
+                    SuqiWindowManager.shared.reloadAllWindows()
                 }
 
                 Slider(value: $settings.backgroundOpacity, in: 0.5...1.0, step: 0.02) {
@@ -34,7 +32,7 @@ public struct SettingsView: View {
                     Text("100%")
                 }
                 .onChange(of: settings.backgroundOpacity) { _, _ in
-                    sessionManager.restartActiveSession()
+                    SuqiWindowManager.shared.reloadAllWindows()
                 }
             }
 
@@ -45,7 +43,7 @@ public struct SettingsView: View {
                     }
                 }
                 .onChange(of: settings.fontFamily) { _, _ in
-                    sessionManager.restartActiveSession()
+                    SuqiWindowManager.shared.reloadAllWindows()
                 }
 
                 HStack {
@@ -56,7 +54,7 @@ public struct SettingsView: View {
                         .foregroundStyle(.secondary)
                     Stepper("", value: $settings.fontSize, in: 9...28, step: 1)
                         .onChange(of: settings.fontSize) { _, _ in
-                            sessionManager.restartActiveSession()
+                            SuqiWindowManager.shared.reloadAllWindows()
                         }
                 }
             }
@@ -68,12 +66,12 @@ public struct SettingsView: View {
                     Text("下划线 (Underline)").tag("underline")
                 }
                 .onChange(of: settings.cursorStyle) { _, _ in
-                    sessionManager.restartActiveSession()
+                    SuqiWindowManager.shared.reloadAllWindows()
                 }
 
                 Toggle("光标闪烁", isOn: $settings.cursorBlink)
                     .onChange(of: settings.cursorBlink) { _, _ in
-                        sessionManager.restartActiveSession()
+                        SuqiWindowManager.shared.reloadAllWindows()
                     }
             }
         }

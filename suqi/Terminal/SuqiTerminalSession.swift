@@ -19,6 +19,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     @Published public private(set) var state: TerminalViewState
     @Published public var customTitle: String?
     public var initialWorkingDirectory: String
+    public var onFocused: (() -> Void)?
     private var cancellables = Set<AnyCancellable>()
 
     public static func == (lhs: SuqiTerminalSession, rhs: SuqiTerminalSession) -> Bool {
@@ -40,7 +41,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             .filter { $0 }
             .sink { [weak self] _ in
                 guard let self else { return }
-                SuqiSessionManager.shared.notifySessionFocused(id: self.id)
+                self.onFocused?()
             }
             .store(in: &cancellables)
     }

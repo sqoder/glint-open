@@ -8,10 +8,12 @@
 import SwiftUI
 
 public struct GhosttyTabBar: View {
-    @ObservedObject private var manager = SuqiSessionManager.shared
+    @ObservedObject public var model: SuqiWindowModel
     @State private var hoveredTabId: UUID?
 
-    public init() {}
+    public init(model: SuqiWindowModel) {
+        self.model = model
+    }
 
     public var body: some View {
         HStack(spacing: 2) {
@@ -21,8 +23,8 @@ public struct GhosttyTabBar: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
-                    ForEach(manager.tabs) { tab in
-                        let isActive = manager.activeTabId == tab.id
+                    ForEach(model.tabs) { tab in
+                        let isActive = model.activeTabId == tab.id
                         let isHovered = hoveredTabId == tab.id
 
                         HStack(spacing: 6) {
@@ -33,7 +35,7 @@ public struct GhosttyTabBar: View {
 
                             if isHovered || isActive {
                                 Button {
-                                    manager.closeTab(id: tab.id)
+                                    model.closeTab(id: tab.id)
                                 } label: {
                                     Image(systemName: "xmark")
                                         .font(.system(size: 7.5, weight: .bold))
@@ -55,7 +57,7 @@ public struct GhosttyTabBar: View {
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            manager.selectTab(id: tab.id)
+                            model.selectTab(id: tab.id)
                         }
                         .onHover { hovering in
                             hoveredTabId = hovering ? tab.id : nil
@@ -64,7 +66,7 @@ public struct GhosttyTabBar: View {
 
                     // 新建标签按钮
                     Button {
-                        manager.createNewSession()
+                        model.createNewTab()
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 9.5, weight: .medium))

@@ -11,11 +11,12 @@ import GhosttyTerminal
 
 public struct SuqiTerminalView: View {
     @ObservedObject var session: SuqiTerminalSession
-    @ObservedObject private var manager = SuqiSessionManager.shared
+    let model: SuqiWindowModel
     @FocusState private var isFocused: Bool
 
-    public init(session: SuqiTerminalSession) {
+    public init(session: SuqiTerminalSession, model: SuqiWindowModel) {
         self.session = session
+        self.model = model
     }
 
     public var body: some View {
@@ -25,13 +26,13 @@ public struct SuqiTerminalView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .transaction { $0.animation = nil }
             .onAppear {
-                if manager.activeSessionId == session.id {
+                if model.activeSessionId == session.id {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                         isFocused = true
                     }
                 }
             }
-            .onChange(of: manager.activeSessionId) { _, newId in
+            .onChange(of: model.activeSessionId) { _, newId in
                 if newId == session.id {
                     isFocused = true
                 }

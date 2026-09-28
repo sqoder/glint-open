@@ -1,5 +1,5 @@
 //
-//  SuqiSessionManager.swift
+//  SuqiWindowModel.swift
 //  suqi
 //
 //  Created for suqi Terminal.
@@ -129,27 +129,18 @@ public final class SuqiTab: ObservableObject, Identifiable {
     }
 }
 
-// MARK: - SuqiSessionManager (多标签与分屏管理器)
+// MARK: - SuqiWindowModel (单窗口独立状态模型)
 
 @MainActor
-public final class SuqiSessionManager: ObservableObject {
-    public static let shared = SuqiSessionManager()
-
+public final class SuqiWindowModel: ObservableObject {
     @Published public private(set) var tabs: [SuqiTab] = []
     @Published public var activeTabId: UUID?
 
-    /// 兼容旧接口：返回所有活跃标签与分屏的会话集合
+    /// 窗口关闭回调
+    public var onCloseWindowRequested: (() -> Void)?
+
     public var sessions: [SuqiTerminalSession] {
         tabs.flatMap { $0.allSessions }
-    }
-
-    public var activeSessionId: UUID? {
-        get { activeTab?.activeSessionId }
-        set {
-            if let val = newValue {
-                activeTab?.activeSessionId = val
-            }
-        }
     }
 
     public var activeTab: SuqiTab? {
@@ -161,23 +152,43 @@ public final class SuqiSessionManager: ObservableObject {
         activeTab?.activeSession
     }
 
+    public var activeSessionId: UUID? {
+        get { activeTab?.activeSessionId }
+        set {
+            if let val = newValue {
+                activeTab?.activeSessionId = val
+            }
+        }
+    }
+
     public var activeIndex: Int {
         guard let activeTabId else { return 0 }
         return tabs.firstIndex { $0.id == activeTabId } ?? 0
     }
 
-    private init() {
-        let defaultSession = SuqiTerminalSession()
-        let defaultTab = SuqiTab(session: defaultSession)
-        self.tabs = [defaultTab]
-        self.activeTabId = defaultTab.id
+    public init(initialWorkingDirectory: String? = nil) {
+        let dir = initialWorkingDirectory ?? NSHomeDirectory()
+        let session = SuqiTerminalSession(workingDirectory: dir)
+        let tab = SuqiTab(session: session)
+        self.tabs = [tab]
+        self.activeTabId = tab.id
+        attachSessionCallbacks(session)
     }
 
-    // ⌘T: 新建标签页
+    private func attachSessionCallbacks(_ session: SuqiTerminalSession) {
+        session.onFocused = { [weak self, weak session] in
+            guard let self, let session else { return }
+            self.selectSession(id: session.id)
+        }
+    }
+
+    // ⌘T: 新建标签页 (自动继承当前活跃会话的工作目录)
     @discardableResult
-    public func createNewSession(workingDirectory: String? = nil) -> SuqiTerminalSession {
+    public func createNewTab(workingDirectory: String? = nil) -> SuqiTerminalSession {
+        objectWillChange.send()
         let initialDir = workingDirectory ?? activeSession?.fullDirectory ?? NSHomeDirectory()
         let session = SuqiTerminalSession(workingDirectory: initialDir)
+        attachSessionCallbacks(session)
         let tab = SuqiTab(session: session)
         tabs.append(tab)
         activeTabId = tab.id
@@ -201,6 +212,8 @@ public final class SuqiSessionManager: ObservableObject {
         objectWillChange.send()
         let initialDir = workingDirectory ?? activeSession?.fullDirectory ?? NSHomeDirectory()
         let session = SuqiTerminalSession(workingDirectory: initialDir)
+        attachSessionCallbacks(session)
+
         if let currentTab = activeTab {
             currentTab.objectWillChange.send()
             currentTab.splitActive(axis: axis, newSession: session)
@@ -212,26 +225,32 @@ public final class SuqiSessionManager: ObservableObject {
         return session
     }
 
-    // ⌘W: 优先关闭当前活跃分屏，分屏全关后关闭标签页
-    public func closeActiveSession() {
+    // ⌘W: 优先关闭当前活跃分屏；窗格全关后关闭标签页；若为最后标签页，通知关闭窗口
+    @discardableResult
+    public func closeActiveSession() -> Bool {
         objectWillChange.send()
-        guard let currentTab = activeTab else { return }
+        guard let currentTab = activeTab else {
+            onCloseWindowRequested?()
+            return false
+        }
+
         currentTab.objectWillChange.send()
         let currentSessionId = currentTab.activeSessionId
         let hasPanesRemaining = currentTab.closeSession(id: currentSessionId)
+
         if !hasPanesRemaining {
-            closeTab(id: currentTab.id)
+            return closeTab(id: currentTab.id)
         }
+        return true
     }
 
-    public func closeSession(id: UUID) {
-        closeActiveSession()
-    }
-
-    public func closeTab(id: UUID) {
+    @discardableResult
+    public func closeTab(id: UUID) -> Bool {
+        objectWillChange.send()
         guard tabs.count > 1 else {
-            activeSession?.restart()
-            return
+            // 当前窗口最后一个 Tab 已被关闭，通知关闭此独立窗口！
+            onCloseWindowRequested?()
+            return false
         }
 
         if let index = tabs.firstIndex(where: { $0.id == id }) {
@@ -241,6 +260,7 @@ public final class SuqiSessionManager: ObservableObject {
                 activeTabId = tabs[newIndex].id
             }
         }
+        return true
     }
 
     public func selectTab(id: UUID) {
@@ -262,10 +282,6 @@ public final class SuqiSessionManager: ObservableObject {
                 return
             }
         }
-    }
-
-    public func notifySessionFocused(id: UUID) {
-        selectSession(id: id)
     }
 
     public func nextTab() {
