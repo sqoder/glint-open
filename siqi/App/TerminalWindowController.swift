@@ -31,7 +31,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = true
         window.backgroundColor = SiqiTheme.nsBackgroundColor(for: SiqiSettings.shared.themeName)
-        window.isOpaque = false
+        window.isOpaque = true
         window.hasShadow = true
         window.minSize = NSSize(width: 480, height: 280)
         window.setFrameAutosaveName("siqi.terminal.main.window")

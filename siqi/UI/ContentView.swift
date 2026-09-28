@@ -18,25 +18,22 @@ public struct ContentView: View {
     }
 
     public var body: some View {
-        ZStack {
-            // 背景层：当透明度 < 1.0 时呈现深色毛玻璃，否则呈现纯粹扎实的主题深色底色
-            if settings.backgroundOpacity < 1.0 {
-                VisualEffectBackgroundView(material: .hudWindow, blendingMode: .behindWindow)
-                themeBg.opacity(settings.backgroundOpacity)
-            } else {
-                themeBg
-            }
+        ZStack(alignment: .topLeading) {
+            // 全窗口一体化纯正深色底衬（完全统一，绝对无任何分层、无横线、无色差）
+            themeBg
+                .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // 仅当开启多个标签页时显示极简 Tab 栏；单标签时仅预留红绿灯拖拽安全高度
+                // 仅当多标签页时显示极简无边框标签；单标签时无任何多余元素，仅留出红绿灯呼吸间距
                 if manager.sessions.count > 1 {
                     GhosttyTabBar()
+                        .frame(height: 28)
                 } else {
                     Color.clear
-                        .frame(height: 24)
+                        .frame(height: 28)
                 }
 
-                // 纯粹的终端工作区
+                // 终端渲染工作区（全幅贴合，与底色 100% 一体化融合）
                 if let active = manager.activeSession {
                     SiqiTerminalView(session: active)
                         .id(active.id)
@@ -46,28 +43,7 @@ public struct ContentView: View {
                 }
             }
         }
-        .frame(minWidth: 500, minHeight: 300)
+        .frame(minWidth: 480, minHeight: 280)
         .ignoresSafeArea()
-    }
-}
-
-// MARK: - NSVisualEffectView Wrapper
-
-struct VisualEffectBackgroundView: NSViewRepresentable {
-    var material: NSVisualEffectView.Material = .hudWindow
-    var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = blendingMode
-        view.state = .active
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = material
-        nsView.blendingMode = blendingMode
-        nsView.state = .active
     }
 }

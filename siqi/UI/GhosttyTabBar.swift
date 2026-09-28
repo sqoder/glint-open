@@ -84,6 +84,6 @@ public struct GhosttyTabBar: View {
             Spacer()
         }
         .frame(height: 28)
-        .background(Color.black.opacity(0.20))
+        .background(Color.clear)
     }
 }
