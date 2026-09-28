@@ -1,0 +1,24 @@
+{
+  "originHash" : "3da96562502d5a63b8eb28403b47d61a25e4572f71a22643409e78c619042821",
+  "pins" : [
+    {
+      "identity" : "libghostty-spm",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/egoist-labs/libghostty-spm",
+      "state" : {
+        "revision" : "5f88a552c217533e789a887db75ac2e2c36d9c46",
+        "version" : "1.3.7"
+      }
+    },
+    {
+      "identity" : "msdisplaylink",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Lakr233/MSDisplayLink.git",
+      "state" : {
+        "revision" : "87eb0af130744c8cbe2e31b6e1a5bcd659f1c220",
+        "version" : "2.2.0"
+      }
+    }
+  ],
+  "version" : 3
+}
