@@ -117,6 +117,12 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
                 return nil
             }
 
+            // 6.5. 处理 ⌃⌘= (均等所有分屏 Equalize Splits)
+            if flags == [.control, .command] && (event.charactersIgnoringModifiers == "=" || event.charactersIgnoringModifiers == "+") {
+                self.model.equalizeSplits()
+                return nil
+            }
+
             // 7. 处理 ⌘Option+Left / ⌘Option+Right (分屏切换)
             if flags == [.command, .option] {
                 if event.specialKey == .leftArrow || event.specialKey == .upArrow {

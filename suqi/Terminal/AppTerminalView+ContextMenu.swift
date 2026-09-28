@@ -45,6 +45,11 @@ public final class TerminalContextMenuBridge: NSObject {
         splitDownItem.target = self
         menu.addItem(splitDownItem)
 
+        // Equalize Splits
+        let equalizeItem = NSMenuItem(title: "Equalize Splits", action: #selector(menuEqualizeSplits), keyEquivalent: "")
+        equalizeItem.target = self
+        menu.addItem(equalizeItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // 6. Clear Screen
@@ -96,6 +101,10 @@ public final class TerminalContextMenuBridge: NSObject {
 
     @objc private func menuSplitDown() {
         SuqiWindowManager.shared.activeWindowController?.model.splitDown()
+    }
+
+    @objc private func menuEqualizeSplits() {
+        SuqiWindowManager.shared.activeWindowController?.model.equalizeSplits()
     }
 
     @objc private func menuClear() {

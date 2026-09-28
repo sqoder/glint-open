@@ -12,13 +12,13 @@ import Combine
 
 public enum PaneNode: Identifiable, Equatable {
     case terminal(SuqiTerminalSession)
-    indirect case split(id: UUID, axis: Axis, first: PaneNode, second: PaneNode)
+    indirect case split(id: UUID, axis: Axis, fraction: CGFloat, first: PaneNode, second: PaneNode)
 
     public var id: UUID {
         switch self {
         case .terminal(let session):
             return session.id
-        case .split(let id, _, _, _):
+        case .split(let id, _, _, _, _):
             return id
         }
     }
@@ -27,8 +27,8 @@ public enum PaneNode: Identifiable, Equatable {
         switch (lhs, rhs) {
         case (.terminal(let s1), .terminal(let s2)):
             return s1.id == s2.id
-        case (.split(let id1, let axis1, let f1, let s1), .split(let id2, let axis2, let f2, let s2)):
-            return id1 == id2 && axis1 == axis2 && f1 == f2 && s1 == s2
+        case (.split(let id1, let axis1, let frac1, let f1, let s1), .split(let id2, let axis2, let frac2, let f2, let s2)):
+            return id1 == id2 && axis1 == axis2 && abs(frac1 - frac2) < 0.0001 && f1 == f2 && s1 == s2
         default:
             return false
         }
@@ -38,7 +38,7 @@ public enum PaneNode: Identifiable, Equatable {
         switch self {
         case .terminal(let session):
             return [session]
-        case .split(_, _, let first, let second):
+        case .split(_, _, _, let first, let second):
             return first.allSessions + second.allSessions
         }
     }
@@ -47,7 +47,7 @@ public enum PaneNode: Identifiable, Equatable {
         switch self {
         case .terminal(let s):
             return s.id == id ? s : nil
-        case .split(_, _, let first, let second):
+        case .split(_, _, _, let first, let second):
             return first.findSession(id: id) ?? second.findSession(id: id)
         }
     }
@@ -56,14 +56,14 @@ public enum PaneNode: Identifiable, Equatable {
         switch self {
         case .terminal(let s):
             if s.id == targetSessionId {
-                return .split(id: UUID(), axis: axis, first: .terminal(s), second: .terminal(newSession))
+                return .split(id: UUID(), axis: axis, fraction: 0.5, first: .terminal(s), second: .terminal(newSession))
             }
             return self
-        case .split(let id, let currentAxis, let first, let second):
+        case .split(let id, let currentAxis, let fraction, let first, let second):
             let newFirst = first.split(targetSessionId: targetSessionId, axis: axis, newSession: newSession)
             let newSecond = second.split(targetSessionId: targetSessionId, axis: axis, newSession: newSession)
             if newFirst != first || newSecond != second {
-                return .split(id: UUID(), axis: currentAxis, first: newFirst, second: newSecond)
+                return .split(id: UUID(), axis: currentAxis, fraction: fraction, first: newFirst, second: newSecond)
             }
             return self
         }
@@ -76,12 +76,12 @@ public enum PaneNode: Identifiable, Equatable {
                 return nil
             }
             return self
-        case .split(let id, let axis, let first, let second):
+        case .split(let id, let axis, let fraction, let first, let second):
             let newFirst = first.remove(sessionId: sessionId)
             let newSecond = second.remove(sessionId: sessionId)
             if let newFirst, let newSecond {
                 if newFirst != first || newSecond != second {
-                    return .split(id: UUID(), axis: axis, first: newFirst, second: newSecond)
+                    return .split(id: UUID(), axis: axis, fraction: fraction, first: newFirst, second: newSecond)
                 }
                 return self
             } else if let newFirst {
@@ -91,6 +91,33 @@ public enum PaneNode: Identifiable, Equatable {
             } else {
                 return nil
             }
+        }
+    }
+
+    public func updatingFraction(splitId: UUID, fraction: CGFloat) -> PaneNode {
+        switch self {
+        case .terminal:
+            return self
+        case .split(let id, let axis, let currentFraction, let first, let second):
+            if id == splitId {
+                let clamped = min(max(fraction, 0.05), 0.95)
+                return .split(id: id, axis: axis, fraction: clamped, first: first, second: second)
+            }
+            let newFirst = first.updatingFraction(splitId: splitId, fraction: fraction)
+            let newSecond = second.updatingFraction(splitId: splitId, fraction: fraction)
+            if newFirst != first || newSecond != second {
+                return .split(id: id, axis: axis, fraction: currentFraction, first: newFirst, second: newSecond)
+            }
+            return self
+        }
+    }
+
+    public func equalized() -> PaneNode {
+        switch self {
+        case .terminal:
+            return self
+        case .split(let id, let axis, _, let first, let second):
+            return .split(id: id, axis: axis, fraction: 0.5, first: first.equalized(), second: second.equalized())
         }
     }
 }
@@ -150,6 +177,15 @@ public final class SuqiTab: ObservableObject, Identifiable {
             return true
         }
         return false
+    }
+
+    public func updateSplitFraction(splitId: UUID, fraction: CGFloat) {
+        rootPane = rootPane.updatingFraction(splitId: splitId, fraction: fraction)
+    }
+
+    public func equalizeSplits() {
+        rootPane = rootPane.equalized()
+        paneVersion += 1
     }
 }
 
@@ -352,5 +388,13 @@ public final class SuqiWindowModel: ObservableObject {
         for session in sessions {
             session.restart()
         }
+    }
+
+    public func updateSplitFraction(splitId: UUID, fraction: CGFloat) {
+        activeTab?.updateSplitFraction(splitId: splitId, fraction: fraction)
+    }
+
+    public func equalizeSplits() {
+        activeTab?.equalizeSplits()
     }
 }
