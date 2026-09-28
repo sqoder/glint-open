@@ -92,4 +92,10 @@ public final class SiqiSessionManager: ObservableObject {
     public func clearActiveSession() {
         activeSession?.clearScreen()
     }
+
+    public func reloadAllSessions() {
+        for session in sessions {
+            session.restart()
+        }
+    }
 }

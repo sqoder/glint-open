@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 @main
 struct SiqiApp: App {
@@ -36,7 +37,7 @@ struct SiqiApp: App {
                 .keyboardShortcut("w", modifiers: .command)
             }
 
-            // MARK: - 编辑菜单 (支持 ⌘C / ⌘V / ⌘A / ⌘X)
+            // MARK: - 编辑菜单 (支持 ⌘C / ⌘V / ⌘A / ⌘X / ⌘F)
             CommandMenu("编辑") {
                 Button("剪切") {
                     NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
@@ -67,6 +68,15 @@ struct SiqiApp: App {
                     }
                 }
                 .keyboardShortcut("a", modifiers: .command)
+
+                Divider()
+
+                Button("查找...") {
+                    if let active = SiqiSessionManager.shared.activeSession {
+                        _ = active.state.performBindingAction("start_search")
+                    }
+                }
+                .keyboardShortcut("f", modifiers: .command)
             }
 
             // MARK: - 终端操作菜单
@@ -76,10 +86,16 @@ struct SiqiApp: App {
                 }
                 .keyboardShortcut("k", modifiers: .command)
 
-                Button("重启会话") {
+                Button("重启当前会话") {
                     SiqiSessionManager.shared.restartActiveSession()
                 }
                 .keyboardShortcut("r", modifiers: .command)
+
+                Button("重新加载 Ghostty 配置") {
+                    SiqiSessionManager.shared.reloadAllSessions()
+                    TerminalWindowController.shared.updateThemeBackground()
+                }
+                .keyboardShortcut(",", modifiers: [.command, .shift])
 
                 Divider()
 
@@ -92,6 +108,16 @@ struct SiqiApp: App {
                     SiqiSessionManager.shared.nextTab()
                 }
                 .keyboardShortcut("]", modifiers: [.command, .shift])
+
+                Divider()
+
+                // Ghostty 快捷键：⌘1 到 ⌘9 快速切 Tab
+                ForEach(1...9, id: \.self) { index in
+                    Button("跳转到标签页 \(index)") {
+                        SiqiSessionManager.shared.selectTab(at: index - 1)
+                    }
+                    .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(0x30 + index)!)), modifiers: .command)
+                }
             }
 
             // MARK: - 视图与字号缩放
@@ -113,6 +139,16 @@ struct SiqiApp: App {
                     SiqiSessionManager.shared.restartActiveSession()
                 }
                 .keyboardShortcut("0", modifiers: .command)
+
+                Divider()
+
+                Button("打开 Ghostty 配置文件") {
+                    let ghosttyPath = NSString(string: "~/.config/ghostty/config").expandingTildeInPath
+                    let siqiPath = NSString(string: "~/.config/siqi/config").expandingTildeInPath
+                    let target = FileManager.default.fileExists(atPath: siqiPath) ? siqiPath : ghosttyPath
+                    NSWorkspace.shared.open(URL(fileURLWithPath: target))
+                }
+                .keyboardShortcut(",", modifiers: .command)
             }
         }
     }

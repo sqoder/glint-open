@@ -68,11 +68,11 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable {
     }
 
     public static func buildTerminalViewState(workingDirectory: String) -> TerminalViewState {
-        let settings = SiqiSettings.shared
-        let theme = GhosttyThemeCatalog.theme(named: settings.themeName)?.toTerminalTheme() ?? .default
+        let (userConfig, resolvedPath) = GhosttyUserConfig.load()
+        let theme = GhosttyThemeCatalog.theme(named: userConfig.themeName)?.toTerminalTheme() ?? .default
 
         let cursorStyle: TerminalCursorStyle
-        switch settings.cursorStyle {
+        switch userConfig.cursorStyle {
         case "block":
             cursorStyle = .block
         case "underline":
@@ -82,21 +82,38 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable {
         }
 
         let config = TerminalConfiguration { builder in
-            builder.withFontSize(Float(settings.fontSize))
-            builder.withFontFamily(settings.fontFamily)
+            builder.withFontSize(Float(userConfig.fontSize))
+            builder.withFontFamily(userConfig.fontFamily)
             builder.withCursorStyle(cursorStyle)
-            builder.withCursorStyleBlink(settings.cursorBlink)
-            builder.withBackgroundOpacity(settings.backgroundOpacity)
-            builder.withWindowPaddingX(14)
-            builder.withWindowPaddingY(12)
+            builder.withCursorStyleBlink(userConfig.cursorBlink)
+            // 将终端内部画布底色透明度设为 0，由 ContentView 全幅毛玻璃+主题底色统一提供，杜绝分层与色差
+            builder.withBackgroundOpacity(0)
+            builder.withWindowPaddingX(userConfig.windowPaddingX)
+            builder.withWindowPaddingY(userConfig.windowPaddingY)
             builder.withCustom("window-padding-balance", "true")
             builder.withCustom("window-padding-color", "extend")
+            if userConfig.adjustCellHeight != 0 {
+                builder.withCustom("adjust-cell-height", "\(userConfig.adjustCellHeight)")
+            }
+            if userConfig.fontThicken {
+                builder.withCustom("font-thicken", "true")
+            }
+            if userConfig.copyOnSelect {
+                builder.withCustom("copy-on-select", "clipboard")
+            }
             builder.withCustom("keybind", "super+c=copy_to_clipboard")
             builder.withCustom("keybind", "super+a=select_all")
         }
 
+        let configSource: TerminalController.ConfigSource = {
+            if let resolvedPath {
+                return .file(resolvedPath)
+            }
+            return .none
+        }()
+
         let viewState = TerminalViewState(
-            configSource: .none,
+            configSource: configSource,
             theme: theme,
             terminalConfiguration: config
         )
@@ -109,8 +126,8 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable {
             backend: .exec,
             workingDirectory: resolvedDir,
             envVars: [
-                "TERM_PROGRAM": "siqi",
-                "TERM_PROGRAM_VERSION": "0.1.0"
+                "TERM_PROGRAM": "ghostty",
+                "TERM_PROGRAM_VERSION": "1.3.1"
             ]
         )
 

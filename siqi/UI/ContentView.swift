@@ -6,6 +6,30 @@
 //
 
 import SwiftUI
+import AppKit
+
+public struct VisualEffectBackground: NSViewRepresentable {
+    var material: NSVisualEffectView.Material = .underWindowBackground
+    var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
+
+    public init(material: NSVisualEffectView.Material = .underWindowBackground, blendingMode: NSVisualEffectView.BlendingMode = .behindWindow) {
+        self.material = material
+        self.blendingMode = blendingMode
+    }
+
+    public func makeNSView(context: Context) -> NSVisualEffectView {
+        let view = NSVisualEffectView()
+        view.material = material
+        view.blendingMode = blendingMode
+        view.state = .active
+        return view
+    }
+
+    public func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
+        nsView.material = material
+        nsView.blendingMode = blendingMode
+    }
+}
 
 public struct ContentView: View {
     @ObservedObject private var manager = SiqiSessionManager.shared
@@ -13,15 +37,30 @@ public struct ContentView: View {
 
     public init() {}
 
+    private var userConfig: GhosttyUserConfig {
+        GhosttyUserConfig.load().config
+    }
+
+    private var isTranslucent: Bool {
+        userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
+    }
+
     private var themeBg: Color {
-        SiqiTheme.backgroundColor(for: settings.themeName)
+        SiqiTheme.backgroundColor(for: userConfig.themeName)
     }
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
-            // 全窗口一体化纯正深色底衬（完全统一，绝对无任何分层、无横线、无色差）
-            themeBg
-                .ignoresSafeArea()
+            // 背景底衬：根据 Ghostty 配置自适应纯色或毛玻璃模糊
+            if isTranslucent {
+                VisualEffectBackground()
+                    .ignoresSafeArea()
+                themeBg.opacity(userConfig.backgroundOpacity)
+                    .ignoresSafeArea()
+            } else {
+                themeBg
+                    .ignoresSafeArea()
+            }
 
             VStack(spacing: 0) {
                 // 仅当多标签页时显示极简无边框标签；单标签时无任何多余元素，仅留出红绿灯呼吸间距

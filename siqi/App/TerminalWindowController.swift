@@ -15,6 +15,9 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
     private var eventMonitor: Any?
 
     private init() {
+        let (userConfig, _) = GhosttyUserConfig.load()
+        let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
+
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 880, height: 540),
             styleMask: [
@@ -32,8 +35,13 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = true
-        window.backgroundColor = SiqiTheme.nsBackgroundColor(for: SiqiSettings.shared.themeName)
-        window.isOpaque = true
+        if isTranslucent {
+            window.isOpaque = false
+            window.backgroundColor = .clear
+        } else {
+            window.backgroundColor = SiqiTheme.nsBackgroundColor(for: userConfig.themeName)
+            window.isOpaque = true
+        }
         window.hasShadow = true
         window.minSize = NSSize(width: 480, height: 280)
         window.setFrameAutosaveName("siqi.terminal.main.window")
@@ -53,24 +61,108 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
 
     private func setupKeyEventMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, let window = self.window, window.isKeyWindow else {
+            guard let self, let window = self.window, (window.isKeyWindow || window.isMainWindow || event.window === window) else {
                 return event
             }
 
             let flags = event.modifierFlags.intersection([.command, .control, .option, .shift])
 
             // 1. 处理 ⌘V (Cmd+V 粘贴图片/文本)
-            if flags == .command && event.charactersIgnoringModifiers == "v" {
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "v" {
                 self.handlePaste()
                 return nil // 消费此事件，拦截系统蜂鸣与默认冒泡
             }
 
             // 2. 处理 ⌘C (Cmd+C 复制选中文本)
-            if flags == .command && event.charactersIgnoringModifiers == "c" {
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "c" {
                 if let session = SiqiSessionManager.shared.activeSession {
                     _ = session.state.performBindingAction("copy_to_clipboard")
                     return nil
                 }
+            }
+
+            // 3. 处理 ⌘1 .. ⌘9 (切换标签页)
+            if flags == .command, let char = event.charactersIgnoringModifiers?.first, char >= "1" && char <= "9" {
+                if let tabIndex = Int(String(char)) {
+                    SiqiSessionManager.shared.selectTab(at: tabIndex - 1)
+                    return nil
+                }
+            }
+
+            // 4. 处理 ⌘[ / ⌘] (标签页前后切换)
+            if flags == .command && event.charactersIgnoringModifiers == "[" {
+                SiqiSessionManager.shared.previousTab()
+                return nil
+            }
+            if flags == .command && event.charactersIgnoringModifiers == "]" {
+                SiqiSessionManager.shared.nextTab()
+                return nil
+            }
+
+            // 5. 处理 ⌘T (新建标签页)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "t" {
+                SiqiSessionManager.shared.createNewSession()
+                return nil
+            }
+
+            // 6. 处理 ⌘W (关闭标签页)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "w" {
+                SiqiSessionManager.shared.closeActiveSession()
+                return nil
+            }
+
+            // 7. 处理 ⌘K (清屏)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "k" {
+                SiqiSessionManager.shared.clearActiveSession()
+                return nil
+            }
+
+            // 8. 处理 ⌘+ / ⌘= / ⌘- / ⌘0 (Ghostty 字号动态缩放)
+            if flags == .command || flags == [.command, .shift] {
+                let char = event.charactersIgnoringModifiers
+                if char == "=" || char == "+" {
+                    _ = SiqiSessionManager.shared.activeSession?.state.performBindingAction("increase_font_size:1")
+                    return nil
+                } else if char == "-" {
+                    _ = SiqiSessionManager.shared.activeSession?.state.performBindingAction("decrease_font_size:1")
+                    return nil
+                } else if char == "0" {
+                    _ = SiqiSessionManager.shared.activeSession?.state.performBindingAction("reset_font_size")
+                    return nil
+                }
+            }
+
+            // 9. 处理 ⌘Shift+[ / ⌘Shift+] (标签页切换快捷键变体)
+            if flags == [.command, .shift] {
+                if event.charactersIgnoringModifiers == "{" || event.charactersIgnoringModifiers == "[" {
+                    SiqiSessionManager.shared.previousTab()
+                    return nil
+                }
+                if event.charactersIgnoringModifiers == "}" || event.charactersIgnoringModifiers == "]" {
+                    SiqiSessionManager.shared.nextTab()
+                    return nil
+                }
+            }
+
+            // 10. 处理 ⌘F (搜索)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "f" {
+                _ = SiqiSessionManager.shared.activeSession?.state.performBindingAction("start_search")
+                return nil
+            }
+
+            // 11. 处理 ⌘, (打开配置文件)
+            if flags == .command && event.charactersIgnoringModifiers == "," {
+                let (_, path) = GhosttyUserConfig.load()
+                let target = path ?? NSString(string: "~/.config/ghostty/config").expandingTildeInPath
+                NSWorkspace.shared.open(URL(fileURLWithPath: target))
+                return nil
+            }
+
+            // 12. 处理 ⌘Shift+, (重载配置)
+            if flags == [.command, .shift] && (event.charactersIgnoringModifiers == "<" || event.charactersIgnoringModifiers == ",") {
+                SiqiSessionManager.shared.reloadAllSessions()
+                self.updateThemeBackground()
+                return nil
             }
 
             return event
@@ -152,7 +244,15 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
 
     public func updateThemeBackground() {
         guard let window = self.window else { return }
-        window.backgroundColor = SiqiTheme.nsBackgroundColor(for: SiqiSettings.shared.themeName)
+        let (userConfig, _) = GhosttyUserConfig.load()
+        let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
+        if isTranslucent {
+            window.isOpaque = false
+            window.backgroundColor = .clear
+        } else {
+            window.backgroundColor = SiqiTheme.nsBackgroundColor(for: userConfig.themeName)
+            window.isOpaque = true
+        }
     }
 
     public func showWindow() {
