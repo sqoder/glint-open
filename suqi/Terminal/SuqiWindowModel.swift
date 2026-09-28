@@ -89,6 +89,8 @@ public final class SuqiTab: ObservableObject, Identifiable {
     public let id: UUID
     @Published public var rootPane: PaneNode
     @Published public var activeSessionId: UUID
+    /// Monotonically increasing counter — forces SwiftUI to see pane tree mutations
+    @Published public var paneVersion: Int = 0
 
     public init(session: SuqiTerminalSession) {
         self.id = UUID()
@@ -119,6 +121,7 @@ public final class SuqiTab: ObservableObject, Identifiable {
     public func splitActive(axis: Axis, newSession: SuqiTerminalSession) {
         rootPane = rootPane.split(targetSessionId: activeSessionId, axis: axis, newSession: newSession)
         activeSessionId = newSession.id
+        paneVersion += 1
     }
 
     public func closeSession(id: UUID) -> Bool {
@@ -127,6 +130,7 @@ public final class SuqiTab: ObservableObject, Identifiable {
             if activeSessionId == id {
                 activeSessionId = rootPane.allSessions.first?.id ?? UUID()
             }
+            paneVersion += 1
             return true
         }
         return false

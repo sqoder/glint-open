@@ -130,6 +130,7 @@ public struct ActiveTabView: View {
 
     public var body: some View {
         PaneContainerView(node: tab.rootPane, model: model)
+            .id("\(tab.id)-\(tab.paneVersion)")
     }
 }
 
@@ -149,23 +150,29 @@ public struct PaneContainerView: View {
                 .id(session.id)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-        case .split(_, let axis, let first, let second):
+        case .split(let splitId, let axis, let first, let second):
             if axis == .horizontal {
                 HStack(spacing: 0) {
                     PaneContainerView(node: first, model: model)
+                        .id(first.id)
                     Rectangle()
                         .fill(Color.white.opacity(0.12))
                         .frame(width: 1)
                     PaneContainerView(node: second, model: model)
+                        .id(second.id)
                 }
+                .id(splitId)
             } else {
                 VStack(spacing: 0) {
                     PaneContainerView(node: first, model: model)
+                        .id(first.id)
                     Rectangle()
                         .fill(Color.white.opacity(0.12))
                         .frame(height: 1)
                     PaneContainerView(node: second, model: model)
+                        .id(second.id)
                 }
+                .id(splitId)
             }
         }
     }
