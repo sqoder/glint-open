@@ -36,7 +36,9 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         window.title = "suqi"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
-        window.isMovableByWindowBackground = true
+        // 关键修复：关闭 isMovableByWindowBackground，使得鼠标拖拽能完全透传给 Ghostty Terminal 进行文本框选/复制；
+        // 窗口移动由顶部 28pt 极简标题栏的 WindowDragArea 接管
+        window.isMovableByWindowBackground = false
         if isTranslucent {
             window.isOpaque = false
             window.backgroundColor = .clear
@@ -297,6 +299,9 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
     }
 
     public func handleCopy() {
+        if let terminalView = getActiveTerminalView(), terminalView.copySelectedTextToPasteboard() {
+            return
+        }
         if let session = model.activeSession {
             _ = session.state.performBindingAction("copy_to_clipboard")
         }

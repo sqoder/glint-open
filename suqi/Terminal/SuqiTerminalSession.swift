@@ -110,7 +110,9 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             builder.withBackgroundOpacity(0)
             builder.withWindowPaddingX(userConfig.windowPaddingX)
             builder.withWindowPaddingY(userConfig.windowPaddingY)
-            builder.withCustom("window-padding-balance", "true")
+            // 关键修复：关闭 window-padding-balance，确保终端顶部内边距严格锚定固定值；
+            // 彻底消除窗口拉伸缩放或分屏时，因行距余数均分导致的顶部命令提示符(Prompt)垂直跳动与抖动闪烁
+            builder.withCustom("window-padding-balance", "false")
             builder.withCustom("window-padding-color", "extend")
             if userConfig.adjustCellHeight != 0 {
                 builder.withCustom("adjust-cell-height", "\(userConfig.adjustCellHeight)")

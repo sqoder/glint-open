@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1C8AF7221BA331EFBC3EC823 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0CA1DBDA76BC2D1EE1A95D7B /* Assets.xcassets */; };
+		4BBB4F3672C2980AC2C1E57A /* WindowDragArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F026B6776BE8F54802752AE /* WindowDragArea.swift */; };
 		5769423471533DE9D49292A0 /* SuqiSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288A5F9CEDCE4C5282866182 /* SuqiSettings.swift */; };
 		600281785E0BB9B05B2B33CB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4878471FB485E2C59461BA84 /* ContentView.swift */; };
 		623DD342294CA4174D623900 /* GhosttyTheme in Frameworks */ = {isa = PBXBuildFile; productRef = D0A104A00C20DB3A2C495424 /* GhosttyTheme */; };
@@ -36,6 +37,7 @@
 		38356A190F4A4CB490BCBAF5 /* SuqiTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTerminalView.swift; sourceTree = "<group>"; };
 		4878471FB485E2C59461BA84 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		588B61BA645F396A9D2FF15E /* suqi.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = suqi.entitlements; sourceTree = "<group>"; };
+		5F026B6776BE8F54802752AE /* WindowDragArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowDragArea.swift; sourceTree = "<group>"; };
 		6710207CA0BD2C3E412175F8 /* AppTerminalView+IME.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppTerminalView+IME.swift"; sourceTree = "<group>"; };
 		685F51842B1DB3E6E992F976 /* SuqiWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiWindowManager.swift; sourceTree = "<group>"; };
 		8100FEA1B96F6EC5FCCBBF21 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 				4878471FB485E2C59461BA84 /* ContentView.swift */,
 				0DB61B0358E51D788578220F /* GhosttyTabBar.swift */,
 				8100FEA1B96F6EC5FCCBBF21 /* SettingsView.swift */,
+				5F026B6776BE8F54802752AE /* WindowDragArea.swift */,
 				2D687235DBA6D5A26C8FA599 /* Theme */,
 			);
 			path = UI;
@@ -242,6 +245,7 @@
 				8DC9CADBC8EA4BDAE2A26212 /* SuqiWindowManager.swift in Sources */,
 				B6F758DCA625FF92CB83A607 /* SuqiWindowModel.swift in Sources */,
 				F5BA4C34A9C33DB61CA89B1D /* TerminalWindowController.swift in Sources */,
+				4BBB4F3672C2980AC2C1E57A /* WindowDragArea.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

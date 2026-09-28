@@ -65,14 +65,17 @@ public struct ContentView: View {
             }
 
             VStack(spacing: 0) {
-                // 仅当多标签页时显示极简无边框标签；单标签时无任何多余元素，留出红绿灯呼吸间距
-                if model.tabs.count > 1 {
-                    GhosttyTabBar(model: model)
+                // 顶部标题/标签栏区域（高度 28）：底层承载原生可拖拽/双击缩放交互，上层渲染标签页
+                ZStack(alignment: .topLeading) {
+                    WindowDragArea()
                         .frame(height: 28)
-                } else {
-                    Color.clear
-                        .frame(height: 28)
+
+                    if model.tabs.count > 1 {
+                        GhosttyTabBar(model: model)
+                            .frame(height: 28)
+                    }
                 }
+                .frame(height: 28)
 
                 // 终端渲染工作区（全幅贴合，支持多标签与多分屏分格）
                 if let activeTab = model.activeTab {
@@ -86,6 +89,7 @@ public struct ContentView: View {
         }
         .frame(minWidth: 480, minHeight: 280)
         .ignoresSafeArea()
+        .transaction { $0.animation = nil }
         // 支持将 Finder 文件直接拖拽至终端窗口自动填入转义路径
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             for provider in providers {
@@ -132,10 +136,6 @@ public struct PaneContainerView: View {
             SuqiTerminalView(session: session, model: model)
                 .id(session.id)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    model.selectSession(id: session.id)
-                }
 
         case .split(_, let axis, let first, let second):
             if axis == .horizontal {
