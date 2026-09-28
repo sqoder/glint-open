@@ -91,7 +91,6 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable {
             builder.withWindowPaddingY(12)
             builder.withCustom("window-padding-balance", "true")
             builder.withCustom("window-padding-color", "extend")
-            builder.withCustom("keybind", "super+v=paste_from_clipboard")
             builder.withCustom("keybind", "super+c=copy_to_clipboard")
             builder.withCustom("keybind", "super+a=select_all")
         }

@@ -53,11 +53,7 @@ struct SiqiApp: App {
                 .keyboardShortcut("c", modifiers: .command)
 
                 Button("粘贴") {
-                    if !NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil) {
-                        if let active = SiqiSessionManager.shared.activeSession {
-                            _ = active.state.performBindingAction("paste_from_clipboard")
-                        }
-                    }
+                    TerminalWindowController.shared.handlePaste()
                 }
                 .keyboardShortcut("v", modifiers: .command)
 
