@@ -13,7 +13,8 @@ public final class SiqiSettings: ObservableObject {
     public static let shared = SiqiSettings()
 
     public static let availableThemes: [String] = [
-        "Tokyo Night",
+        "TokyoNight",
+        "TokyoNight Storm",
         "Catppuccin Macchiato",
         "Catppuccin Mocha",
         "Dracula",
@@ -21,7 +22,6 @@ public final class SiqiSettings: ObservableObject {
         "One Dark",
         "Solarized Dark",
         "Gruvbox Dark",
-        "Monokai",
         "GitHub Dark"
     ]
 
@@ -32,7 +32,7 @@ public final class SiqiSettings: ObservableObject {
         "Courier New"
     ]
 
-    @AppStorage("siqi.themeName") public var themeName: String = "Tokyo Night" {
+    @AppStorage("siqi.themeName") public var themeName: String = "TokyoNight" {
         didSet { objectWillChange.send() }
     }
 
@@ -44,7 +44,7 @@ public final class SiqiSettings: ObservableObject {
         didSet { objectWillChange.send() }
     }
 
-    @AppStorage("siqi.backgroundOpacity") public var backgroundOpacity: Double = 0.88 {
+    @AppStorage("siqi.backgroundOpacity") public var backgroundOpacity: Double = 1.0 {
         didSet { objectWillChange.send() }
     }
 

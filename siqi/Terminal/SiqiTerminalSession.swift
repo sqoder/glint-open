@@ -86,9 +86,9 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable {
             builder.withFontFamily(settings.fontFamily)
             builder.withCursorStyle(cursorStyle)
             builder.withCursorStyleBlink(settings.cursorBlink)
-            builder.withBackgroundOpacity(0.0) // 透出 macOS 原生毛玻璃背景
-            builder.withWindowPaddingX(12)
-            builder.withWindowPaddingY(10)
+            builder.withBackgroundOpacity(settings.backgroundOpacity)
+            builder.withWindowPaddingX(14)
+            builder.withWindowPaddingY(12)
             builder.withCustom("window-padding-balance", "true")
             builder.withCustom("window-padding-color", "extend")
         }

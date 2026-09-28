@@ -7,30 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		013338AA6F085ACC119FD2BD /* GhosttyTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6B3AC67015FFE452E80D647 /* GhosttyTabBar.swift */; };
 		091B5910FDEF7ACD323B2687 /* AppTerminalView+IME.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61498DC8B7FADC45C6AD995 /* AppTerminalView+IME.swift */; };
 		1533A6BDD85BE914ABA2A2CC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 92B446DBBDF949A0EFB14E97 /* Assets.xcassets */; };
 		1A73F8A795D61AB6580B3CDB /* SiqiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2814BECA01801D6205F032B0 /* SiqiApp.swift */; };
-		41212B60B2412770C10F4BD2 /* SettingsPopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C2628C6D0D56A5EF3CD39F4 /* SettingsPopoverView.swift */; };
 		465253751481B9956560888C /* SiqiSessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F637608BBC181820DA77CFA1 /* SiqiSessionManager.swift */; };
 		5318C5584E2A9279CA7C5537 /* TerminalWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AED0964FA1E460D7C0A31DF0 /* TerminalWindowController.swift */; };
 		5C68D3E23828478653C3A2BA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0672D331F3152DD01CC683 /* ContentView.swift */; };
 		60D9F09E42D66ADAA385BB9B /* GhosttyTheme in Frameworks */ = {isa = PBXBuildFile; productRef = B2EF0779032FE3B23E7B13C9 /* GhosttyTheme */; };
 		61F3F9698A19A6CAC0CC34D9 /* SiqiTerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE88E68079B4A20FAF478291 /* SiqiTerminalSession.swift */; };
 		74CF53612445D468EDE50041 /* SiqiSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88EF40C34B8A6DC7F57F1D6F /* SiqiSettings.swift */; };
-		8960DBABF3833D340BF0CE29 /* TerminalTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B53C0A33CCF3E945E0C3C7D1 /* TerminalTabBar.swift */; };
 		95FCB4ECDA8F9095D0B3F36B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C5985EB46C42CAD44579BD8 /* AppDelegate.swift */; };
 		B3F92C44B80E10371FAAB113 /* GhosttyTerminal in Frameworks */ = {isa = PBXBuildFile; productRef = 7B508151D6A5F88F6AD8B9FE /* GhosttyTerminal */; };
-		C0C7A0F5792C2EAD3C9B237D /* TerminalHeaderBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E53927BC1DDA110328C47A2 /* TerminalHeaderBar.swift */; };
 		DC1C5CADB471F468E964D7E3 /* SiqiTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767D9227C90D0F1FC8965831 /* SiqiTheme.swift */; };
 		E1EC3AA06D3080F77DFD3C75 /* SiqiTerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0FD594DE4EB4075BD4219E3 /* SiqiTerminalView.swift */; };
+		E2B05C93357E1269732C94EF /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 602ABE96E2CF56FD109E7C60 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		2814BECA01801D6205F032B0 /* SiqiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiqiApp.swift; sourceTree = "<group>"; };
 		2D0672D331F3152DD01CC683 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		3E53927BC1DDA110328C47A2 /* TerminalHeaderBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalHeaderBar.swift; sourceTree = "<group>"; };
+		602ABE96E2CF56FD109E7C60 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		694E2557254862E5D0BB6CE7 /* siqi.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = siqi.entitlements; sourceTree = "<group>"; };
-		6C2628C6D0D56A5EF3CD39F4 /* SettingsPopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPopoverView.swift; sourceTree = "<group>"; };
 		767D9227C90D0F1FC8965831 /* SiqiTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiqiTheme.swift; sourceTree = "<group>"; };
 		88EF40C34B8A6DC7F57F1D6F /* SiqiSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiqiSettings.swift; sourceTree = "<group>"; };
 		8C5985EB46C42CAD44579BD8 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -39,7 +37,7 @@
 		A39F2183F1F5CC6DE82CC6FD /* siqi.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = siqi.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AE88E68079B4A20FAF478291 /* SiqiTerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiqiTerminalSession.swift; sourceTree = "<group>"; };
 		AED0964FA1E460D7C0A31DF0 /* TerminalWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalWindowController.swift; sourceTree = "<group>"; };
-		B53C0A33CCF3E945E0C3C7D1 /* TerminalTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTabBar.swift; sourceTree = "<group>"; };
+		B6B3AC67015FFE452E80D647 /* GhosttyTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyTabBar.swift; sourceTree = "<group>"; };
 		C61498DC8B7FADC45C6AD995 /* AppTerminalView+IME.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppTerminalView+IME.swift"; sourceTree = "<group>"; };
 		ED39F148125431C236BE393B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F637608BBC181820DA77CFA1 /* SiqiSessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiqiSessionManager.swift; sourceTree = "<group>"; };
@@ -73,9 +71,8 @@
 			isa = PBXGroup;
 			children = (
 				2D0672D331F3152DD01CC683 /* ContentView.swift */,
-				6C2628C6D0D56A5EF3CD39F4 /* SettingsPopoverView.swift */,
-				3E53927BC1DDA110328C47A2 /* TerminalHeaderBar.swift */,
-				B53C0A33CCF3E945E0C3C7D1 /* TerminalTabBar.swift */,
+				B6B3AC67015FFE452E80D647 /* GhosttyTabBar.swift */,
+				602ABE96E2CF56FD109E7C60 /* SettingsView.swift */,
 				47E4FA40BF67B255806E8518 /* Theme */,
 			);
 			path = UI;
@@ -224,15 +221,14 @@
 				95FCB4ECDA8F9095D0B3F36B /* AppDelegate.swift in Sources */,
 				091B5910FDEF7ACD323B2687 /* AppTerminalView+IME.swift in Sources */,
 				5C68D3E23828478653C3A2BA /* ContentView.swift in Sources */,
-				41212B60B2412770C10F4BD2 /* SettingsPopoverView.swift in Sources */,
+				013338AA6F085ACC119FD2BD /* GhosttyTabBar.swift in Sources */,
+				E2B05C93357E1269732C94EF /* SettingsView.swift in Sources */,
 				1A73F8A795D61AB6580B3CDB /* SiqiApp.swift in Sources */,
 				465253751481B9956560888C /* SiqiSessionManager.swift in Sources */,
 				74CF53612445D468EDE50041 /* SiqiSettings.swift in Sources */,
 				61F3F9698A19A6CAC0CC34D9 /* SiqiTerminalSession.swift in Sources */,
 				E1EC3AA06D3080F77DFD3C75 /* SiqiTerminalView.swift in Sources */,
 				DC1C5CADB471F468E964D7E3 /* SiqiTheme.swift in Sources */,
-				C0C7A0F5792C2EAD3C9B237D /* TerminalHeaderBar.swift in Sources */,
-				8960DBABF3833D340BF0CE29 /* TerminalTabBar.swift in Sources */,
 				5318C5584E2A9279CA7C5537 /* TerminalWindowController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

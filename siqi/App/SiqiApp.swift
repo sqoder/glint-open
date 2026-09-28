@@ -13,7 +13,7 @@ struct SiqiApp: App {
 
     var body: some Scene {
         Settings {
-            SettingsPopoverView()
+            SettingsView()
         }
         .commands {
             // MARK: - 文件菜单

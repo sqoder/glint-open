@@ -13,19 +13,30 @@ public struct ContentView: View {
 
     public init() {}
 
+    private var themeBg: Color {
+        SiqiTheme.backgroundColor(for: settings.themeName)
+    }
+
     public var body: some View {
         ZStack {
-            // 背景毛玻璃沉浸层（可调浓度）
-            VisualEffectBackgroundView(material: .underWindowBackground, blendingMode: .behindWindow)
-                .opacity(settings.backgroundOpacity)
-
-            Color.black.opacity(1.0 - settings.backgroundOpacity * 0.7)
+            // 背景层：当透明度 < 1.0 时呈现深色毛玻璃，否则呈现纯粹扎实的主题深色底色
+            if settings.backgroundOpacity < 1.0 {
+                VisualEffectBackgroundView(material: .hudWindow, blendingMode: .behindWindow)
+                themeBg.opacity(settings.backgroundOpacity)
+            } else {
+                themeBg
+            }
 
             VStack(spacing: 0) {
-                // 1. 顶部 Header / Tab 栏
-                TerminalHeaderBar()
+                // 仅当开启多个标签页时显示极简 Tab 栏；单标签时仅预留红绿灯拖拽安全高度
+                if manager.sessions.count > 1 {
+                    GhosttyTabBar()
+                } else {
+                    Color.clear
+                        .frame(height: 24)
+                }
 
-                // 2. 终端工作区
+                // 纯粹的终端工作区
                 if let active = manager.activeSession {
                     SiqiTerminalView(session: active)
                         .id(active.id)
@@ -35,12 +46,7 @@ public struct ContentView: View {
                 }
             }
         }
-        .frame(minWidth: 520, minHeight: 320)
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(SiqiTheme.borderColor, lineWidth: 0.8)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .frame(minWidth: 500, minHeight: 300)
         .ignoresSafeArea()
     }
 }
@@ -48,7 +54,7 @@ public struct ContentView: View {
 // MARK: - NSVisualEffectView Wrapper
 
 struct VisualEffectBackgroundView: NSViewRepresentable {
-    var material: NSVisualEffectView.Material = .underWindowBackground
+    var material: NSVisualEffectView.Material = .hudWindow
     var blendingMode: NSVisualEffectView.BlendingMode = .behindWindow
 
     func makeNSView(context: Context) -> NSVisualEffectView {

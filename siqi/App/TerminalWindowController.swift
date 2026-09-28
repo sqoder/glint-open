@@ -30,10 +30,10 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.isMovableByWindowBackground = true
+        window.backgroundColor = SiqiTheme.nsBackgroundColor(for: SiqiSettings.shared.themeName)
         window.isOpaque = false
-        window.backgroundColor = .clear
         window.hasShadow = true
-        window.minSize = NSSize(width: 520, height: 320)
+        window.minSize = NSSize(width: 480, height: 280)
         window.setFrameAutosaveName("siqi.terminal.main.window")
 
         let contentView = ContentView()
@@ -46,6 +46,11 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    public func updateThemeBackground() {
+        guard let window = self.window else { return }
+        window.backgroundColor = SiqiTheme.nsBackgroundColor(for: SiqiSettings.shared.themeName)
     }
 
     public func showWindow() {
