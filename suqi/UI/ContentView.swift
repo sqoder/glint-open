@@ -66,13 +66,25 @@ public struct ContentView: View {
 
             VStack(spacing: 0) {
                 // 顶部标题/标签栏区域（高度 28）：底层承载原生可拖拽/双击缩放交互，上层渲染标签页
-                ZStack(alignment: .topLeading) {
+                ZStack(alignment: .center) {
                     WindowDragArea()
                         .frame(height: 28)
 
                     if model.tabs.count > 1 {
                         GhosttyTabBar(model: model)
                             .frame(height: 28)
+                    } else if let activeTab = model.activeTab {
+                        VStack(spacing: 1) {
+                            Text(activeTab.displayPathFormatted)
+                                .font(.system(size: 11.5, weight: .regular, design: .default))
+                                .foregroundStyle(Color.white.opacity(0.85))
+                                .lineLimit(1)
+                            Text("···")
+                                .font(.system(size: 7, weight: .bold))
+                                .foregroundStyle(Color.white.opacity(0.40))
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: 28)
+                        .allowsHitTesting(false)
                     }
                 }
                 .frame(height: 28)

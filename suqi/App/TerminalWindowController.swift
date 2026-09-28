@@ -275,16 +275,21 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         let isImage = pasteboardContainsImage(pb)
 
         if isImage {
-            // 若从 Finder 复制了图片文件，补全内存 TIFF 格式，确保 CLI 工具都能无缝读取
+            // 若从 Finder 复制了图片文件，补全内存 TIFF 和 PNG 格式，确保 CLI 工具都能无缝读取
             if !pb.canReadObject(forClasses: [NSImage.self], options: nil) {
                 let imageExtensions: Set<String> = [
                     "png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "tiff", "svg", "ico"
                 ]
                 if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL],
                    let firstImgUrl = urls.first(where: { imageExtensions.contains($0.pathExtension.lowercased()) }),
-                   let img = NSImage(contentsOf: firstImgUrl),
-                   let tiffData = img.tiffRepresentation {
-                    pb.setData(tiffData, forType: .tiff)
+                   let img = NSImage(contentsOf: firstImgUrl) {
+                    if let tiffData = img.tiffRepresentation {
+                        pb.setData(tiffData, forType: .tiff)
+                        if let rep = NSBitmapImageRep(data: tiffData),
+                           let pngData = rep.representation(using: .png, properties: [:]) {
+                            pb.setData(pngData, forType: .png)
+                        }
+                    }
                 }
             }
 

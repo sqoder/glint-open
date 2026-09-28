@@ -104,6 +104,10 @@ public final class SuqiTab: ObservableObject, Identifiable {
         activeSession?.displayDirectory ?? "~"
     }
 
+    public var displayPathFormatted: String {
+        activeSession?.displayPathFormatted ?? "~"
+    }
+
     public var activeSession: SuqiTerminalSession? {
         rootPane.findSession(id: activeSessionId) ?? rootPane.allSessions.first
     }

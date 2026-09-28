@@ -44,6 +44,17 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
                 self.onFocused?()
             }
             .store(in: &cancellables)
+        state.$workingDirectory
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        state.$title
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
 
     public var title: String {
@@ -67,6 +78,18 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             return "~"
         }
         return URL(fileURLWithPath: initialWorkingDirectory).lastPathComponent
+    }
+
+    public var displayPathFormatted: String {
+        let full = fullDirectory
+        let home = NSHomeDirectory()
+        if full == home {
+            return "~"
+        }
+        if full.hasPrefix(home + "/") {
+            return "~" + full.dropFirst(home.count)
+        }
+        return full
     }
 
     public var fullDirectory: String {
