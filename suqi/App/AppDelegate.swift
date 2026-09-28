@@ -12,6 +12,7 @@ import GhosttyTerminal
 public final class AppDelegate: NSObject, NSApplicationDelegate {
     public func applicationDidFinishLaunching(_ notification: Notification) {
         _ = AppTerminalView.enableSmoothResizePipeline
+        _ = AppTerminalView.enableContextMenuPipeline
         _ = SuqiWindowManager.shared.createWindow()
     }
 

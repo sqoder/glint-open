@@ -70,12 +70,16 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
 
     private func setupKeyEventMonitor() {
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, let window = self.window,
-                  (window.isKeyWindow || window.isMainWindow || event.window === window) else {
+            guard let self, let window = self.window else {
                 return event
             }
 
+            let isRelevant = window.isKeyWindow || window.isMainWindow || event.window === window
             let flags = event.modifierFlags.intersection([.command, .control, .option, .shift])
+
+            guard isRelevant else {
+                return event
+            }
 
             // 1. 处理 ⌘V (Cmd+V 粘贴图片/文本至本窗口当前活跃窗格)
             if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "v" {

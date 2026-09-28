@@ -155,24 +155,30 @@ public struct PaneContainerView: View {
                 HStack(spacing: 0) {
                     PaneContainerView(node: first, model: model)
                         .id(first.id)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     Rectangle()
                         .fill(Color.white.opacity(0.12))
                         .frame(width: 1)
                     PaneContainerView(node: second, model: model)
                         .id(second.id)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .id(splitId)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 VStack(spacing: 0) {
                     PaneContainerView(node: first, model: model)
                         .id(first.id)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                     Rectangle()
                         .fill(Color.white.opacity(0.12))
                         .frame(height: 1)
                     PaneContainerView(node: second, model: model)
                         .id(second.id)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .id(splitId)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
     }

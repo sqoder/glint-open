@@ -24,7 +24,14 @@ public enum PaneNode: Identifiable, Equatable {
     }
 
     public static func == (lhs: PaneNode, rhs: PaneNode) -> Bool {
-        lhs.id == rhs.id
+        switch (lhs, rhs) {
+        case (.terminal(let s1), .terminal(let s2)):
+            return s1.id == s2.id
+        case (.split(let id1, let axis1, let f1, let s1), .split(let id2, let axis2, let f2, let s2)):
+            return id1 == id2 && axis1 == axis2 && f1 == f2 && s1 == s2
+        default:
+            return false
+        }
     }
 
     public var allSessions: [SuqiTerminalSession] {
@@ -55,7 +62,10 @@ public enum PaneNode: Identifiable, Equatable {
         case .split(let id, let currentAxis, let first, let second):
             let newFirst = first.split(targetSessionId: targetSessionId, axis: axis, newSession: newSession)
             let newSecond = second.split(targetSessionId: targetSessionId, axis: axis, newSession: newSession)
-            return .split(id: id, axis: currentAxis, first: newFirst, second: newSecond)
+            if newFirst != first || newSecond != second {
+                return .split(id: UUID(), axis: currentAxis, first: newFirst, second: newSecond)
+            }
+            return self
         }
     }
 
@@ -70,7 +80,10 @@ public enum PaneNode: Identifiable, Equatable {
             let newFirst = first.remove(sessionId: sessionId)
             let newSecond = second.remove(sessionId: sessionId)
             if let newFirst, let newSecond {
-                return .split(id: id, axis: axis, first: newFirst, second: newSecond)
+                if newFirst != first || newSecond != second {
+                    return .split(id: UUID(), axis: axis, first: newFirst, second: newSecond)
+                }
+                return self
             } else if let newFirst {
                 return newFirst
             } else if let newSecond {
@@ -119,7 +132,10 @@ public final class SuqiTab: ObservableObject, Identifiable {
     }
 
     public func splitActive(axis: Axis, newSession: SuqiTerminalSession) {
-        rootPane = rootPane.split(targetSessionId: activeSessionId, axis: axis, newSession: newSession)
+        let targetId = (rootPane.findSession(id: activeSessionId) != nil)
+            ? activeSessionId
+            : (rootPane.allSessions.first?.id ?? activeSessionId)
+        rootPane = rootPane.split(targetSessionId: targetId, axis: axis, newSession: newSession)
         activeSessionId = newSession.id
         paneVersion += 1
     }
