@@ -7,6 +7,7 @@
 
 import AppKit
 import SwiftUI
+import GhosttyTerminal
 
 @MainActor
 public final class TerminalWindowController: NSWindowController, NSWindowDelegate {
@@ -76,29 +77,76 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         }
     }
 
-    /// 统一粘贴入口：智能区分图片与纯文本
-    public func handlePaste() {
-        guard let session = SiqiSessionManager.shared.activeSession else { return }
+    private func findTerminalView(in view: NSView) -> AppTerminalView? {
+        if let tv = view as? AppTerminalView {
+            return tv
+        }
+        for subview in view.subviews {
+            if let found = findTerminalView(in: subview) {
+                return found
+            }
+        }
+        return nil
+    }
 
-        let pb = NSPasteboard.general
-        var hasImage = pb.canReadObject(forClasses: [NSImage.self], options: nil)
-            || (pb.types?.contains { $0 == .png || $0 == .tiff || $0.rawValue.contains("image") || $0.rawValue.contains("png") } ?? false)
+    private func getActiveTerminalView() -> AppTerminalView? {
+        guard let window = self.window else { return nil }
+        if let tv = window.firstResponder as? AppTerminalView {
+            return tv
+        }
+        if let contentView = window.contentView, let tv = findTerminalView(in: contentView) {
+            return tv
+        }
+        return nil
+    }
 
-        // 检测剪贴板是否拷贝了图片类文件 URL (如截屏生成的临时 png 文件)
-        if !hasImage, let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], let first = urls.first {
-            let ext = first.pathExtension.lowercased()
-            if ["png", "jpg", "jpeg", "gif", "webp", "bmp", "heic"].contains(ext) {
-                hasImage = true
+    private func pasteboardContainsImage(_ pb: NSPasteboard) -> Bool {
+        let imageExtensions: Set<String> = [
+            "png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "tiff", "svg", "ico"
+        ]
+
+        // 1. 优先检查是否有文件 URL
+        if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
+            return urls.contains { url in
+                imageExtensions.contains(url.pathExtension.lowercased())
             }
         }
 
-        if hasImage {
-            // 向终端 PTY 发送 ASCII 22 (\u{16}，即 Control+V) 字节！
-            // Claude Code / Codex / Antigravity CLI 等终端工具检测到 Control+V 会立即读取系统剪贴板中的图片并完成图片粘贴！
-            session.send("\u{16}")
+        // 2. 无文件 URL 时，检查是否包含纯内存图片数据 (如浏览器右键复制图片、系统剪贴板原生截图等)
+        if pb.canReadObject(forClasses: [NSImage.self], options: nil) {
+            return true
+        }
+
+        if let types = pb.types {
+            let imageTypes: Set<NSPasteboard.PasteboardType> = [.png, .tiff]
+            if types.contains(where: { imageTypes.contains($0) || $0.rawValue.lowercased().contains("image") || $0.rawValue.lowercased().contains("png") }) {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    /// 统一粘贴入口：智能区分图片与纯文本
+    public func handlePaste() {
+        guard let window = self.window else { return }
+        let terminalView = getActiveTerminalView()
+
+        if let terminalView, window.firstResponder !== terminalView {
+            window.makeFirstResponder(terminalView)
+        }
+
+        let pb = NSPasteboard.general
+        let isImage = pasteboardContainsImage(pb)
+
+        if isImage {
+            if let terminalView {
+                terminalView.triggerImagePasteShortcut()
+            }
         } else {
-            // 纯文本：使用 Ghostty 的 paste_from_clipboard 执行标准终端粘贴（支持括号粘贴防错）
-            _ = session.state.performBindingAction("paste_from_clipboard")
+            if let session = SiqiSessionManager.shared.activeSession {
+                _ = session.state.performBindingAction("paste_from_clipboard")
+            }
         }
     }
 
