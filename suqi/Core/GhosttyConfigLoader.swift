@@ -89,3 +89,61 @@ public struct GhosttyUserConfig: Sendable {
         return (cfg, targetPath)
     }
 }
+
+extension Notification.Name {
+    public static let ghosttyConfigDidChange = Notification.Name("GhosttyConfigDidChange")
+}
+
+// MARK: - 配置文件热重载监听器 (自动监控 ~/.config/ghostty/config 或 ~/.config/suqi/config 变动)
+
+@MainActor
+public final class GhosttyConfigFileWatcher: ObservableObject {
+    public static let shared = GhosttyConfigFileWatcher()
+
+    private var fileSource: DispatchSourceFileSystemObject?
+    private var fileDescriptor: CInt = -1
+
+    public init() {
+        startWatching()
+    }
+
+    public func startWatching() {
+        stopWatching()
+
+        let (_, resolvedPath) = GhosttyUserConfig.load()
+        guard let path = resolvedPath else { return }
+
+        fileDescriptor = open(path, O_EVTONLY)
+        guard fileDescriptor >= 0 else { return }
+
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fileDescriptor,
+            eventMask: [.write, .delete, .rename, .extend],
+            queue: .main
+        )
+
+        source.setEventHandler { [weak self] in
+            guard let self else { return }
+            NotificationCenter.default.post(name: .ghosttyConfigDidChange, object: nil)
+            // 重新挂载监控（兼容 Vim/VSCode 等编辑器的原子重命名写入机制）
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.startWatching()
+            }
+        }
+
+        source.setCancelHandler { [weak self] in
+            if let fd = self?.fileDescriptor, fd >= 0 {
+                close(fd)
+            }
+        }
+
+        source.resume()
+        self.fileSource = source
+    }
+
+    public func stopWatching() {
+        fileSource?.cancel()
+        fileSource = nil
+        fileDescriptor = -1
+    }
+}

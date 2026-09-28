@@ -34,13 +34,15 @@ public struct VisualEffectBackground: NSViewRepresentable {
 public struct ContentView: View {
     @ObservedObject public var model: SuqiWindowModel
     @ObservedObject private var settings = SuqiSettings.shared
+    @State private var configReloadToken = UUID()
 
     public init(model: SuqiWindowModel) {
         self.model = model
     }
 
     private var userConfig: GhosttyUserConfig {
-        GhosttyUserConfig.load().config
+        _ = configReloadToken
+        return GhosttyUserConfig.load().config
     }
 
     private var isTranslucent: Bool {
@@ -89,14 +91,25 @@ public struct ContentView: View {
                 }
                 .frame(height: 28)
 
-                // 终端渲染工作区（全幅贴合，支持多标签与多分屏分格）
-                if let activeTab = model.activeTab {
-                    ActiveTabView(tab: activeTab, model: model)
-                        .id(activeTab.id)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    Color.clear
+                // 终端渲染工作区（全幅贴合，支持多标签、多分屏、全屏聚焦与滚动搜索）
+                ZStack(alignment: .topTrailing) {
+                    if let activeTab = model.activeTab {
+                        ActiveTabView(tab: activeTab, model: model)
+                            .id(activeTab.id)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        Color.clear
+                    }
+
+                    if model.isSearching {
+                        TerminalSearchBar(model: model)
+                            .padding(.top, 6)
+                            .padding(.trailing, 14)
+                            .transition(.opacity)
+                            .zIndex(999)
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .frame(minWidth: 480, minHeight: 280)
@@ -116,6 +129,9 @@ public struct ContentView: View {
             }
             return true
         }
+        .onReceive(NotificationCenter.default.publisher(for: .ghosttyConfigDidChange)) { _ in
+            configReloadToken = UUID()
+        }
     }
 }
 
@@ -129,8 +145,181 @@ public struct ActiveTabView: View {
     }
 
     public var body: some View {
-        PaneContainerView(node: tab.rootPane, model: model)
-            .id("\(tab.id)-\(tab.paneVersion)")
+        ZStack(alignment: .topTrailing) {
+            if tab.isZoomed, let activeSession = tab.activeSession {
+                SuqiTerminalView(session: activeSession, model: model)
+                    .id(activeSession.id)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                // 极简全屏/缩放徽标 (Ghostty 风格)
+                HStack(spacing: 5) {
+                    Image(systemName: "arrow.down.right.and.arrow.up.left")
+                        .font(.system(size: 9, weight: .bold))
+                    Text("ZOOMED · ⌘⇧↩ 还原")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                }
+                .foregroundStyle(Color.white.opacity(0.85))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3.5)
+                .background(
+                    Capsule()
+                        .fill(Color.black.opacity(0.60))
+                        .overlay(
+                            Capsule()
+                                .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                        )
+                )
+                .padding(.top, 6)
+                .padding(.trailing, 10)
+                .onTapGesture {
+                    tab.toggleZoom()
+                }
+            } else {
+                PaneContainerView(node: tab.rootPane, model: model)
+                    .id("\(tab.id)-\(tab.paneVersion)")
+            }
+        }
+    }
+}
+
+public struct TerminalSearchBar: View {
+    @ObservedObject var model: SuqiWindowModel
+    @State private var query: String = ""
+
+    public init(model: SuqiWindowModel) {
+        self.model = model
+    }
+
+    public var body: some View {
+        HStack(spacing: 6) {
+            SearchFieldRepresentable(
+                text: $query,
+                onCommit: {
+                    _ = model.activeSession?.state.surface?.navigateSearch(forward: true)
+                },
+                onCancel: {
+                    closeSearch()
+                }
+            )
+            .frame(width: 180, height: 22)
+            .onChange(of: query) { _, newQuery in
+                _ = model.activeSession?.state.surface?.search(newQuery)
+            }
+
+            // Prev Match
+            Button {
+                _ = model.activeSession?.state.surface?.navigateSearch(forward: false)
+            } label: {
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.7))
+                    .frame(width: 16, height: 16)
+                    .background(RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.08)))
+            }
+            .buttonStyle(.plain)
+            .help("上一个匹配项 (⇧Enter)")
+
+            // Next Match
+            Button {
+                _ = model.activeSession?.state.surface?.navigateSearch(forward: true)
+            } label: {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.7))
+                    .frame(width: 16, height: 16)
+                    .background(RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.08)))
+            }
+            .buttonStyle(.plain)
+            .help("下一个匹配项 (Enter)")
+
+            // Close Search
+            Button {
+                closeSearch()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(Color.white.opacity(0.6))
+                    .frame(width: 16, height: 16)
+            }
+            .buttonStyle(.plain)
+            .help("关闭搜索 (Esc)")
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 5)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(Color(nsColor: .windowBackgroundColor).opacity(0.95))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
+                )
+        )
+        .shadow(color: .black.opacity(0.4), radius: 8, y: 3)
+        .onAppear {
+            _ = model.activeSession?.state.surface?.startSearch()
+        }
+    }
+
+    private func closeSearch() {
+        model.isSearching = false
+        _ = model.activeSession?.state.surface?.endSearch()
+    }
+}
+
+// MARK: - AppKit 原生搜索输入框 (保证 ⌘F 唤起时 100% 抢占 First Responder)
+
+struct SearchFieldRepresentable: NSViewRepresentable {
+    @Binding var text: String
+    var onCommit: () -> Void
+    var onCancel: () -> Void
+
+    func makeNSView(context: Context) -> NSSearchField {
+        let field = NSSearchField()
+        field.placeholderString = "查找回滚内容..."
+        field.font = .monospacedSystemFont(ofSize: 11.5, weight: .regular)
+        field.delegate = context.coordinator
+        field.focusRingType = .none
+        field.isBordered = false
+        field.backgroundColor = .clear
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            field.window?.makeFirstResponder(field)
+        }
+        return field
+    }
+
+    func updateNSView(_ nsView: NSSearchField, context: Context) {
+        if nsView.stringValue != text {
+            nsView.stringValue = text
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, NSSearchFieldDelegate {
+        var parent: SearchFieldRepresentable
+
+        init(_ parent: SearchFieldRepresentable) {
+            self.parent = parent
+        }
+
+        func controlTextDidChange(_ obj: Notification) {
+            if let field = obj.object as? NSSearchField {
+                parent.text = field.stringValue
+            }
+        }
+
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.insertNewline(_:)) {
+                parent.onCommit()
+                return true
+            } else if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                parent.onCancel()
+                return true
+            }
+            return false
+        }
     }
 }
 

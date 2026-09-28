@@ -123,6 +123,45 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
                 return nil
             }
 
+            // 6.6. 处理 ⌘Shift+Enter (分屏最大化聚焦 Toggle Split Zoom)
+            if flags == [.command, .shift] && (event.keyCode == 36 || event.charactersIgnoringModifiers == "\r") {
+                self.model.toggleZoom()
+                return nil
+            }
+
+            // 6.7. 处理 ⌃⌘H / ⌃⌘J / ⌃⌘K / ⌃⌘L 以及 ⌃⌘方向键 (空间几何方向分屏聚焦 Goto Split)
+            if flags == [.control, .command] {
+                let char = event.charactersIgnoringModifiers?.lowercased()
+                if char == "h" || event.specialKey == .leftArrow {
+                    self.model.focusPane(in: .left)
+                    return nil
+                }
+                if char == "l" || event.specialKey == .rightArrow {
+                    self.model.focusPane(in: .right)
+                    return nil
+                }
+                if char == "k" || event.specialKey == .upArrow {
+                    self.model.focusPane(in: .up)
+                    return nil
+                }
+                if char == "j" || event.specialKey == .downArrow {
+                    self.model.focusPane(in: .down)
+                    return nil
+                }
+            }
+
+            // 6.8. 处理 ⌘F (终端回滚内容原生查找)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "f" {
+                self.model.isSearching.toggle()
+                return nil
+            }
+
+            // 6.9. 处理 ⌃` (下拉式浮动终端 Quick Terminal)
+            if flags == .control && (event.charactersIgnoringModifiers == "`" || event.charactersIgnoringModifiers == "~") {
+                QuickTerminalController.shared.toggle()
+                return nil
+            }
+
             // 7. 处理 ⌘Option+Left / ⌘Option+Right (分屏切换)
             if flags == [.command, .option] {
                 if event.specialKey == .leftArrow || event.specialKey == .upArrow {

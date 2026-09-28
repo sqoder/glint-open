@@ -13,6 +13,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     public func applicationDidFinishLaunching(_ notification: Notification) {
         _ = AppTerminalView.enableSmoothResizePipeline
         _ = AppTerminalView.enableContextMenuPipeline
+        _ = GhosttyConfigFileWatcher.shared
+        _ = QuickTerminalController.shared
         _ = SuqiWindowManager.shared.createWindow()
     }
 
@@ -41,6 +43,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         newTabItem.target = self
         menu.addItem(newTabItem)
 
+        menu.addItem(NSMenuItem.separator())
+
+        let quickTermItem = NSMenuItem(title: "Toggle Quick Terminal", action: #selector(dockToggleQuickTerminal), keyEquivalent: "")
+        quickTermItem.target = self
+        menu.addItem(quickTermItem)
+
         return menu
     }
 
@@ -50,5 +58,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func dockNewTab() {
         SuqiWindowManager.shared.activeWindowController?.model.createNewTab()
+    }
+
+    @objc private func dockToggleQuickTerminal() {
+        QuickTerminalController.shared.toggle()
     }
 }

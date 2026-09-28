@@ -10,6 +10,7 @@ import SwiftUI
 public struct GhosttyTabBar: View {
     @ObservedObject public var model: SuqiWindowModel
     @State private var hoveredTabId: UUID?
+    @State private var draggingTabId: UUID?
 
     public init(model: SuqiWindowModel) {
         self.model = model
@@ -62,6 +63,19 @@ public struct GhosttyTabBar: View {
                         .onHover { hovering in
                             hoveredTabId = hovering ? tab.id : nil
                         }
+                        // 支持鼠标拖拽标签页重排
+                        .onDrag {
+                            self.draggingTabId = tab.id
+                            return NSItemProvider(object: tab.id.uuidString as NSString)
+                        }
+                        .onDrop(
+                            of: [.text],
+                            delegate: TabDropDelegate(
+                                destinationTab: tab,
+                                model: model,
+                                draggingTabId: $draggingTabId
+                            )
+                        )
                     }
 
                     // 新建标签按钮
@@ -87,5 +101,34 @@ public struct GhosttyTabBar: View {
         }
         .frame(height: 28)
         .background(Color.clear)
+    }
+}
+
+// MARK: - 标签页拖拽重排代理
+
+struct TabDropDelegate: DropDelegate {
+    let destinationTab: SuqiTab
+    let model: SuqiWindowModel
+    @Binding var draggingTabId: UUID?
+
+    func dropEntered(info: DropInfo) {
+        guard let draggingTabId,
+              draggingTabId != destinationTab.id,
+              let fromIndex = model.tabs.firstIndex(where: { $0.id == draggingTabId }),
+              let toIndex = model.tabs.firstIndex(where: { $0.id == destinationTab.id })
+        else { return }
+
+        withAnimation(.easeInOut(duration: 0.15)) {
+            model.moveTab(from: fromIndex, to: toIndex)
+        }
+    }
+
+    func performDrop(info: DropInfo) -> Bool {
+        draggingTabId = nil
+        return true
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
     }
 }

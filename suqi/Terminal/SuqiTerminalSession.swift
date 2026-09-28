@@ -55,6 +55,13 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
+
+        NotificationCenter.default.publisher(for: .ghosttyConfigDidChange)
+            .sink { [weak self] _ in
+                _ = self?.state.surface?.performBindingAction("reload_config")
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
     }
 
     public var title: String {

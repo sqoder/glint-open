@@ -41,6 +41,16 @@ struct SuqiApp: App {
                 }
                 .keyboardShortcut("d", modifiers: [.command, .shift])
 
+                Button("分屏最大化聚焦 (Toggle Split Zoom)") {
+                    SuqiWindowManager.shared.activeWindowController?.model.toggleZoom()
+                }
+                .keyboardShortcut(.return, modifiers: [.command, .shift])
+
+                Button("均等所有分屏 (Equalize Splits)") {
+                    SuqiWindowManager.shared.activeWindowController?.model.equalizeSplits()
+                }
+                .keyboardShortcut("=", modifiers: [.command, .control])
+
                 Divider()
 
                 Button("关闭分屏 / 标签页") {
@@ -85,13 +95,20 @@ struct SuqiApp: App {
                 Divider()
 
                 Button("查找...") {
-                    _ = SuqiWindowManager.shared.activeWindowController?.model.activeSession?.state.performBindingAction("start_search")
+                    SuqiWindowManager.shared.activeWindowController?.model.isSearching.toggle()
                 }
                 .keyboardShortcut("f", modifiers: .command)
             }
 
             // MARK: - 终端操作菜单
             CommandMenu("终端") {
+                Button("随叫随到下拉终端 (Quick Terminal)") {
+                    QuickTerminalController.shared.toggle()
+                }
+                .keyboardShortcut("`", modifiers: .control)
+
+                Divider()
+
                 Button("清空屏幕") {
                     SuqiWindowManager.shared.activeWindowController?.model.clearActiveSession()
                 }

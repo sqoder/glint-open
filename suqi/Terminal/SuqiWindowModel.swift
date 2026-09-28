@@ -120,6 +120,33 @@ public enum PaneNode: Identifiable, Equatable {
             return .split(id: id, axis: axis, fraction: 0.5, first: first.equalized(), second: second.equalized())
         }
     }
+
+    /// 计算每个终端窗格在 [0, 1] x [0, 1] 归一化空间下的几何矩形，用于几何方向聚焦
+    public func computeNormalizedFrames(in rect: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1)) -> [(UUID, CGRect)] {
+        switch self {
+        case .terminal(let s):
+            return [(s.id, rect)]
+        case .split(_, let axis, let fraction, let first, let second):
+            if axis == .horizontal {
+                let w1 = rect.width * fraction
+                let r1 = CGRect(x: rect.minX, y: rect.minY, width: w1, height: rect.height)
+                let r2 = CGRect(x: rect.minX + w1, y: rect.minY, width: max(0, rect.width - w1), height: rect.height)
+                return first.computeNormalizedFrames(in: r1) + second.computeNormalizedFrames(in: r2)
+            } else {
+                let h1 = rect.height * fraction
+                let r1 = CGRect(x: rect.minX, y: rect.minY, width: rect.width, height: h1)
+                let r2 = CGRect(x: rect.minX, y: rect.minY + h1, width: rect.width, height: max(0, rect.height - h1))
+                return first.computeNormalizedFrames(in: r1) + second.computeNormalizedFrames(in: r2)
+            }
+        }
+    }
+}
+
+public enum PaneDirection {
+    case left
+    case right
+    case up
+    case down
 }
 
 // MARK: - SuqiTab (标签页)
@@ -129,6 +156,7 @@ public final class SuqiTab: ObservableObject, Identifiable {
     public let id: UUID
     @Published public var rootPane: PaneNode
     @Published public var activeSessionId: UUID
+    @Published public var isZoomed: Bool = false
     /// Monotonically increasing counter — forces SwiftUI to see pane tree mutations
     @Published public var paneVersion: Int = 0
 
@@ -164,6 +192,7 @@ public final class SuqiTab: ObservableObject, Identifiable {
             : (rootPane.allSessions.first?.id ?? activeSessionId)
         rootPane = rootPane.split(targetSessionId: targetId, axis: axis, newSession: newSession)
         activeSessionId = newSession.id
+        isZoomed = false
         paneVersion += 1
     }
 
@@ -172,6 +201,9 @@ public final class SuqiTab: ObservableObject, Identifiable {
             rootPane = newRoot
             if activeSessionId == id {
                 activeSessionId = rootPane.allSessions.first?.id ?? UUID()
+            }
+            if rootPane.allSessions.count <= 1 {
+                isZoomed = false
             }
             paneVersion += 1
             return true
@@ -185,7 +217,65 @@ public final class SuqiTab: ObservableObject, Identifiable {
 
     public func equalizeSplits() {
         rootPane = rootPane.equalized()
+        isZoomed = false
         paneVersion += 1
+    }
+
+    public func toggleZoom() {
+        if isZoomed {
+            isZoomed = false
+        } else if rootPane.allSessions.count > 1 {
+            isZoomed = true
+        }
+    }
+
+    public func focusPane(in direction: PaneDirection) {
+        if isZoomed { isZoomed = false }
+        let frames = rootPane.computeNormalizedFrames()
+        guard let current = frames.first(where: { $0.0 == activeSessionId }) else { return }
+        let curFrame = current.1
+
+        var bestTarget: UUID?
+        var bestScore: CGFloat = .greatestFiniteMagnitude
+
+        for (id, frame) in frames where id != activeSessionId {
+            let primaryGap: CGFloat
+            let perpOverlap: CGFloat
+            let centerDist: CGFloat
+
+            switch direction {
+            case .left:
+                guard frame.maxX <= curFrame.minX + 0.001 else { continue }
+                primaryGap = curFrame.minX - frame.maxX
+                perpOverlap = max(0, min(curFrame.maxY, frame.maxY) - max(curFrame.minY, frame.minY))
+                centerDist = abs(frame.midY - curFrame.midY)
+            case .right:
+                guard frame.minX >= curFrame.maxX - 0.001 else { continue }
+                primaryGap = frame.minX - curFrame.maxX
+                perpOverlap = max(0, min(curFrame.maxY, frame.maxY) - max(curFrame.minY, frame.minY))
+                centerDist = abs(frame.midY - curFrame.midY)
+            case .up:
+                guard frame.maxY <= curFrame.minY + 0.001 else { continue }
+                primaryGap = curFrame.minY - frame.maxY
+                perpOverlap = max(0, min(curFrame.maxX, frame.maxX) - max(curFrame.minX, frame.minX))
+                centerDist = abs(frame.midX - curFrame.midX)
+            case .down:
+                guard frame.minY >= curFrame.maxY - 0.001 else { continue }
+                primaryGap = frame.minY - curFrame.maxY
+                perpOverlap = max(0, min(curFrame.maxX, frame.maxX) - max(curFrame.minX, frame.minX))
+                centerDist = abs(frame.midX - curFrame.midX)
+            }
+
+            let score = primaryGap * 10 - perpOverlap * 5 + centerDist
+            if score < bestScore {
+                bestScore = score
+                bestTarget = id
+            }
+        }
+
+        if let target = bestTarget {
+            activeSessionId = target
+        }
     }
 }
 
@@ -195,6 +285,7 @@ public final class SuqiTab: ObservableObject, Identifiable {
 public final class SuqiWindowModel: ObservableObject {
     @Published public private(set) var tabs: [SuqiTab] = []
     @Published public var activeTabId: UUID?
+    @Published public var isSearching: Bool = false
 
     /// 窗口关闭回调
     public var onCloseWindowRequested: (() -> Void)?
@@ -396,5 +487,22 @@ public final class SuqiWindowModel: ObservableObject {
 
     public func equalizeSplits() {
         activeTab?.equalizeSplits()
+    }
+
+    public func toggleZoom() {
+        activeTab?.toggleZoom()
+    }
+
+    public func focusPane(in direction: PaneDirection) {
+        activeTab?.focusPane(in: direction)
+    }
+
+    public func moveTab(from sourceIndex: Int, to destinationIndex: Int) {
+        guard sourceIndex >= 0, sourceIndex < tabs.count,
+              destinationIndex >= 0, destinationIndex < tabs.count,
+              sourceIndex != destinationIndex else { return }
+        objectWillChange.send()
+        let tab = tabs.remove(at: sourceIndex)
+        tabs.insert(tab, at: destinationIndex)
     }
 }

@@ -50,6 +50,18 @@ public final class TerminalContextMenuBridge: NSObject {
         equalizeItem.target = self
         menu.addItem(equalizeItem)
 
+        // Toggle Split Zoom
+        let zoomItem = NSMenuItem(title: "Toggle Split Zoom", action: #selector(menuToggleZoom), keyEquivalent: "")
+        zoomItem.target = self
+        menu.addItem(zoomItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        // Find...
+        let findItem = NSMenuItem(title: "Find...", action: #selector(menuFind), keyEquivalent: "")
+        findItem.target = self
+        menu.addItem(findItem)
+
         menu.addItem(NSMenuItem.separator())
 
         // 6. Clear Screen
@@ -105,6 +117,16 @@ public final class TerminalContextMenuBridge: NSObject {
 
     @objc private func menuEqualizeSplits() {
         SuqiWindowManager.shared.activeWindowController?.model.equalizeSplits()
+    }
+
+    @objc private func menuToggleZoom() {
+        SuqiWindowManager.shared.activeWindowController?.model.toggleZoom()
+    }
+
+    @objc private func menuFind() {
+        if let model = SuqiWindowManager.shared.activeWindowController?.model {
+            model.isSearching = true
+        }
     }
 
     @objc private func menuClear() {

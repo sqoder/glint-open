@@ -37,5 +37,10 @@ public struct SuqiTerminalView: View {
                     isFocused = true
                 }
             }
+            .onChange(of: isFocused) { _, focused in
+                if focused && model.activeSessionId != session.id {
+                    model.activeSessionId = session.id
+                }
+            }
     }
 }
