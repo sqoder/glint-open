@@ -7,17 +7,23 @@
 
 import Foundation
 import SwiftUI
+import Combine
 import GhosttyTerminal
 import GhosttyTheme
 
 @MainActor
-public final class SiqiTerminalSession: ObservableObject, Identifiable {
+public final class SiqiTerminalSession: ObservableObject, Identifiable, Equatable {
     public let id: UUID
     public let createdAt: Date
 
     @Published public private(set) var state: TerminalViewState
     @Published public var customTitle: String?
     public var initialWorkingDirectory: String
+    private var cancellables = Set<AnyCancellable>()
+
+    public static func == (lhs: SiqiTerminalSession, rhs: SiqiTerminalSession) -> Bool {
+        lhs.id == rhs.id
+    }
 
     public init(id: UUID = UUID(), workingDirectory: String? = nil) {
         self.id = id
@@ -25,6 +31,18 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable {
         let initialDir = workingDirectory ?? NSHomeDirectory()
         self.initialWorkingDirectory = initialDir
         self.state = Self.buildTerminalViewState(workingDirectory: initialDir)
+        bindState()
+    }
+
+    private func bindState() {
+        cancellables.removeAll()
+        state.$isFocused
+            .filter { $0 }
+            .sink { [weak self] _ in
+                guard let self else { return }
+                SiqiSessionManager.shared.notifySessionFocused(id: self.id)
+            }
+            .store(in: &cancellables)
     }
 
     public var title: String {
@@ -57,6 +75,7 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable {
     public func restart() {
         let currentCwd = state.workingDirectory ?? initialWorkingDirectory
         self.state = Self.buildTerminalViewState(workingDirectory: currentCwd)
+        bindState()
     }
 
     public func send(_ text: String) {

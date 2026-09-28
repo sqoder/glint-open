@@ -21,19 +21,19 @@ public struct GhosttyTabBar: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
-                    ForEach(manager.sessions) { session in
-                        let isActive = manager.activeSessionId == session.id
-                        let isHovered = hoveredTabId == session.id
+                    ForEach(manager.tabs) { tab in
+                        let isActive = manager.activeTabId == tab.id
+                        let isHovered = hoveredTabId == tab.id
 
                         HStack(spacing: 6) {
-                            Text(session.displayDirectory.isEmpty ? session.title : session.displayDirectory)
+                            Text(tab.displayDirectory.isEmpty ? tab.title : tab.displayDirectory)
                                 .font(.system(size: 11, weight: isActive ? .medium : .regular, design: .monospaced))
                                 .foregroundStyle(isActive ? Color.white.opacity(0.92) : Color.white.opacity(0.50))
                                 .lineLimit(1)
 
                             if isHovered || isActive {
                                 Button {
-                                    manager.closeSession(id: session.id)
+                                    manager.closeTab(id: tab.id)
                                 } label: {
                                     Image(systemName: "xmark")
                                         .font(.system(size: 7.5, weight: .bold))
@@ -55,10 +55,10 @@ public struct GhosttyTabBar: View {
                         )
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            manager.selectSession(id: session.id)
+                            manager.selectTab(id: tab.id)
                         }
                         .onHover { hovering in
-                            hoveredTabId = hovering ? session.id : nil
+                            hoveredTabId = hovering ? tab.id : nil
                         }
                     }
 

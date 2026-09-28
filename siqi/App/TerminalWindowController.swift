@@ -105,7 +105,31 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
                 return nil
             }
 
-            // 6. 处理 ⌘W (关闭标签页)
+            // 5.1 处理 ⌘D (垂直分屏新建 Split Right)
+            if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "d" {
+                SiqiSessionManager.shared.splitRight()
+                return nil
+            }
+
+            // 5.2 处理 ⌘Shift+D (水平分屏新建 Split Down)
+            if flags == [.command, .shift] && event.charactersIgnoringModifiers?.lowercased() == "d" {
+                SiqiSessionManager.shared.splitDown()
+                return nil
+            }
+
+            // 5.3 处理 ⌘Option+Left / ⌘Option+Right (分屏切换)
+            if flags == [.command, .option] {
+                if event.specialKey == .leftArrow || event.specialKey == .upArrow {
+                    SiqiSessionManager.shared.previousPane()
+                    return nil
+                }
+                if event.specialKey == .rightArrow || event.specialKey == .downArrow {
+                    SiqiSessionManager.shared.nextPane()
+                    return nil
+                }
+            }
+
+            // 6. 处理 ⌘W (关闭当前分屏或标签页)
             if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "w" {
                 SiqiSessionManager.shared.closeActiveSession()
                 return nil

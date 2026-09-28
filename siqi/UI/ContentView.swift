@@ -64,7 +64,7 @@ public struct ContentView: View {
 
             VStack(spacing: 0) {
                 // 仅当多标签页时显示极简无边框标签；单标签时无任何多余元素，仅留出红绿灯呼吸间距
-                if manager.sessions.count > 1 {
+                if manager.tabs.count > 1 {
                     GhosttyTabBar()
                         .frame(height: 28)
                 } else {
@@ -72,10 +72,10 @@ public struct ContentView: View {
                         .frame(height: 28)
                 }
 
-                // 终端渲染工作区（全幅贴合，与底色 100% 一体化融合）
-                if let active = manager.activeSession {
-                    SiqiTerminalView(session: active)
-                        .id(active.id)
+                // 终端渲染工作区（全幅贴合，支持多标签与多分屏分格）
+                if let activeTab = manager.activeTab {
+                    ActiveTabView(tab: activeTab)
+                        .id(activeTab.id)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     Color.clear
@@ -84,5 +84,58 @@ public struct ContentView: View {
         }
         .frame(minWidth: 480, minHeight: 280)
         .ignoresSafeArea()
+    }
+}
+
+public struct ActiveTabView: View {
+    @ObservedObject var tab: SiqiTab
+
+    public init(tab: SiqiTab) {
+        self.tab = tab
+    }
+
+    public var body: some View {
+        PaneContainerView(node: tab.rootPane)
+    }
+}
+
+public struct PaneContainerView: View {
+    let node: PaneNode
+    @ObservedObject private var manager = SiqiSessionManager.shared
+
+    public init(node: PaneNode) {
+        self.node = node
+    }
+
+    public var body: some View {
+        switch node {
+        case .terminal(let session):
+            SiqiTerminalView(session: session)
+                .id(session.id)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    manager.selectSession(id: session.id)
+                }
+
+        case .split(_, let axis, let first, let second):
+            if axis == .horizontal {
+                HStack(spacing: 0) {
+                    PaneContainerView(node: first)
+                    Rectangle()
+                        .fill(Color.white.opacity(0.12))
+                        .frame(width: 1)
+                    PaneContainerView(node: second)
+                }
+            } else {
+                VStack(spacing: 0) {
+                    PaneContainerView(node: first)
+                    Rectangle()
+                        .fill(Color.white.opacity(0.12))
+                        .frame(height: 1)
+                    PaneContainerView(node: second)
+                }
+            }
+        }
     }
 }

@@ -11,6 +11,7 @@ import GhosttyTerminal
 
 public struct SiqiTerminalView: View {
     @ObservedObject var session: SiqiTerminalSession
+    @ObservedObject private var manager = SiqiSessionManager.shared
     @FocusState private var isFocused: Bool
 
     public init(session: SiqiTerminalSession) {
@@ -24,7 +25,14 @@ public struct SiqiTerminalView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .transaction { $0.animation = nil }
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                if manager.activeSessionId == session.id {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        isFocused = true
+                    }
+                }
+            }
+            .onChange(of: manager.activeSessionId) { _, newId in
+                if newId == session.id {
                     isFocused = true
                 }
             }

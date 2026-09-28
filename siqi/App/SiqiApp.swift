@@ -31,7 +31,19 @@ struct SiqiApp: App {
 
                 Divider()
 
-                Button("关闭标签页") {
+                Button("垂直分屏新建 (Split Right)") {
+                    SiqiSessionManager.shared.splitRight()
+                }
+                .keyboardShortcut("d", modifiers: .command)
+
+                Button("水平分屏新建 (Split Down)") {
+                    SiqiSessionManager.shared.splitDown()
+                }
+                .keyboardShortcut("d", modifiers: [.command, .shift])
+
+                Divider()
+
+                Button("关闭当前分屏/标签页") {
                     SiqiSessionManager.shared.closeActiveSession()
                 }
                 .keyboardShortcut("w", modifiers: .command)
