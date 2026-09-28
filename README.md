@@ -1,34 +1,43 @@
-# siqi 桌面终端
+# suqi 桌面终端
 
-> 基于 Ghostty Metal GPU 硬件加速渲染内核与现代 macOS 液态毛玻璃美学的极速、轻量桌面终端。
+> 以 Ghostty 为体验基石、视觉极致干净纯粹，彻底解决 Ghostty 痛点——直接用 ⌘V (Cmd+V) 一键粘贴图片到 AI 命令行（Codex / agy / Claude Code）的独立 macOS 桌面终端。
 
 ---
 
-## 🌟 核心特性
+## 🌟 核心特性与设计哲学
 
-- ⚡️ **Metal GPU 极速渲染**：内嵌 `libghostty-spm`（GhosttyTerminal 引擎），带来 120 FPS 丝滑刷新率与极低输入延迟。
-- 🧊 **深色微透毛玻璃质感**：原生 `NSVisualEffectView` 配合沉浸式标题栏与窗口微光轮廓，支持自由调节背景浓度。
-- 🗂 **多标签页 (Tabs) 支持**：随时通过 `⌘T` 新建标签、`⌘W` 关闭标签、`⇧⌘[` 与 `⇧⌘]` 快速切换会话。
-- ⌨️ **系统级原生中文/CJK 输入法完美适配**：针对 Ghostty 原生 IME window level 进行修复，彻底杜绝候选词弹窗被遮挡问题。
-- 🎨 **开箱即用丰富配色**：内置 Tokyo Night、Catppuccin、Dracula、Nord、One Dark 等经典主题，并支持字号即时缩放。
-- 🧱 **极简易扩展**：代码结构清晰紧凑，易于在此基础上逐步叠加专属功能（如 Quake 下拉刘海模式、AI 辅助行、分屏、会话持久化等）。
+- ⚡️ **Ghostty Metal GPU 硬件加速基石**：内嵌 `libghostty-spm`（GhosttyTerminal 渲染内核），120 FPS 极速刷新率与亚毫秒级输入响应，全功能终端协议支持。
+- 🖼 **彻底解决 Ghostty 图片粘贴痛点**：原生 Ghostty 在按下 `⌘V` 时仅读取文本，图片直接静默失效；**suqi** 深度桥接 macOS 系统剪贴板与现代 AI 终端工具协议，按下 `⌘V` 时自动识别系统截图、剪贴板图像或 Finder 图片文件，无缝转化为 `Control+V` 事件发送到 PTY。在 **Codex**、**agy (Google Antigravity CLI)**、**Claude Code** 中一键附带多模态图片！
+- 🪟 **极致干净纯粹的视觉美学**：
+  - 彻底消灭普通终端的割裂感与多余边框、横线与状态栏。
+  - 原生全幅 `NSVisualEffectView` 深度毛玻璃背景，完美适配浅色/深色系统与 Ghostty 主题底色。
+  - 单标签页时隐去所有冗余 UI，保留经典的红绿灯呼吸间距；多标签页时展示极简无边框 Tab。
+- 🗂 **灵活的多标签与分屏 (Tabs & Splits)**：
+  - `⌘T` 新建标签页，`⌘W` 智能关闭当前分屏或标签页。
+  - `⌘D` 垂直分屏 (Split Right，左右分屏)，`⇧⌘D` 水平分屏 (Split Down，上下分屏)。
+  - `⌥⌘←` / `⌥⌘→` 快速在分屏终端间切换焦点。
+- ⚙️ **无缝兼容 Ghostty 生态配置**：开箱即读 `~/.config/suqi/config` 或用户的 `~/.config/ghostty/config`，无缝继承你的常用主题、字体、行高与光标配置。
+- ⌨️ **系统级原生中文/CJK 输入法完美适配**：针对 Ghostty 原生 IME window level 进行底层修复，彻底杜绝输入法候选词浮窗被终端窗口遮挡问题。
 
 ---
 
 ## ⌨️ 常用快捷键
 
-| 快捷键 | 功能 |
-|---|---|
-| `⌘ T` | 新建终端标签页 |
-| `⌘ W` | 关闭当前标签页 |
-| `⌘ N` | 呼出/激活终端窗口 |
-| `⌘ K` | 清屏 (`clear`) |
-| `⌘ R` | 重启当前终端会话 |
-| `⇧ ⌘ [` | 切换到上一个标签页 |
-| `⇧ ⌘ ]` | 切换到下一个标签页 |
-| `⌘ +` | 放大终端字体 |
-| `⌘ -` | 缩小终端字体 |
-| `⌘ 0` | 恢复默认字体大小 |
+| 快捷键 | 功能 | 说明 |
+|---|---|---|
+| `⌘ V` | **智能粘贴（图片/文本）** | 剪贴板有图片时直达 AI 命令行 (Codex / agy / Claude Code) |
+| `⌘ C` | 复制选中内容 | 快速复制终端选中文本 |
+| `⌘ A` | 全选屏幕内容 | 快捷全选 |
+| `⌘ D` | 垂直分屏 (Split Right) | 左右分屏同时对照 |
+| `⇧ ⌘ D` | 水平分屏 (Split Down) | 上下分屏同时查看 |
+| `⌥ ⌘ ←` / `⌥ ⌘ →` | 切换分屏窗格 | 焦点快速轮转 |
+| `⌘ T` | 新建终端标签页 | 快速开辟新上下文 |
+| `⌘ W` | 关闭分屏/标签页 | 优先关闭当前窗格，全关后关闭标签 |
+| `⌘ 1` ~ `⌘ 9` | 快速直达指定标签 | 精确 Tab 切换 |
+| `⇧ ⌘ [` / `⇧ ⌘ ]` | 切换上一个/下一个标签 | 顺滑循环切页 |
+| `⌘ K` | 清屏 (`clear`) | 快速恢复清爽界面 |
+| `⌘ +` / `⌘ -` / `⌘ 0` | 字号放大 / 缩小 / 恢复 | 实时无损缩放渲染 |
+| `⇧ ⌘ ,` | 热重载配置 | 重新加载 Ghostty / suqi 配置文件 |
 
 ---
 
@@ -37,11 +46,11 @@
 工程使用 [XcodeGen](https://github.com/yonaskolb/XcodeGen) 规范化管理：
 
 ```bash
-# 1. 生成 siqi.xcodeproj
+# 1. 生成 suqi.xcodeproj
 xcodegen generate
 
 # 2. 编译调试
-xcodebuild -project siqi.xcodeproj -scheme siqi -configuration Debug build
+xcodebuild -project suqi.xcodeproj -scheme suqi -configuration Debug build
 ```
 
-也可以直接在 Xcode 中双击打开 `siqi.xcodeproj` 进行运行与调试。
+或者直接双击打开 `suqi.xcodeproj` 在 Xcode 中运行与调试。

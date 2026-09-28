@@ -1,8 +1,8 @@
 //
 //  ContentView.swift
-//  siqi
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import SwiftUI
@@ -32,8 +32,8 @@ public struct VisualEffectBackground: NSViewRepresentable {
 }
 
 public struct ContentView: View {
-    @ObservedObject private var manager = SiqiSessionManager.shared
-    @ObservedObject private var settings = SiqiSettings.shared
+    @ObservedObject private var manager = SuqiSessionManager.shared
+    @ObservedObject private var settings = SuqiSettings.shared
 
     public init() {}
 
@@ -46,7 +46,7 @@ public struct ContentView: View {
     }
 
     private var themeBg: Color {
-        SiqiTheme.backgroundColor(for: userConfig.themeName)
+        SuqiTheme.backgroundColor(for: userConfig.themeName)
     }
 
     public var body: some View {
@@ -88,9 +88,9 @@ public struct ContentView: View {
 }
 
 public struct ActiveTabView: View {
-    @ObservedObject var tab: SiqiTab
+    @ObservedObject var tab: SuqiTab
 
-    public init(tab: SiqiTab) {
+    public init(tab: SuqiTab) {
         self.tab = tab
     }
 
@@ -101,7 +101,7 @@ public struct ActiveTabView: View {
 
 public struct PaneContainerView: View {
     let node: PaneNode
-    @ObservedObject private var manager = SiqiSessionManager.shared
+    @ObservedObject private var manager = SuqiSessionManager.shared
 
     public init(node: PaneNode) {
         self.node = node
@@ -110,7 +110,7 @@ public struct PaneContainerView: View {
     public var body: some View {
         switch node {
         case .terminal(let session):
-            SiqiTerminalView(session: session)
+            SuqiTerminalView(session: session)
                 .id(session.id)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .contentShape(Rectangle())

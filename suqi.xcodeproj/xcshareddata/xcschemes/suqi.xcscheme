@@ -15,10 +15,10 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "65C1B6A56CF0B988E6447E58"
-               BuildableName = "siqi.app"
-               BlueprintName = "siqi"
-               ReferencedContainer = "container:siqi.xcodeproj">
+               BlueprintIdentifier = "2129874DE3FA9B67266DE63C"
+               BuildableName = "suqi.app"
+               BlueprintName = "suqi"
+               ReferencedContainer = "container:suqi.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -32,10 +32,10 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "65C1B6A56CF0B988E6447E58"
-            BuildableName = "siqi.app"
-            BlueprintName = "siqi"
-            ReferencedContainer = "container:siqi.xcodeproj">
+            BlueprintIdentifier = "2129874DE3FA9B67266DE63C"
+            BuildableName = "suqi.app"
+            BlueprintName = "suqi"
+            ReferencedContainer = "container:suqi.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -55,10 +55,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "65C1B6A56CF0B988E6447E58"
-            BuildableName = "siqi.app"
-            BlueprintName = "siqi"
-            ReferencedContainer = "container:siqi.xcodeproj">
+            BlueprintIdentifier = "2129874DE3FA9B67266DE63C"
+            BuildableName = "suqi.app"
+            BlueprintName = "suqi"
+            ReferencedContainer = "container:suqi.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <CommandLineArguments>
@@ -74,10 +74,10 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "65C1B6A56CF0B988E6447E58"
-            BuildableName = "siqi.app"
-            BlueprintName = "siqi"
-            ReferencedContainer = "container:siqi.xcodeproj">
+            BlueprintIdentifier = "2129874DE3FA9B67266DE63C"
+            BuildableName = "suqi.app"
+            BlueprintName = "suqi"
+            ReferencedContainer = "container:suqi.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

@@ -1,8 +1,8 @@
 //
 //  AppTerminalView+Paste.swift
-//  siqi
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import AppKit

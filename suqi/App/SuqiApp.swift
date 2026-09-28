@@ -1,15 +1,15 @@
 //
-//  SiqiApp.swift
-//  siqi
+//  SuqiApp.swift
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import SwiftUI
 import AppKit
 
 @main
-struct SiqiApp: App {
+struct SuqiApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     var body: some Scene {
@@ -20,7 +20,7 @@ struct SiqiApp: App {
             // MARK: - 文件菜单
             CommandGroup(replacing: .newItem) {
                 Button("新建标签页") {
-                    SiqiSessionManager.shared.createNewSession()
+                    SuqiSessionManager.shared.createNewSession()
                 }
                 .keyboardShortcut("t", modifiers: .command)
 
@@ -32,19 +32,19 @@ struct SiqiApp: App {
                 Divider()
 
                 Button("垂直分屏新建 (Split Right)") {
-                    SiqiSessionManager.shared.splitRight()
+                    SuqiSessionManager.shared.splitRight()
                 }
                 .keyboardShortcut("d", modifiers: .command)
 
                 Button("水平分屏新建 (Split Down)") {
-                    SiqiSessionManager.shared.splitDown()
+                    SuqiSessionManager.shared.splitDown()
                 }
                 .keyboardShortcut("d", modifiers: [.command, .shift])
 
                 Divider()
 
                 Button("关闭当前分屏/标签页") {
-                    SiqiSessionManager.shared.closeActiveSession()
+                    SuqiSessionManager.shared.closeActiveSession()
                 }
                 .keyboardShortcut("w", modifiers: .command)
             }
@@ -58,7 +58,7 @@ struct SiqiApp: App {
 
                 Button("复制") {
                     if !NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil) {
-                        if let active = SiqiSessionManager.shared.activeSession {
+                        if let active = SuqiSessionManager.shared.activeSession {
                             _ = active.state.performBindingAction("copy_to_clipboard")
                         }
                     }
@@ -74,7 +74,7 @@ struct SiqiApp: App {
 
                 Button("全选") {
                     if !NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil) {
-                        if let active = SiqiSessionManager.shared.activeSession {
+                        if let active = SuqiSessionManager.shared.activeSession {
                             _ = active.state.performBindingAction("select_all")
                         }
                     }
@@ -84,7 +84,7 @@ struct SiqiApp: App {
                 Divider()
 
                 Button("查找...") {
-                    if let active = SiqiSessionManager.shared.activeSession {
+                    if let active = SuqiSessionManager.shared.activeSession {
                         _ = active.state.performBindingAction("start_search")
                     }
                 }
@@ -94,17 +94,17 @@ struct SiqiApp: App {
             // MARK: - 终端操作菜单
             CommandMenu("终端") {
                 Button("清空屏幕") {
-                    SiqiSessionManager.shared.clearActiveSession()
+                    SuqiSessionManager.shared.clearActiveSession()
                 }
                 .keyboardShortcut("k", modifiers: .command)
 
                 Button("重启当前会话") {
-                    SiqiSessionManager.shared.restartActiveSession()
+                    SuqiSessionManager.shared.restartActiveSession()
                 }
                 .keyboardShortcut("r", modifiers: .command)
 
                 Button("重新加载 Ghostty 配置") {
-                    SiqiSessionManager.shared.reloadAllSessions()
+                    SuqiSessionManager.shared.reloadAllSessions()
                     TerminalWindowController.shared.updateThemeBackground()
                 }
                 .keyboardShortcut(",", modifiers: [.command, .shift])
@@ -112,12 +112,12 @@ struct SiqiApp: App {
                 Divider()
 
                 Button("上一个标签页") {
-                    SiqiSessionManager.shared.previousTab()
+                    SuqiSessionManager.shared.previousTab()
                 }
                 .keyboardShortcut("[", modifiers: [.command, .shift])
 
                 Button("下一个标签页") {
-                    SiqiSessionManager.shared.nextTab()
+                    SuqiSessionManager.shared.nextTab()
                 }
                 .keyboardShortcut("]", modifiers: [.command, .shift])
 
@@ -126,7 +126,7 @@ struct SiqiApp: App {
                 // Ghostty 快捷键：⌘1 到 ⌘9 快速切 Tab
                 ForEach(1...9, id: \.self) { index in
                     Button("跳转到标签页 \(index)") {
-                        SiqiSessionManager.shared.selectTab(at: index - 1)
+                        SuqiSessionManager.shared.selectTab(at: index - 1)
                     }
                     .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(0x30 + index)!)), modifiers: .command)
                 }
@@ -135,29 +135,29 @@ struct SiqiApp: App {
             // MARK: - 视图与字号缩放
             CommandMenu("视图") {
                 Button("放大字号") {
-                    SiqiSettings.shared.increaseFontSize()
-                    SiqiSessionManager.shared.restartActiveSession()
+                    SuqiSettings.shared.increaseFontSize()
+                    SuqiSessionManager.shared.restartActiveSession()
                 }
                 .keyboardShortcut("+", modifiers: .command)
 
                 Button("缩小字号") {
-                    SiqiSettings.shared.decreaseFontSize()
-                    SiqiSessionManager.shared.restartActiveSession()
+                    SuqiSettings.shared.decreaseFontSize()
+                    SuqiSessionManager.shared.restartActiveSession()
                 }
                 .keyboardShortcut("-", modifiers: .command)
 
                 Button("恢复默认字号") {
-                    SiqiSettings.shared.resetFontSize()
-                    SiqiSessionManager.shared.restartActiveSession()
+                    SuqiSettings.shared.resetFontSize()
+                    SuqiSessionManager.shared.restartActiveSession()
                 }
                 .keyboardShortcut("0", modifiers: .command)
 
                 Divider()
 
-                Button("打开 Ghostty 配置文件") {
+                Button("打开 Ghostty / suqi 配置文件") {
                     let ghosttyPath = NSString(string: "~/.config/ghostty/config").expandingTildeInPath
-                    let siqiPath = NSString(string: "~/.config/siqi/config").expandingTildeInPath
-                    let target = FileManager.default.fileExists(atPath: siqiPath) ? siqiPath : ghosttyPath
+                    let suqiPath = NSString(string: "~/.config/suqi/config").expandingTildeInPath
+                    let target = FileManager.default.fileExists(atPath: suqiPath) ? suqiPath : ghosttyPath
                     NSWorkspace.shared.open(URL(fileURLWithPath: target))
                 }
                 .keyboardShortcut(",", modifiers: .command)

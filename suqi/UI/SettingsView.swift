@@ -1,15 +1,15 @@
 //
 //  SettingsView.swift
-//  siqi
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import SwiftUI
 
 public struct SettingsView: View {
-    @ObservedObject private var settings = SiqiSettings.shared
-    @ObservedObject private var sessionManager = SiqiSessionManager.shared
+    @ObservedObject private var settings = SuqiSettings.shared
+    @ObservedObject private var sessionManager = SuqiSessionManager.shared
 
     public init() {}
 
@@ -17,7 +17,7 @@ public struct SettingsView: View {
         Form {
             Section("外观与配色") {
                 Picker("主题配色", selection: $settings.themeName) {
-                    ForEach(SiqiSettings.availableThemes, id: \.self) { name in
+                    ForEach(SuqiSettings.availableThemes, id: \.self) { name in
                         Text(name).tag(name)
                     }
                 }
@@ -40,7 +40,7 @@ public struct SettingsView: View {
 
             Section("字体与排版") {
                 Picker("等宽字体", selection: $settings.fontFamily) {
-                    ForEach(SiqiSettings.availableFonts, id: \.self) { font in
+                    ForEach(SuqiSettings.availableFonts, id: \.self) { font in
                         Text(font).tag(font)
                     }
                 }

@@ -1,8 +1,8 @@
 //
-//  SiqiSessionManager.swift
-//  siqi
+//  SuqiSessionManager.swift
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import SwiftUI
@@ -11,7 +11,7 @@ import Combine
 // MARK: - PaneNode (分屏树节点)
 
 public enum PaneNode: Identifiable, Equatable {
-    case terminal(SiqiTerminalSession)
+    case terminal(SuqiTerminalSession)
     indirect case split(id: UUID, axis: Axis, first: PaneNode, second: PaneNode)
 
     public var id: UUID {
@@ -27,7 +27,7 @@ public enum PaneNode: Identifiable, Equatable {
         lhs.id == rhs.id
     }
 
-    public var allSessions: [SiqiTerminalSession] {
+    public var allSessions: [SuqiTerminalSession] {
         switch self {
         case .terminal(let session):
             return [session]
@@ -36,7 +36,7 @@ public enum PaneNode: Identifiable, Equatable {
         }
     }
 
-    public func findSession(id: UUID) -> SiqiTerminalSession? {
+    public func findSession(id: UUID) -> SuqiTerminalSession? {
         switch self {
         case .terminal(let s):
             return s.id == id ? s : nil
@@ -45,7 +45,7 @@ public enum PaneNode: Identifiable, Equatable {
         }
     }
 
-    public func split(targetSessionId: UUID, axis: Axis, newSession: SiqiTerminalSession) -> PaneNode {
+    public func split(targetSessionId: UUID, axis: Axis, newSession: SuqiTerminalSession) -> PaneNode {
         switch self {
         case .terminal(let s):
             if s.id == targetSessionId {
@@ -82,15 +82,15 @@ public enum PaneNode: Identifiable, Equatable {
     }
 }
 
-// MARK: - SiqiTab (标签页)
+// MARK: - SuqiTab (标签页)
 
 @MainActor
-public final class SiqiTab: ObservableObject, Identifiable {
+public final class SuqiTab: ObservableObject, Identifiable {
     public let id: UUID
     @Published public var rootPane: PaneNode
     @Published public var activeSessionId: UUID
 
-    public init(session: SiqiTerminalSession) {
+    public init(session: SuqiTerminalSession) {
         self.id = UUID()
         self.rootPane = .terminal(session)
         self.activeSessionId = session.id
@@ -104,15 +104,15 @@ public final class SiqiTab: ObservableObject, Identifiable {
         activeSession?.displayDirectory ?? "~"
     }
 
-    public var activeSession: SiqiTerminalSession? {
+    public var activeSession: SuqiTerminalSession? {
         rootPane.findSession(id: activeSessionId) ?? rootPane.allSessions.first
     }
 
-    public var allSessions: [SiqiTerminalSession] {
+    public var allSessions: [SuqiTerminalSession] {
         rootPane.allSessions
     }
 
-    public func splitActive(axis: Axis, newSession: SiqiTerminalSession) {
+    public func splitActive(axis: Axis, newSession: SuqiTerminalSession) {
         rootPane = rootPane.split(targetSessionId: activeSessionId, axis: axis, newSession: newSession)
         activeSessionId = newSession.id
     }
@@ -129,17 +129,17 @@ public final class SiqiTab: ObservableObject, Identifiable {
     }
 }
 
-// MARK: - SiqiSessionManager (多标签与分屏管理器)
+// MARK: - SuqiSessionManager (多标签与分屏管理器)
 
 @MainActor
-public final class SiqiSessionManager: ObservableObject {
-    public static let shared = SiqiSessionManager()
+public final class SuqiSessionManager: ObservableObject {
+    public static let shared = SuqiSessionManager()
 
-    @Published public private(set) var tabs: [SiqiTab] = []
+    @Published public private(set) var tabs: [SuqiTab] = []
     @Published public var activeTabId: UUID?
 
     /// 兼容旧接口：返回所有活跃标签与分屏的会话集合
-    public var sessions: [SiqiTerminalSession] {
+    public var sessions: [SuqiTerminalSession] {
         tabs.flatMap { $0.allSessions }
     }
 
@@ -152,12 +152,12 @@ public final class SiqiSessionManager: ObservableObject {
         }
     }
 
-    public var activeTab: SiqiTab? {
+    public var activeTab: SuqiTab? {
         guard let activeTabId else { return tabs.first }
         return tabs.first { $0.id == activeTabId } ?? tabs.first
     }
 
-    public var activeSession: SiqiTerminalSession? {
+    public var activeSession: SuqiTerminalSession? {
         activeTab?.activeSession
     }
 
@@ -167,18 +167,18 @@ public final class SiqiSessionManager: ObservableObject {
     }
 
     private init() {
-        let defaultSession = SiqiTerminalSession()
-        let defaultTab = SiqiTab(session: defaultSession)
+        let defaultSession = SuqiTerminalSession()
+        let defaultTab = SuqiTab(session: defaultSession)
         self.tabs = [defaultTab]
         self.activeTabId = defaultTab.id
     }
 
     // ⌘T: 新建标签页
     @discardableResult
-    public func createNewSession(workingDirectory: String? = nil) -> SiqiTerminalSession {
+    public func createNewSession(workingDirectory: String? = nil) -> SuqiTerminalSession {
         let initialDir = workingDirectory ?? activeSession?.fullDirectory ?? NSHomeDirectory()
-        let session = SiqiTerminalSession(workingDirectory: initialDir)
-        let tab = SiqiTab(session: session)
+        let session = SuqiTerminalSession(workingDirectory: initialDir)
+        let tab = SuqiTab(session: session)
         tabs.append(tab)
         activeTabId = tab.id
         return session
@@ -186,26 +186,26 @@ public final class SiqiSessionManager: ObservableObject {
 
     // ⌘D: 垂直分屏新建 (Split Right，左右分屏)
     @discardableResult
-    public func splitRight(workingDirectory: String? = nil) -> SiqiTerminalSession {
+    public func splitRight(workingDirectory: String? = nil) -> SuqiTerminalSession {
         splitActivePane(axis: .horizontal, workingDirectory: workingDirectory)
     }
 
     // ⌘Shift+D: 水平分屏新建 (Split Down，上下分屏)
     @discardableResult
-    public func splitDown(workingDirectory: String? = nil) -> SiqiTerminalSession {
+    public func splitDown(workingDirectory: String? = nil) -> SuqiTerminalSession {
         splitActivePane(axis: .vertical, workingDirectory: workingDirectory)
     }
 
     @discardableResult
-    public func splitActivePane(axis: Axis, workingDirectory: String? = nil) -> SiqiTerminalSession {
+    public func splitActivePane(axis: Axis, workingDirectory: String? = nil) -> SuqiTerminalSession {
         objectWillChange.send()
         let initialDir = workingDirectory ?? activeSession?.fullDirectory ?? NSHomeDirectory()
-        let session = SiqiTerminalSession(workingDirectory: initialDir)
+        let session = SuqiTerminalSession(workingDirectory: initialDir)
         if let currentTab = activeTab {
             currentTab.objectWillChange.send()
             currentTab.splitActive(axis: axis, newSession: session)
         } else {
-            let tab = SiqiTab(session: session)
+            let tab = SuqiTab(session: session)
             tabs.append(tab)
             activeTabId = tab.id
         }

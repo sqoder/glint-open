@@ -1,20 +1,20 @@
 //
-//  SiqiTerminalView.swift
-//  siqi
+//  SuqiTerminalView.swift
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import SwiftUI
 import AppKit
 import GhosttyTerminal
 
-public struct SiqiTerminalView: View {
-    @ObservedObject var session: SiqiTerminalSession
-    @ObservedObject private var manager = SiqiSessionManager.shared
+public struct SuqiTerminalView: View {
+    @ObservedObject var session: SuqiTerminalSession
+    @ObservedObject private var manager = SuqiSessionManager.shared
     @FocusState private var isFocused: Bool
 
-    public init(session: SiqiTerminalSession) {
+    public init(session: SuqiTerminalSession) {
         self.session = session
     }
 

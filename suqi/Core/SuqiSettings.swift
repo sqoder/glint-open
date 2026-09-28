@@ -1,16 +1,16 @@
 //
-//  SiqiSettings.swift
-//  siqi
+//  SuqiSettings.swift
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import SwiftUI
 import Combine
 
 @MainActor
-public final class SiqiSettings: ObservableObject {
-    public static let shared = SiqiSettings()
+public final class SuqiSettings: ObservableObject {
+    public static let shared = SuqiSettings()
 
     public static let availableThemes: [String] = [
         "TokyoNight",
@@ -32,27 +32,27 @@ public final class SiqiSettings: ObservableObject {
         "Courier New"
     ]
 
-    @AppStorage("siqi.themeName") public var themeName: String = "TokyoNight" {
+    @AppStorage("suqi.themeName") public var themeName: String = "TokyoNight" {
         didSet { objectWillChange.send() }
     }
 
-    @AppStorage("siqi.fontSize") public var fontSize: Double = 13.5 {
+    @AppStorage("suqi.fontSize") public var fontSize: Double = 13.5 {
         didSet { objectWillChange.send() }
     }
 
-    @AppStorage("siqi.fontFamily") public var fontFamily: String = "SF Mono" {
+    @AppStorage("suqi.fontFamily") public var fontFamily: String = "SF Mono" {
         didSet { objectWillChange.send() }
     }
 
-    @AppStorage("siqi.backgroundOpacity") public var backgroundOpacity: Double = 1.0 {
+    @AppStorage("suqi.backgroundOpacity") public var backgroundOpacity: Double = 1.0 {
         didSet { objectWillChange.send() }
     }
 
-    @AppStorage("siqi.cursorStyle") public var cursorStyle: String = "bar" {
+    @AppStorage("suqi.cursorStyle") public var cursorStyle: String = "bar" {
         didSet { objectWillChange.send() }
     }
 
-    @AppStorage("siqi.cursorBlink") public var cursorBlink: Bool = true {
+    @AppStorage("suqi.cursorBlink") public var cursorBlink: Bool = true {
         didSet { objectWillChange.send() }
     }
 

@@ -1,8 +1,8 @@
 //
 //  GhosttyConfigLoader.swift
-//  siqi
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import Foundation
@@ -27,11 +27,11 @@ public struct GhosttyUserConfig: Sendable {
 
     public static func load() -> (config: GhosttyUserConfig, filePath: String?) {
         let ghosttyPath = NSString(string: "~/.config/ghostty/config").expandingTildeInPath
-        let siqiPath = NSString(string: "~/.config/siqi/config").expandingTildeInPath
+        let suqiPath = NSString(string: "~/.config/suqi/config").expandingTildeInPath
 
         let targetPath: String? = {
-            if FileManager.default.fileExists(atPath: siqiPath) {
-                return siqiPath
+            if FileManager.default.fileExists(atPath: suqiPath) {
+                return suqiPath
             } else if FileManager.default.fileExists(atPath: ghosttyPath) {
                 return ghosttyPath
             }

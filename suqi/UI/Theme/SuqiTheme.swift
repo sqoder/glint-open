@@ -1,15 +1,15 @@
 //
-//  SiqiTheme.swift
-//  siqi
+//  SuqiTheme.swift
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import SwiftUI
 import AppKit
 import GhosttyTheme
 
-public enum SiqiTheme {
+public enum SuqiTheme {
     public static func backgroundColor(for themeName: String) -> Color {
         if let theme = GhosttyThemeCatalog.theme(named: themeName) {
             return Color(hex: theme.background)

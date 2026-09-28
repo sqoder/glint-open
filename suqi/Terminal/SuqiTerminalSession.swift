@@ -1,8 +1,8 @@
 //
-//  SiqiTerminalSession.swift
-//  siqi
+//  SuqiTerminalSession.swift
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import Foundation
@@ -12,7 +12,7 @@ import GhosttyTerminal
 import GhosttyTheme
 
 @MainActor
-public final class SiqiTerminalSession: ObservableObject, Identifiable, Equatable {
+public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatable {
     public let id: UUID
     public let createdAt: Date
 
@@ -21,7 +21,7 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable, Equatabl
     public var initialWorkingDirectory: String
     private var cancellables = Set<AnyCancellable>()
 
-    public static func == (lhs: SiqiTerminalSession, rhs: SiqiTerminalSession) -> Bool {
+    public static func == (lhs: SuqiTerminalSession, rhs: SuqiTerminalSession) -> Bool {
         lhs.id == rhs.id
     }
 
@@ -40,7 +40,7 @@ public final class SiqiTerminalSession: ObservableObject, Identifiable, Equatabl
             .filter { $0 }
             .sink { [weak self] _ in
                 guard let self else { return }
-                SiqiSessionManager.shared.notifySessionFocused(id: self.id)
+                SuqiSessionManager.shared.notifySessionFocused(id: self.id)
             }
             .store(in: &cancellables)
     }

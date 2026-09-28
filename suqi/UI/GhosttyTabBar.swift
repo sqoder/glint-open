@@ -1,14 +1,14 @@
 //
 //  GhosttyTabBar.swift
-//  siqi
+//  suqi
 //
-//  Created for siqi Terminal.
+//  Created for suqi Terminal.
 //
 
 import SwiftUI
 
 public struct GhosttyTabBar: View {
-    @ObservedObject private var manager = SiqiSessionManager.shared
+    @ObservedObject private var manager = SuqiSessionManager.shared
     @State private var hoveredTabId: UUID?
 
     public init() {}
