@@ -36,6 +36,43 @@ struct SiqiApp: App {
                 .keyboardShortcut("w", modifiers: .command)
             }
 
+            // MARK: - 编辑菜单 (支持 ⌘C / ⌘V / ⌘A / ⌘X)
+            CommandMenu("编辑") {
+                Button("剪切") {
+                    NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+                }
+                .keyboardShortcut("x", modifiers: .command)
+
+                Button("复制") {
+                    if !NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil) {
+                        if let active = SiqiSessionManager.shared.activeSession {
+                            _ = active.state.performBindingAction("copy_to_clipboard")
+                        }
+                    }
+                }
+                .keyboardShortcut("c", modifiers: .command)
+
+                Button("粘贴") {
+                    if !NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil) {
+                        if let active = SiqiSessionManager.shared.activeSession {
+                            _ = active.state.performBindingAction("paste_from_clipboard")
+                        }
+                    }
+                }
+                .keyboardShortcut("v", modifiers: .command)
+
+                Divider()
+
+                Button("全选") {
+                    if !NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil) {
+                        if let active = SiqiSessionManager.shared.activeSession {
+                            _ = active.state.performBindingAction("select_all")
+                        }
+                    }
+                }
+                .keyboardShortcut("a", modifiers: .command)
+            }
+
             // MARK: - 终端操作菜单
             CommandMenu("终端") {
                 Button("清空屏幕") {
