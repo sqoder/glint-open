@@ -26,7 +26,7 @@ public final class QuickTerminalController: ObservableObject {
     }
 
     private func setupLocalShortcut() {
-        // 1. 本地键盘监听：在 suqi 处于活跃状态时响应 ⌃`，以及在 Quick Terminal 处于焦点时响应 Esc 关闭
+        // 1. 本地键盘监听：在 suqi 处于活跃状态时响应 ⌃`，以及在 Quick Terminal 处于焦点时分发所有快捷键 (⌘V / ⌘D / ⌘W 等)
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
@@ -34,11 +34,19 @@ public final class QuickTerminalController: ObservableObject {
                 self.toggle()
                 return nil
             }
-            if self.isVisible, let panel = self.panel, (panel.isKeyWindow || event.window === panel) {
-                if event.keyCode == 53 && self.model?.isSearching != true {
+            if self.isVisible, let panel = self.panel, let model = self.model, (panel.isKeyWindow || event.window === panel) {
+                if event.keyCode == 53 && model.isSearching != true {
                     self.hide()
                     return nil
                 }
+                return TerminalActionBridge.dispatchKeyEvent(
+                    event: event,
+                    window: panel,
+                    model: model,
+                    onCloseRequested: { [weak self] in
+                        self?.hide()
+                    }
+                )
             }
             return event
         }
@@ -69,6 +77,10 @@ public final class QuickTerminalController: ObservableObject {
         if panel == nil {
             let model = SuqiWindowModel()
             self.model = model
+
+            model.onCloseWindowRequested = { [weak self] in
+                self?.hide()
+            }
 
             let width = min(screenFrame.width * 0.96, 1200)
             let height = screenFrame.height * 0.50

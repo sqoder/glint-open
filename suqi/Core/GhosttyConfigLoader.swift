@@ -103,6 +103,52 @@ public struct GhosttyUserConfig: Sendable {
 
         return (cfg, targetPath)
     }
+
+    /// 将配置项更新并写回 ~/.config/suqi/config，支持热重载
+    public static func saveValues(_ updates: [String: String]) {
+        let suqiDir = NSString(string: "~/.config/suqi").expandingTildeInPath
+        let suqiPath = NSString(string: "~/.config/suqi/config").expandingTildeInPath
+        let ghosttyPath = NSString(string: "~/.config/ghostty/config").expandingTildeInPath
+
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: suqiDir) {
+            try? fileManager.createDirectory(atPath: suqiDir, withIntermediateDirectories: true)
+        }
+
+        var lines: [String] = []
+        if fileManager.fileExists(atPath: suqiPath) {
+            if let content = try? String(contentsOfFile: suqiPath, encoding: .utf8) {
+                lines = content.components(separatedBy: .newlines)
+            }
+        } else if fileManager.fileExists(atPath: ghosttyPath) {
+            if let content = try? String(contentsOfFile: ghosttyPath, encoding: .utf8) {
+                lines = content.components(separatedBy: .newlines)
+            }
+        }
+
+        var remainingUpdates = updates
+        var updatedLines: [String] = []
+
+        for line in lines {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if !trimmed.isEmpty && !trimmed.hasPrefix("#") {
+                let parts = trimmed.split(separator: "=", maxSplits: 1).map { $0.trimmingCharacters(in: .whitespaces) }
+                if parts.count == 2, let newVal = remainingUpdates.removeValue(forKey: parts[0]) {
+                    updatedLines.append("\(parts[0]) = \(newVal)")
+                    continue
+                }
+            }
+            updatedLines.append(line)
+        }
+
+        for (k, v) in remainingUpdates {
+            updatedLines.append("\(k) = \(v)")
+        }
+
+        let newContent = updatedLines.joined(separator: "\n")
+        try? newContent.write(toFile: suqiPath, atomically: true, encoding: .utf8)
+        NotificationCenter.default.post(name: .ghosttyConfigDidChange, object: nil)
+    }
 }
 
 extension Notification.Name {

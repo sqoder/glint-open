@@ -20,6 +20,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     @Published public var customTitle: String?
     public var initialWorkingDirectory: String
     public var onFocused: (() -> Void)?
+    public var onClosed: (() -> Void)?
     private var cancellables = Set<AnyCancellable>()
 
     public static func == (lhs: SuqiTerminalSession, rhs: SuqiTerminalSession) -> Bool {
@@ -37,6 +38,12 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
 
     private func bindState() {
         cancellables.removeAll()
+
+        state.onClose = { [weak self] _ in
+            guard let self else { return }
+            self.onClosed?()
+        }
+
         state.$isFocused
             .filter { $0 }
             .sink { [weak self] _ in
@@ -44,6 +51,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
                 self.onFocused?()
             }
             .store(in: &cancellables)
+
         state.$workingDirectory
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
@@ -51,6 +59,12 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             .store(in: &cancellables)
 
         state.$title
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+
+        state.$scrollbar
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
             }

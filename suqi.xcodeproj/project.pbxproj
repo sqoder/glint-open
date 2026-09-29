@@ -17,6 +17,7 @@
 		74DDB09A0FAC7C1DD4A1C9D9 /* SuqiTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A55F9B778CFADA8535586F9 /* SuqiTheme.swift */; };
 		7FABD35078400B22BF9A0571 /* SuqiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C68E7248FBDD6BCF85625B38 /* SuqiApp.swift */; };
 		8DC9CADBC8EA4BDAE2A26212 /* SuqiWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685F51842B1DB3E6E992F976 /* SuqiWindowManager.swift */; };
+		92D460DF1C9380361DDCD1B9 /* TerminalActionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430DC079E285DD7A421F88E2 /* TerminalActionBridge.swift */; };
 		9B9B42DCF1ADAB43C96DFC7A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8100FEA1B96F6EC5FCCBBF21 /* SettingsView.swift */; };
 		A25F7F56420450291E05074B /* AppTerminalView+ContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = F23CE583DF84BDD3B6029367 /* AppTerminalView+ContextMenu.swift */; };
 		A6264D803D40E6EA80C5E34C /* GhosttyConfigLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9A267F01646B2D48A9B39D8 /* GhosttyConfigLoader.swift */; };
@@ -39,6 +40,7 @@
 		288A5F9CEDCE4C5282866182 /* SuqiSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiSettings.swift; sourceTree = "<group>"; };
 		2A55F9B778CFADA8535586F9 /* SuqiTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTheme.swift; sourceTree = "<group>"; };
 		38356A190F4A4CB490BCBAF5 /* SuqiTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTerminalView.swift; sourceTree = "<group>"; };
+		430DC079E285DD7A421F88E2 /* TerminalActionBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalActionBridge.swift; sourceTree = "<group>"; };
 		4878471FB485E2C59461BA84 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		588B61BA645F396A9D2FF15E /* suqi.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = suqi.entitlements; sourceTree = "<group>"; };
 		5F026B6776BE8F54802752AE /* WindowDragArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowDragArea.swift; sourceTree = "<group>"; };
@@ -139,6 +141,7 @@
 				BE3117CFA51D306A25BED0B7 /* SuqiTerminalSession.swift */,
 				38356A190F4A4CB490BCBAF5 /* SuqiTerminalView.swift */,
 				EE7F1F265537572EC00C0DF8 /* SuqiWindowModel.swift */,
+				430DC079E285DD7A421F88E2 /* TerminalActionBridge.swift */,
 			);
 			path = Terminal;
 			sourceTree = "<group>";
@@ -260,6 +263,7 @@
 				74DDB09A0FAC7C1DD4A1C9D9 /* SuqiTheme.swift in Sources */,
 				8DC9CADBC8EA4BDAE2A26212 /* SuqiWindowManager.swift in Sources */,
 				B6F758DCA625FF92CB83A607 /* SuqiWindowModel.swift in Sources */,
+				92D460DF1C9380361DDCD1B9 /* TerminalActionBridge.swift in Sources */,
 				F5BA4C34A9C33DB61CA89B1D /* TerminalWindowController.swift in Sources */,
 				4BBB4F3672C2980AC2C1E57A /* WindowDragArea.swift in Sources */,
 			);
@@ -274,7 +278,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = suqi/Resources/suqi.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = suqi/Resources/Info.plist;
@@ -282,7 +286,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.0.2;
+				MARKETING_VERSION = 0.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suqi.terminal;
 				PRODUCT_NAME = suqi;
 				SDKROOT = macosx;
@@ -360,7 +364,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = suqi/Resources/suqi.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = suqi/Resources/Info.plist;
@@ -368,7 +372,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.0.2;
+				MARKETING_VERSION = 0.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suqi.terminal;
 				PRODUCT_NAME = suqi;
 				SDKROOT = macosx;

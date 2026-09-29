@@ -331,6 +331,27 @@ public final class SuqiWindowModel: ObservableObject {
             guard let self, let session else { return }
             self.selectSession(id: session.id)
         }
+        session.onClosed = { [weak self, weak session] in
+            guard let self, let session else { return }
+            _ = self.closeSession(id: session.id)
+        }
+    }
+
+    /// 关闭指定 ID 的终端会话（当进程 exit 时自动调用，或由分屏关闭触发）
+    @discardableResult
+    public func closeSession(id: UUID) -> Bool {
+        objectWillChange.send()
+        for tab in tabs {
+            if tab.allSessions.contains(where: { $0.id == id }) {
+                tab.objectWillChange.send()
+                let hasPanesRemaining = tab.closeSession(id: id)
+                if !hasPanesRemaining {
+                    return closeTab(id: tab.id)
+                }
+                return true
+            }
+        }
+        return false
     }
 
     // ⌘T: 新建标签页 (自动继承当前活跃会话的工作目录)
