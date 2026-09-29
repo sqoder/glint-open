@@ -108,7 +108,8 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             window.isOpaque = true
         }
         window.hasShadow = true
-        window.minSize = NSSize(width: 480, height: 280)
+        window.minSize = NSSize(width: 80, height: 32)
+        window.contentMinSize = NSSize(width: 80, height: 32)
         window.isReleasedWhenClosed = false
 
         // Align with Ghostty window-save-state: persist window size and position

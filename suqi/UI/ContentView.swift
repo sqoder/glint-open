@@ -67,27 +67,31 @@ public struct ContentView: View {
 
             VStack(spacing: 0) {
                 // Top title/tab bar area (height: 32): background handles native drag/double-click zoom, foreground renders tabs
-                ZStack(alignment: .center) {
-                    WindowDragArea()
-                        .frame(height: 32)
-
-                    if model.tabs.count > 1 {
-                        GhosttyTabBar(model: model)
+                GeometryReader { titleBarProxy in
+                    let barWidth = titleBarProxy.size.width
+                    ZStack(alignment: .center) {
+                        WindowDragArea()
                             .frame(height: 32)
-                    } else if let activeTab = model.activeTab {
-                        VStack(spacing: 2) {
-                            Text(activeTab.displayPathFormatted)
-                                .font(.system(size: 11.5, weight: .regular, design: .default))
-                                .foregroundStyle(Color.white.opacity(0.85))
-                                .lineLimit(1)
-                            Text("···")
-                                .font(.system(size: 7, weight: .bold))
-                                .foregroundStyle(Color.white.opacity(0.40))
+
+                        if model.tabs.count > 1 && barWidth > 140 {
+                            GhosttyTabBar(model: model)
+                                .frame(height: 32)
+                        } else if let activeTab = model.activeTab, barWidth > 180 {
+                            VStack(spacing: 2) {
+                                Text(activeTab.displayPathFormatted)
+                                    .font(.system(size: 11.5, weight: .regular, design: .default))
+                                    .foregroundStyle(Color.white.opacity(0.85))
+                                    .lineLimit(1)
+                                Text("···")
+                                    .font(.system(size: 7, weight: .bold))
+                                    .foregroundStyle(Color.white.opacity(0.40))
+                            }
+                            .offset(y: 6.5)
+                            .frame(maxWidth: .infinity, maxHeight: 32)
+                            .allowsHitTesting(false)
                         }
-                        .offset(y: 6.5)
-                        .frame(maxWidth: .infinity, maxHeight: 32)
-                        .allowsHitTesting(false)
                     }
+                    .frame(height: 32)
                 }
                 .frame(height: 32)
 
@@ -112,7 +116,7 @@ public struct ContentView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(minWidth: 480, minHeight: 280)
+        .frame(minWidth: 80, minHeight: 32)
         .ignoresSafeArea()
         .transaction { $0.animation = nil }
         // Support dragging files from Finder directly into terminal window

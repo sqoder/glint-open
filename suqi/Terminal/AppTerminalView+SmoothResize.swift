@@ -49,7 +49,7 @@ extension AppTerminalView {
             view.layerContentsRedrawPolicy = .never
 
             // 3. Notify Ghostty core to synchronize dimensions and schedule next DisplayLink frame
-            if sizeChanged {
+            if sizeChanged && newSize.width >= 10 && newSize.height >= 10 {
                 view.fitToSize()
             }
         }
