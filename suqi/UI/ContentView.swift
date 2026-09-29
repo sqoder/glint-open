@@ -50,7 +50,7 @@ public struct ContentView: View {
     }
 
     private var themeBg: Color {
-        SuqiTheme.backgroundColor(for: userConfig.themeName)
+        SuqiTheme.backgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
     }
 
     public var body: some View {

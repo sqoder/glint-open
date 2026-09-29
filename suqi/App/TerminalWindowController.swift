@@ -65,7 +65,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             window.isOpaque = false
             window.backgroundColor = .clear
         } else {
-            window.backgroundColor = SuqiTheme.nsBackgroundColor(for: userConfig.themeName)
+            window.backgroundColor = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
             window.isOpaque = true
         }
         window.hasShadow = true
@@ -424,7 +424,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             window.isOpaque = false
             window.backgroundColor = .clear
         } else {
-            window.backgroundColor = SuqiTheme.nsBackgroundColor(for: userConfig.themeName)
+            window.backgroundColor = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
             window.isOpaque = true
         }
     }

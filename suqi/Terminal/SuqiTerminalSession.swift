@@ -153,6 +153,10 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             if userConfig.copyOnSelect {
                 builder.withCustom("copy-on-select", "clipboard")
             }
+            if let bg = userConfig.background {
+                let cleanBg = bg.trimmingCharacters(in: CharacterSet(charactersIn: "#\"\' "))
+                builder.withCustom("background", "#\(cleanBg)")
+            }
             builder.withCustom("keybind", "super+c=copy_to_clipboard")
             builder.withCustom("keybind", "super+a=select_all")
         }

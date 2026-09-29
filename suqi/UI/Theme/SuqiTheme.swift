@@ -10,25 +10,33 @@ import AppKit
 import GhosttyTheme
 
 public enum SuqiTheme {
-    public static func backgroundColor(for themeName: String) -> Color {
+    public static let defaultBackgroundHex = "2F343F"
+
+    public static func backgroundColor(for themeName: String, customBackground: String? = nil) -> Color {
+        if let customBackground, !customBackground.trimmingCharacters(in: .whitespaces).isEmpty {
+            return Color(hex: customBackground)
+        }
         if let theme = GhosttyThemeCatalog.theme(named: themeName) {
             return Color(hex: theme.background)
         }
-        return Color(hex: "1a1b26")
+        return Color(hex: defaultBackgroundHex)
     }
 
-    public static func nsBackgroundColor(for themeName: String) -> NSColor {
+    public static func nsBackgroundColor(for themeName: String, customBackground: String? = nil) -> NSColor {
+        if let customBackground, !customBackground.trimmingCharacters(in: .whitespaces).isEmpty {
+            return NSColor(hex: customBackground)
+        }
         if let theme = GhosttyThemeCatalog.theme(named: themeName) {
             return NSColor(hex: theme.background)
         }
-        return NSColor(hex: "1a1b26")
+        return NSColor(hex: defaultBackgroundHex)
     }
 }
 
 // MARK: - Color Hex Extensions
 
 public extension Color {
-    init(hex: String, defaultColor: Color = Color(red: 26/255.0, green: 27/255.0, blue: 38/255.0)) {
+    init(hex: String, defaultColor: Color = Color(red: 47/255.0, green: 52/255.0, blue: 63/255.0)) {
         let clean = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         if Scanner(string: clean).scanHexInt64(&int) {
@@ -49,7 +57,7 @@ public extension Color {
 }
 
 public extension NSColor {
-    convenience init(hex: String, defaultColor: NSColor = NSColor(srgbRed: 26/255.0, green: 27/255.0, blue: 38/255.0, alpha: 1.0)) {
+    convenience init(hex: String, defaultColor: NSColor = NSColor(srgbRed: 47/255.0, green: 52/255.0, blue: 63/255.0, alpha: 1.0)) {
         let clean = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         if Scanner(string: clean).scanHexInt64(&int) {
