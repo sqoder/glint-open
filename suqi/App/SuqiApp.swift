@@ -17,75 +17,75 @@ struct SuqiApp: App {
             SettingsView()
         }
         .commands {
-            // MARK: - 文件菜单
+            // MARK: - File Menu
             CommandGroup(replacing: .newItem) {
-                Button("新建窗口") {
+                Button("New Window") {
                     SuqiWindowManager.shared.createWindow()
                 }
                 .keyboardShortcut("n", modifiers: .command)
 
-                Button("新建标签页") {
+                Button("New Tab") {
                     SuqiWindowManager.shared.activeWindowController?.model.createNewTab()
                 }
                 .keyboardShortcut("t", modifiers: .command)
 
                 Divider()
 
-                Button("垂直分屏新建 (Split Right)") {
+                Button("Split Right") {
                     SuqiWindowManager.shared.activeWindowController?.model.splitRight()
                 }
                 .keyboardShortcut("d", modifiers: .command)
 
-                Button("水平分屏新建 (Split Down)") {
+                Button("Split Down") {
                     SuqiWindowManager.shared.activeWindowController?.model.splitDown()
                 }
                 .keyboardShortcut("d", modifiers: [.command, .shift])
 
-                Button("分屏最大化聚焦 (Toggle Split Zoom)") {
+                Button("Toggle Split Zoom") {
                     SuqiWindowManager.shared.activeWindowController?.model.toggleZoom()
                 }
                 .keyboardShortcut(.return, modifiers: [.command, .shift])
 
-                Button("均等所有分屏 (Equalize Splits)") {
+                Button("Equalize Splits") {
                     SuqiWindowManager.shared.activeWindowController?.model.equalizeSplits()
                 }
                 .keyboardShortcut("=", modifiers: [.command, .control])
 
                 Divider()
 
-                Button("关闭分屏 / 标签页") {
+                Button("Close Split / Tab") {
                     SuqiWindowManager.shared.activeWindowController?.closeCurrentTabOrWindow()
                 }
                 .keyboardShortcut("w", modifiers: .command)
 
-                Button("关闭当前窗口") {
+                Button("Close Window") {
                     SuqiWindowManager.shared.activeWindowController?.closeWindow()
                 }
                 .keyboardShortcut("w", modifiers: [.command, .shift])
             }
 
-            // MARK: - 编辑菜单 (支持 ⌘C / ⌘V / ⌘A / ⌘X / ⌘F)
-            CommandMenu("编辑") {
-                Button("剪切") {
+            // MARK: - Edit Menu
+            CommandMenu("Edit") {
+                Button("Cut") {
                     NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
                 }
                 .keyboardShortcut("x", modifiers: .command)
 
-                Button("复制") {
+                Button("Copy") {
                     if !NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil) {
                         SuqiWindowManager.shared.activeWindowController?.handleCopy()
                     }
                 }
                 .keyboardShortcut("c", modifiers: .command)
 
-                Button("粘贴") {
+                Button("Paste") {
                     SuqiWindowManager.shared.activeWindowController?.handlePaste()
                 }
                 .keyboardShortcut("v", modifiers: .command)
 
                 Divider()
 
-                Button("全选") {
+                Button("Select All") {
                     if !NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil) {
                         SuqiWindowManager.shared.activeWindowController?.handleSelectAll()
                     }
@@ -94,79 +94,79 @@ struct SuqiApp: App {
 
                 Divider()
 
-                Button("查找...") {
+                Button("Find...") {
                     SuqiWindowManager.shared.activeWindowController?.model.isSearching.toggle()
                 }
                 .keyboardShortcut("f", modifiers: .command)
             }
 
-            // MARK: - 终端操作菜单
-            CommandMenu("终端") {
-                Button("随叫随到下拉终端 (Quick Terminal)") {
+            // MARK: - Terminal Menu
+            CommandMenu("Terminal") {
+                Button("Toggle Quick Terminal") {
                     QuickTerminalController.shared.toggle()
                 }
                 .keyboardShortcut("`", modifiers: .control)
 
                 Divider()
 
-                Button("清空屏幕") {
+                Button("Clear Scrollback") {
                     SuqiWindowManager.shared.activeWindowController?.model.clearActiveSession()
                 }
                 .keyboardShortcut("k", modifiers: .command)
 
-                Button("重启当前会话") {
+                Button("Restart Active Session") {
                     SuqiWindowManager.shared.activeWindowController?.model.restartActiveSession()
                 }
                 .keyboardShortcut("r", modifiers: .command)
 
-                Button("重新加载 Ghostty / suqi 配置") {
+                Button("Reload Configuration") {
                     SuqiWindowManager.shared.reloadAllWindows()
                 }
                 .keyboardShortcut(",", modifiers: [.command, .shift])
 
                 Divider()
 
-                Button("上一个标签页") {
+                Button("Previous Tab") {
                     SuqiWindowManager.shared.activeWindowController?.model.previousTab()
                 }
                 .keyboardShortcut("[", modifiers: [.command, .shift])
 
-                Button("下一个标签页") {
+                Button("Next Tab") {
                     SuqiWindowManager.shared.activeWindowController?.model.nextTab()
                 }
                 .keyboardShortcut("]", modifiers: [.command, .shift])
 
                 Divider()
 
-                // Ghostty 快捷键：⌘1 到 ⌘9 快速切 Tab
+                // Quick tab switching ⌘1 to ⌘9
                 ForEach(1...9, id: \.self) { index in
-                    Button("跳转到标签页 \(index)") {
+                    Button("Select Tab \(index)") {
                         SuqiWindowManager.shared.activeWindowController?.model.selectTab(at: index - 1)
                     }
                     .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(0x30 + index)!)), modifiers: .command)
                 }
             }
 
-            // MARK: - 视图与字号缩放
-            CommandMenu("视图") {
-                Button("放大字号") {
+            // MARK: - View Menu
+            CommandMenu("View") {
+                Button("Increase Font Size") {
                     _ = SuqiWindowManager.shared.activeWindowController?.model.activeSession?.state.performBindingAction("increase_font_size:1")
                 }
                 .keyboardShortcut("+", modifiers: .command)
 
-                Button("缩小字号") {
+                Button("Decrease Font Size") {
                     _ = SuqiWindowManager.shared.activeWindowController?.model.activeSession?.state.performBindingAction("decrease_font_size:1")
                 }
                 .keyboardShortcut("-", modifiers: .command)
 
-                Button("恢复默认字号") {
+                Button("Reset Font Size") {
                     _ = SuqiWindowManager.shared.activeWindowController?.model.activeSession?.state.performBindingAction("reset_font_size")
                 }
                 .keyboardShortcut("0", modifiers: .command)
 
                 Divider()
 
-                Button("打开 Ghostty / suqi 配置文件") {
+                Button("Open Configuration File") {
                     let ghosttyPath = NSString(string: "~/.config/ghostty/config").expandingTildeInPath
                     let suqiPath = NSString(string: "~/.config/suqi/config").expandingTildeInPath
                     let target = FileManager.default.fileExists(atPath: suqiPath) ? suqiPath : ghosttyPath

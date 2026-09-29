@@ -125,7 +125,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         state.workingDirectory ?? initialWorkingDirectory
     }
 
-    /// 原位热重载主题配色、字号字体、光标与 Ghostty 配置，无需重启或杀死正在运行的 Shell / agy 进程
+    /// In-place hot reload of themes, fonts, cursor, and configuration without restarting running processes
     public func reloadConfiguration() {
         let (userConfig, _) = GhosttyUserConfig.load()
         let theme = GhosttyThemeCatalog.theme(named: userConfig.themeName)?.toTerminalTheme() ?? .default
@@ -136,7 +136,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         objectWillChange.send()
     }
 
-    /// 彻底销毁当前终端会话，释放 Metal、DisplayLink 以及观察者资源
+    /// Destroys terminal session, releasing Metal, DisplayLink, and observer resources
     public func tearDown() {
         cancellables.removeAll()
         terminalView.removeFromSuperview()
@@ -180,12 +180,11 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             builder.withFontFamily(userConfig.fontFamily)
             builder.withCursorStyle(cursorStyle)
             builder.withCursorStyleBlink(userConfig.cursorBlink)
-            // 将终端内部画布底色透明度设为 0，由 ContentView 全幅毛玻璃+主题底色统一提供，杜绝分层与色差
+            // Render terminal canvas transparent; unified visual effect layer provides background
             builder.withBackgroundOpacity(0)
             builder.withWindowPaddingX(userConfig.windowPaddingX)
             builder.withWindowPaddingY(userConfig.windowPaddingY)
-            // 关键修复：关闭 window-padding-balance，确保终端顶部内边距严格锚定固定值；
-            // 彻底消除窗口拉伸缩放或分屏时，因行距余数均分导致的顶部命令提示符(Prompt)垂直跳动与抖动闪烁
+            // Disable window-padding-balance to anchor top padding strictly and prevent prompt jitter during resizing
             builder.withCustom("window-padding-balance", "false")
             builder.withCustom("window-padding-color", "extend")
             if userConfig.adjustCellHeight != 0 {

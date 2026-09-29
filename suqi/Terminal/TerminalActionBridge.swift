@@ -47,14 +47,14 @@ public enum TerminalActionBridge {
             "png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "tiff", "svg", "ico"
         ]
 
-        // 1. 优先检查是否有文件 URL
+        // 1. Check for file URLs first
         if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
             return urls.contains { url in
                 imageExtensions.contains(url.pathExtension.lowercased())
             }
         }
 
-        // 2. 无文件 URL 时，检查是否包含纯内存图片数据 (如系统截屏、浏览器复制图片等)
+        // 2. Check for in-memory image data (e.g., screenshots, web browser copies)
         if pb.canReadObject(forClasses: [NSImage.self], options: nil) {
             return true
         }
@@ -81,7 +81,7 @@ public enum TerminalActionBridge {
         let isImage = pasteboardContainsImage(pb)
 
         if isImage {
-            // 若从 Finder 复制了图片文件，补全内存 TIFF 和 PNG 格式，确保 CLI 工具都能无缝读取
+            // Populate TIFF and PNG pasteboard representations if copied from Finder
             if !pb.canReadObject(forClasses: [NSImage.self], options: nil) {
                 let imageExtensions: Set<String> = [
                     "png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "tiff", "svg", "ico"
@@ -103,7 +103,7 @@ public enum TerminalActionBridge {
                 terminalView.triggerImagePasteShortcut()
             }
         } else {
-            // 检查剪贴板是否复制了 Finder 普通文件，若有则贴入转义文件路径
+            // Check if ordinary Finder files were copied; paste escaped file paths
             if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
                 let paths = urls.map { $0.path.replacingOccurrences(of: " ", with: "\\ ") }
                 let text = paths.joined(separator: " ") + " "
@@ -132,7 +132,7 @@ public enum TerminalActionBridge {
         }
     }
 
-    /// 统一按键分发器：处理普通窗口和 Quick Terminal 的所有核心快捷键
+    /// Unified key event dispatcher handling all core keyboard shortcuts
     public static func dispatchKeyEvent(
         event: NSEvent,
         window: NSWindow,
@@ -144,9 +144,9 @@ public enum TerminalActionBridge {
 
         let flags = event.modifierFlags.intersection([.command, .control, .option, .shift])
 
-        // 若当前输入光标正在 ⌘F 搜索框等原生输入框中，放行 ⌘C / ⌘V / ⌘A / ⌘X，不抢占焦点！
+        // When text input cursor is inside a native text field (such as ⌘F search bar), pass ⌘C / ⌘V / ⌘A / ⌘X through
         if isTextInputFocused(in: window) {
-            // Esc: 关闭搜索框并将焦点还给终端
+            // Esc: close search bar and return focus to terminal
             if event.keyCode == 53 && model.isSearching {
                 model.isSearching = false
                 if let tv = getActiveTerminalView(for: window) {
@@ -157,7 +157,7 @@ public enum TerminalActionBridge {
             if flags == .command {
                 let char = event.charactersIgnoringModifiers?.lowercased()
                 if char == "c" || char == "v" || char == "a" || char == "x" {
-                    return event // 放行原生编辑行为
+                    return event // Allow native text editing behavior
                 }
                 if char == "f" {
                     model.isSearching = false
@@ -169,61 +169,61 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 1. 处理 ⌘V (智能粘贴图片或文本)
+        // 1. ⌘V (Smart image or text paste)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "v" {
             handlePaste(in: window, model: model)
             return nil
         }
 
-        // 2. 处理 ⌘C (复制选中文本)
+        // 2. ⌘C (Copy selected text)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "c" {
             handleCopy(in: window, model: model)
             return nil
         }
 
-        // 3. 处理 ⌘A (全选)
+        // 3. ⌘A (Select all)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "a" {
             handleSelectAll(model: model)
             return nil
         }
 
-        // 4. 处理 ⌘N (新建独立窗口)
+        // 4. ⌘N (New standalone window)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "n" {
             SuqiWindowManager.shared.createWindow(workingDirectory: model.activeSession?.fullDirectory)
             return nil
         }
 
-        // 5. 处理 ⌘T (新建标签页)
+        // 5. ⌘T (New tab)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "t" {
             model.createNewTab()
             return nil
         }
 
-        // 6. 处理 ⌘D (垂直分屏 Split Right)
+        // 6. ⌘D (Split Right)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "d" {
             model.splitRight()
             return nil
         }
 
-        // 7. 处理 ⌘Shift+D (水平分屏 Split Down)
+        // 7. ⌘Shift+D (Split Down)
         if flags == [.command, .shift] && event.charactersIgnoringModifiers?.lowercased() == "d" {
             model.splitDown()
             return nil
         }
 
-        // 8. 处理 ⌃⌘= (均等所有分屏 Equalize Splits)
+        // 8. ⌃⌘= (Equalize Splits)
         if flags == [.control, .command] && (event.charactersIgnoringModifiers == "=" || event.charactersIgnoringModifiers == "+") {
             model.equalizeSplits()
             return nil
         }
 
-        // 9. 处理 ⌘Shift+Enter (分屏最大化聚焦 Toggle Split Zoom)
+        // 9. ⌘Shift+Enter (Toggle Split Zoom)
         if flags == [.command, .shift] && (event.keyCode == 36 || event.charactersIgnoringModifiers == "\r") {
             model.toggleZoom()
             return nil
         }
 
-        // 10. 处理 ⌃⌘H / ⌃⌘J / ⌃⌘K / ⌃⌘L 以及 ⌃⌘方向键 (空间几何方向分屏聚焦)
+        // 10. ⌃⌘H / ⌃⌘J / ⌃⌘K / ⌃⌘L and ⌃⌘ Arrow keys (Directional pane navigation)
         if flags == [.control, .command] {
             let char = event.charactersIgnoringModifiers?.lowercased()
             if char == "h" || event.specialKey == .leftArrow {
@@ -244,13 +244,13 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 11. 处理 ⌘F (终端回滚内容原生查找)
+        // 11. ⌘F (Scrollback search)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "f" {
             model.isSearching.toggle()
             return nil
         }
 
-        // 12. 处理 ⌥⌘Left / ⌥⌘Right (分屏切换)
+        // 12. ⌥⌘Left / ⌥⌘Right (Pane navigation)
         if flags == [.command, .option] {
             if event.specialKey == .leftArrow || event.specialKey == .upArrow {
                 model.previousPane()
@@ -262,19 +262,19 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 13. 处理 ⌘W (优先关闭当前分屏或当前 Tab；若全关则请求关闭)
+        // 13. ⌘W (Close active pane / tab / window)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "w" {
             model.closeActiveSession()
             return nil
         }
 
-        // 14. 处理 ⌘Shift+W (直接关闭整个窗口)
+        // 14. ⌘Shift+W (Close entire window)
         if flags == [.command, .shift] && event.charactersIgnoringModifiers?.lowercased() == "w" {
             onCloseRequested()
             return nil
         }
 
-        // 15. 处理 ⌘1 .. ⌘9 (切换标签页)
+        // 15. ⌘1 .. ⌘9 (Switch to tab)
         if flags == .command, let char = event.charactersIgnoringModifiers?.first, char >= "1" && char <= "9" {
             if let tabIndex = Int(String(char)) {
                 model.selectTab(at: tabIndex - 1)
@@ -282,7 +282,7 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 16. 处理 ⌘[ / ⌘] (标签页前后切换)
+        // 16. ⌘[ / ⌘] (Previous / Next tab)
         if flags == .command && event.charactersIgnoringModifiers == "[" {
             model.previousTab()
             return nil
@@ -292,7 +292,7 @@ public enum TerminalActionBridge {
             return nil
         }
 
-        // 17. 处理 ⌘Shift+[ / ⌘Shift+] (标签页前后切换变体)
+        // 17. ⌘Shift+[ / ⌘Shift+] (Previous / Next tab variant)
         if flags == [.command, .shift] {
             if event.charactersIgnoringModifiers == "{" || event.charactersIgnoringModifiers == "[" {
                 model.previousTab()
@@ -304,13 +304,13 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 18. 处理 ⌘K (清屏)
+        // 18. ⌘K (Clear scrollback)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "k" {
             model.clearActiveSession()
             return nil
         }
 
-        // 19. 处理 ⌘+ / ⌘= / ⌘- / ⌘0 (Ghostty 字号动态缩放)
+        // 19. ⌘+ / ⌘= / ⌘- / ⌘0 (Dynamic font size scaling)
         if flags == .command || flags == [.command, .shift] {
             let char = event.charactersIgnoringModifiers
             if char == "=" || char == "+" {
@@ -325,7 +325,7 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 20. 处理 ⌘, (打开配置文件)
+        // 20. ⌘, (Open configuration file)
         if flags == .command && event.charactersIgnoringModifiers == "," {
             let (_, path) = GhosttyUserConfig.load()
             let target = path ?? NSString(string: "~/.config/ghostty/config").expandingTildeInPath
@@ -333,7 +333,7 @@ public enum TerminalActionBridge {
             return nil
         }
 
-        // 21. 处理 ⌘Shift+, (重载配置)
+        // 21. ⌘Shift+, (Reload configuration)
         if flags == [.command, .shift] && (event.charactersIgnoringModifiers == "<" || event.charactersIgnoringModifiers == ",") {
             SuqiWindowManager.shared.reloadAllWindows()
             return nil

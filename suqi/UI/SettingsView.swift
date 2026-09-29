@@ -71,8 +71,8 @@ public struct SettingsView: View {
 
     public var body: some View {
         Form {
-            Section("外观与配色") {
-                Picker("主题配色", selection: $themeName) {
+            Section("Appearance & Theme") {
+                Picker("Theme", selection: $themeName) {
                     ForEach(allThemes, id: \.self) { name in
                         Text(name).tag(name)
                     }
@@ -83,7 +83,7 @@ public struct SettingsView: View {
                 }
 
                 Slider(value: $backgroundOpacity, in: 0.4...1.0, step: 0.02) {
-                    Text("背景不透明度")
+                    Text("Background Opacity")
                 } minimumValueLabel: {
                     Text("40%")
                 } maximumValueLabel: {
@@ -95,8 +95,8 @@ public struct SettingsView: View {
                 }
             }
 
-            Section("字体与排版") {
-                Picker("等宽字体", selection: $fontFamily) {
+            Section("Font & Typography") {
+                Picker("Font Family", selection: $fontFamily) {
                     ForEach(allFonts, id: \.self) { font in
                         Text(font).tag(font)
                     }
@@ -107,7 +107,7 @@ public struct SettingsView: View {
                 }
 
                 HStack {
-                    Text("字号大小")
+                    Text("Font Size")
                     Spacer()
                     Text("\(Int(fontSize)) pt")
                         .font(.system(.body, design: .monospaced))
@@ -120,18 +120,18 @@ public struct SettingsView: View {
                 }
             }
 
-            Section("光标") {
-                Picker("光标样式", selection: $cursorStyle) {
-                    Text("条状 (Bar)").tag("bar")
-                    Text("方块 (Block)").tag("block")
-                    Text("下划线 (Underline)").tag("underline")
+            Section("Cursor") {
+                Picker("Cursor Style", selection: $cursorStyle) {
+                    Text("Bar").tag("bar")
+                    Text("Block").tag("block")
+                    Text("Underline").tag("underline")
                 }
                 .onChange(of: cursorStyle) { _, newStyle in
                     GhosttyUserConfig.saveValues(["cursor-style": newStyle])
                     SuqiWindowManager.shared.reloadAllWindows()
                 }
 
-                Toggle("光标闪烁", isOn: $cursorBlink)
+                Toggle("Cursor Blink", isOn: $cursorBlink)
                     .onChange(of: cursorBlink) { _, newBlink in
                         GhosttyUserConfig.saveValues(["cursor-style-blink": newBlink ? "true" : "false"])
                         SuqiWindowManager.shared.reloadAllWindows()
@@ -140,6 +140,6 @@ public struct SettingsView: View {
         }
         .formStyle(.grouped)
         .frame(width: 440, height: 400)
-        .navigationTitle("设置")
+        .navigationTitle("Settings")
     }
 }

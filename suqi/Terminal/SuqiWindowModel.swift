@@ -8,7 +8,7 @@
 import SwiftUI
 import Combine
 
-// MARK: - PaneNode (分屏树节点)
+// MARK: - PaneNode (Split Tree Node)
 
 public enum PaneNode: Identifiable, Equatable {
     case terminal(SuqiTerminalSession)
@@ -121,7 +121,7 @@ public enum PaneNode: Identifiable, Equatable {
         }
     }
 
-    /// 计算每个终端窗格在 [0, 1] x [0, 1] 归一化空间下的几何矩形，用于几何方向聚焦
+    /// Computes normalized rects [0, 1] x [0, 1] for each pane to support geometric directional navigation
     public func computeNormalizedFrames(in rect: CGRect = CGRect(x: 0, y: 0, width: 1, height: 1)) -> [(UUID, CGRect)] {
         switch self {
         case .terminal(let s):
@@ -149,7 +149,7 @@ public enum PaneDirection {
     case down
 }
 
-// MARK: - SuqiTab (标签页)
+// MARK: - SuqiTab (Tab Model)
 
 @MainActor
 public final class SuqiTab: ObservableObject, Identifiable {
@@ -282,7 +282,7 @@ public final class SuqiTab: ObservableObject, Identifiable {
     }
 }
 
-// MARK: - SuqiWindowModel (单窗口独立状态模型)
+// MARK: - SuqiWindowModel (Single Window Model)
 
 @MainActor
 public final class SuqiWindowModel: ObservableObject {
@@ -290,7 +290,7 @@ public final class SuqiWindowModel: ObservableObject {
     @Published public var activeTabId: UUID?
     @Published public var isSearching: Bool = false
 
-    /// 窗口关闭回调
+    /// Window close callback
     public var onCloseWindowRequested: (() -> Void)?
 
     public var sessions: [SuqiTerminalSession] {
@@ -340,7 +340,7 @@ public final class SuqiWindowModel: ObservableObject {
         }
     }
 
-    /// 立即将键盘输入焦点（First Responder）转移至当前活跃的终端视图
+    /// Sets keyboard focus (First Responder) to the active terminal view
     public func focusActiveSession() {
         DispatchQueue.main.async { [weak self] in
             guard let session = self?.activeSession else { return }
@@ -348,7 +348,7 @@ public final class SuqiWindowModel: ObservableObject {
         }
     }
 
-    /// 关闭指定 ID 的终端会话（当进程 exit 时自动调用，或由分屏关闭触发）
+    /// Closes a terminal session by ID (triggered by process exit or pane close)
     @discardableResult
     public func closeSession(id: UUID) -> Bool {
         objectWillChange.send()
@@ -366,7 +366,7 @@ public final class SuqiWindowModel: ObservableObject {
         return false
     }
 
-    // ⌘T: 新建标签页 (自动继承当前活跃会话的工作目录)
+    // ⌘T: New Tab (inherits working directory from active session)
     @discardableResult
     public func createNewTab(workingDirectory: String? = nil) -> SuqiTerminalSession {
         objectWillChange.send()
@@ -380,13 +380,13 @@ public final class SuqiWindowModel: ObservableObject {
         return session
     }
 
-    // ⌘D: 垂直分屏新建 (Split Right，左右分屏)
+    // ⌘D: Split Right
     @discardableResult
     public func splitRight(workingDirectory: String? = nil) -> SuqiTerminalSession {
         splitActivePane(axis: .horizontal, workingDirectory: workingDirectory)
     }
 
-    // ⌘Shift+D: 水平分屏新建 (Split Down，上下分屏)
+    // ⌘Shift+D: Split Down
     @discardableResult
     public func splitDown(workingDirectory: String? = nil) -> SuqiTerminalSession {
         splitActivePane(axis: .vertical, workingDirectory: workingDirectory)
@@ -411,7 +411,7 @@ public final class SuqiWindowModel: ObservableObject {
         return session
     }
 
-    // ⌘W: 优先关闭当前活跃分屏；窗格全关后关闭标签页；若为最后标签页，通知关闭窗口
+    // ⌘W: Close active pane; if all panes closed, close tab; if last tab, close window
     @discardableResult
     public func closeActiveSession() -> Bool {
         objectWillChange.send()
@@ -435,7 +435,7 @@ public final class SuqiWindowModel: ObservableObject {
     public func closeTab(id: UUID) -> Bool {
         objectWillChange.send()
         guard tabs.count > 1 else {
-            // 当前窗口最后一个 Tab 已被关闭，通知关闭此独立窗口！
+            // Last tab closed, notify controller to close window
             onCloseWindowRequested?()
             return false
         }
@@ -522,7 +522,7 @@ public final class SuqiWindowModel: ObservableObject {
         activeSession?.clearScreen()
     }
 
-    /// 热重载所有终端会话配置（修改主题、字号、光标时不杀死正在运行的 agy / 终端程序）
+    /// Hot-reloads all terminal session configurations without killing running processes
     public func reloadAllSessions() {
         for session in sessions {
             session.reloadConfiguration()

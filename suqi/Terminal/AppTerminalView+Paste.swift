@@ -11,10 +11,10 @@ import GhosttyTerminal
 // MARK: - AppTerminalView Image Paste Extension
 
 extension AppTerminalView {
-    /// 触发与用户在物理键盘上按下 Control+V 完全一致的终端按键事件。
+    /// Triggers a synthetic Control+V key event matching physical keyboard input.
     ///
-    /// 现代 AI 终端 CLI（如 agy / Claude Code / Codex / OpenCode 等）在接收到 Control+V 时，
-    /// 会主动调用 macOS 原生剪贴板 API 读取图片并生成上传附件。
+    /// Modern AI CLI agents (such as agy, Claude Code, Codex, OpenCode, etc.)
+    /// intercept Control+V to read raw image payloads directly from the macOS clipboard.
     public func triggerImagePasteShortcut() {
         let timestamp = ProcessInfo.processInfo.systemUptime
         let windowNum = window?.windowNumber ?? 0

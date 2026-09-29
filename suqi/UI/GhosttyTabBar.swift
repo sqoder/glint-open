@@ -18,7 +18,7 @@ public struct GhosttyTabBar: View {
 
     public var body: some View {
         HStack(spacing: 2) {
-            // 红绿灯安全间距 (适配下移与微调后的交通灯)
+            // Traffic lights inset
             Spacer()
                 .frame(width: 82)
 
@@ -63,7 +63,7 @@ public struct GhosttyTabBar: View {
                         .onHover { hovering in
                             hoveredTabId = hovering ? tab.id : nil
                         }
-                        // 支持鼠标拖拽标签页重排
+                        // Support tab drag-and-drop reordering
                         .onDrag {
                             self.draggingTabId = tab.id
                             return NSItemProvider(object: tab.id.uuidString as NSString)
@@ -78,7 +78,7 @@ public struct GhosttyTabBar: View {
                         )
                     }
 
-                    // 新建标签按钮
+                    // New tab button
                     Button {
                         model.createNewTab()
                     } label: {
@@ -92,7 +92,7 @@ public struct GhosttyTabBar: View {
                             )
                     }
                     .buttonStyle(.plain)
-                    .help("新建标签页 (⌘T)")
+                    .help("New Tab (⌘T)")
                 }
                 .padding(.vertical, 3)
             }
@@ -104,7 +104,7 @@ public struct GhosttyTabBar: View {
     }
 }
 
-// MARK: - 标签页拖拽重排代理
+// MARK: - Tab Drop Delegate (Reordering)
 
 struct TabDropDelegate: DropDelegate {
     let destinationTab: SuqiTab

@@ -38,7 +38,7 @@ public final class SuqiTerminalWindow: NSWindow {
               let mini = standardWindowButton(.miniaturizeButton),
               let zoom = standardWindowButton(.zoomButton) else { return }
 
-        // 对齐现代 macOS 呼吸感：下移左上角红绿灯（y 调至 4.0）并优化左边距，消除贴顶太高的紧绷感
+        // Modern macOS breathing room: offset traffic light buttons
         let targetY: CGFloat = 4.0
         let targetStartX: CGFloat = 13.0
         let spacing: CGFloat = 22.0
@@ -60,7 +60,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         let (userConfig, _) = GhosttyUserConfig.load()
         let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
 
-        // 支持从配置文件读取 window-width / window-height（支持像素或字符列数，默认对齐 Ghostty 终端网格）
+        // Parse initial window size from window-width / window-height config
         let initialWidth: CGFloat = {
             let font = NSFont(name: userConfig.fontFamily, size: userConfig.fontSize)
                 ?? NSFont.monospacedSystemFont(ofSize: userConfig.fontSize, weight: .regular)
@@ -69,17 +69,17 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             if let w = userConfig.windowWidth {
                 return w > 200 ? CGFloat(w) : CGFloat(w) * cellWidth + padding
             }
-            return 100 * cellWidth + padding // 默认 100 列
+            return 100 * cellWidth + padding // Default 100 columns
         }()
         let initialHeight: CGFloat = {
             let font = NSFont(name: userConfig.fontFamily, size: userConfig.fontSize)
                 ?? NSFont.monospacedSystemFont(ofSize: userConfig.fontSize, weight: .regular)
             let cellHeight = ceil(font.ascender - font.descender + font.leading) + CGFloat(userConfig.adjustCellHeight)
-            let padding = CGFloat(userConfig.windowPaddingY * 2) + 32 // 32pt 标题栏
+            let padding = CGFloat(userConfig.windowPaddingY * 2) + 32 // 32pt titlebar
             if let h = userConfig.windowHeight {
                 return h > 150 ? CGFloat(h) : CGFloat(h) * cellHeight + padding
             }
-            return 30 * cellHeight + padding // 默认 30 行
+            return 30 * cellHeight + padding // Default 30 rows
         }()
 
         let window = SuqiTerminalWindow(
@@ -98,8 +98,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         window.title = "suqi"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
-        // 关键修复：关闭 isMovableByWindowBackground，使得鼠标拖拽能完全透传给 Ghostty Terminal 进行文本框选/复制；
-        // 窗口移动由顶部 28pt 极简标题栏的 WindowDragArea 接管
+        // Disable isMovableByWindowBackground so mouse dragging passes cleanly to Ghostty Terminal for text selection
         window.isMovableByWindowBackground = false
         if isTranslucent {
             window.isOpaque = false
@@ -112,7 +111,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         window.minSize = NSSize(width: 480, height: 280)
         window.isReleasedWhenClosed = false
 
-        // 对齐 Ghostty 的 window-save-state：持久化记忆用户调整过的窗口大小与位置
+        // Align with Ghostty window-save-state: persist window size and position
         if userConfig.windowSaveState.lowercased() != "never" {
             window.setFrameAutosaveName("SuqiTerminalWindow")
         }
@@ -123,7 +122,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         super.init(window: window)
         window.delegate = self
 
-        // 绑定窗口关闭请求（如最后一个标签页被 ⌘W 关闭时，平滑关闭本窗口）
+        // Bind window close request (smoothly close window when last tab is closed)
         model.onCloseWindowRequested = { [weak self] in
             self?.closeWindow()
         }

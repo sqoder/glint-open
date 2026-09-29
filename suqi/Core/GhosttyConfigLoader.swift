@@ -104,7 +104,7 @@ public struct GhosttyUserConfig: Sendable {
         return (cfg, targetPath)
     }
 
-    /// 将配置项更新并写回 ~/.config/suqi/config，支持热重载
+    /// Updates configuration values and writes back to ~/.config/suqi/config with hot reload
     public static func saveValues(_ updates: [String: String]) {
         let suqiDir = NSString(string: "~/.config/suqi").expandingTildeInPath
         let suqiPath = NSString(string: "~/.config/suqi/config").expandingTildeInPath
@@ -155,7 +155,7 @@ extension Notification.Name {
     public static let ghosttyConfigDidChange = Notification.Name("GhosttyConfigDidChange")
 }
 
-// MARK: - 配置文件热重载监听器 (自动监控 ~/.config/ghostty/config 或 ~/.config/suqi/config 变动)
+// MARK: - Configuration File Hot Reload Watcher (monitors ~/.config/ghostty/config or ~/.config/suqi/config)
 
 @MainActor
 public final class GhosttyConfigFileWatcher: ObservableObject {
@@ -186,7 +186,7 @@ public final class GhosttyConfigFileWatcher: ObservableObject {
         source.setEventHandler { [weak self] in
             guard let self else { return }
             NotificationCenter.default.post(name: .ghosttyConfigDidChange, object: nil)
-            // 重新挂载监控（兼容 Vim/VSCode 等编辑器的原子重命名写入机制）
+            // Re-watch file upon changes to support atomic save/rename mechanisms (Vim/VSCode)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 self.startWatching()
             }

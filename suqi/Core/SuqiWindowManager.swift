@@ -17,7 +17,7 @@ public final class SuqiWindowManager: ObservableObject {
 
     private init() {}
 
-    /// 获取当前最前端（活跃）的终端窗口控制器
+    /// Returns the currently active terminal window controller
     public var activeWindowController: TerminalWindowController? {
         if let keyWindow = NSApp.keyWindow,
            let ctrl = windowControllers.first(where: { $0.window === keyWindow }) {
@@ -30,7 +30,7 @@ public final class SuqiWindowManager: ObservableObject {
         return windowControllers.last
     }
 
-    /// 创建一个全新独立的终端窗口
+    /// Creates a new standalone terminal window
     @discardableResult
     public func createWindow(workingDirectory: String? = nil) -> TerminalWindowController {
         let initialDir = workingDirectory
@@ -40,8 +40,8 @@ public final class SuqiWindowManager: ObservableObject {
         let model = SuqiWindowModel(initialWorkingDirectory: initialDir)
         let controller = TerminalWindowController(model: model)
 
-        // 首个窗口优先恢复用户上次调整过的大小与坐标 (window-save-state)，无历史记录时居中；
-        // 后续窗口 (⌘N) 进行级联错位布局 (Cascade)，提供标准的 macOS 多窗口体验
+        // First window restores saved geometry (window-save-state), or centers on screen;
+        // Subsequent windows (⌘N) cascade naturally for standard macOS multi-window workflow
         guard let win = controller.window else {
             windowControllers.append(controller)
             controller.showWindow()
@@ -52,7 +52,7 @@ public final class SuqiWindowManager: ObservableObject {
         let shouldSaveState = cfg.windowSaveState.lowercased() != "never"
 
         if windowControllers.isEmpty {
-            // 首个窗口：优先从 window-save-state 恢复保存的尺寸与位置；无记录时居中
+            // First window: restore saved position/size if available, else center
             var didRestore = false
             if shouldSaveState {
                 didRestore = win.setFrameUsingName("SuqiTerminalWindow")
@@ -63,7 +63,7 @@ public final class SuqiWindowManager: ObservableObject {
             lastWindowTopLeft = win.frame.origin
             lastWindowTopLeft?.y += win.frame.height
         } else {
-            // 后续新建窗口 (⌘N)：继承当前活跃窗口的尺寸，并级联 (Cascade) 错位布局，完全对齐 Ghostty / macOS 原生行为
+            // Subsequent windows (⌘N): inherit active window dimensions and cascade
             if let activeWin = activeWindowController?.window {
                 var newFrame = win.frame
                 newFrame.size = activeWin.frame.size
@@ -81,7 +81,7 @@ public final class SuqiWindowManager: ObservableObject {
         windowControllers.append(controller)
         controller.showWindow()
 
-        // 窗口展示后同步记录
+        // Sync saved frame after window display
         if shouldSaveState {
             controller.saveWindowFrameIfNeeded()
         }
@@ -89,7 +89,7 @@ public final class SuqiWindowManager: ObservableObject {
         return controller
     }
 
-    /// 移除已关闭的窗口控制器
+    /// Removes a closed window controller
     public func removeWindow(_ controller: TerminalWindowController) {
         controller.saveWindowFrameIfNeeded()
         windowControllers.removeAll { $0 === controller }
@@ -98,14 +98,14 @@ public final class SuqiWindowManager: ObservableObject {
         }
     }
 
-    /// 重新加载所有窗口的主题与背景
+    /// Reloads theme background colors across all windows
     public func updateAllThemeBackgrounds() {
         for controller in windowControllers {
             controller.updateThemeBackground()
         }
     }
 
-    /// 重载所有窗口中的终端配置与会话
+    /// Hot-reloads terminal configurations and active sessions across all windows
     public func reloadAllWindows() {
         for controller in windowControllers {
             controller.model.reloadAllSessions()

@@ -54,7 +54,7 @@ public struct ContentView: View {
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
-            // 背景底衬：根据 Ghostty 配置自适应纯色或毛玻璃模糊
+            // Background: Adaptively renders solid color or visual effect blur per Ghostty config
             if isTranslucent {
                 VisualEffectBackground()
                     .ignoresSafeArea()
@@ -66,7 +66,7 @@ public struct ContentView: View {
             }
 
             VStack(spacing: 0) {
-                // 顶部标题/标签栏区域（高度 32）：底层承载原生可拖拽/双击缩放交互，上层渲染标签页
+                // Top title/tab bar area (height: 32): background handles native drag/double-click zoom, foreground renders tabs
                 ZStack(alignment: .center) {
                     WindowDragArea()
                         .frame(height: 32)
@@ -91,7 +91,7 @@ public struct ContentView: View {
                 }
                 .frame(height: 32)
 
-                // 终端渲染工作区（全幅贴合，支持多标签、多分屏、全屏聚焦与滚动搜索）
+                // Terminal workspace (multi-tab, split panes, zoom, and scrollback search)
                 ZStack(alignment: .topTrailing) {
                     if let activeTab = model.activeTab {
                         ActiveTabView(tab: activeTab, model: model)
@@ -115,7 +115,7 @@ public struct ContentView: View {
         .frame(minWidth: 480, minHeight: 280)
         .ignoresSafeArea()
         .transaction { $0.animation = nil }
-        // 支持将 Finder 文件直接拖拽至终端窗口自动填入转义路径
+        // Support dragging files from Finder directly into terminal window
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             for provider in providers {
                 _ = provider.loadObject(ofClass: URL.self) { url, _ in
@@ -151,11 +151,11 @@ public struct ActiveTabView: View {
                     .id(activeSession.id)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                // 极简全屏/缩放徽标 (Ghostty 风格)
+                // Minimalist zoom badge (Ghostty style)
                 HStack(spacing: 5) {
                     Image(systemName: "arrow.down.right.and.arrow.up.left")
                         .font(.system(size: 9, weight: .bold))
-                    Text("ZOOMED · ⌘⇧↩ 还原")
+                    Text("ZOOMED · ⌘⇧↩ Unzoom")
                         .font(.system(size: 10, weight: .medium, design: .monospaced))
                 }
                 .foregroundStyle(Color.white.opacity(0.85))
@@ -217,7 +217,7 @@ public struct TerminalSearchBar: View {
                     .background(RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.08)))
             }
             .buttonStyle(.plain)
-            .help("上一个匹配项 (⇧Enter)")
+            .help("Previous Match (⇧Enter)")
 
             // Next Match
             Button {
@@ -230,7 +230,7 @@ public struct TerminalSearchBar: View {
                     .background(RoundedRectangle(cornerRadius: 3).fill(Color.white.opacity(0.08)))
             }
             .buttonStyle(.plain)
-            .help("下一个匹配项 (Enter)")
+            .help("Next Match (Enter)")
 
             // Close Search
             Button {
@@ -242,7 +242,7 @@ public struct TerminalSearchBar: View {
                     .frame(width: 16, height: 16)
             }
             .buttonStyle(.plain)
-            .help("关闭搜索 (Esc)")
+            .help("Close Search (Esc)")
         }
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
@@ -266,7 +266,7 @@ public struct TerminalSearchBar: View {
     }
 }
 
-// MARK: - AppKit 原生搜索输入框 (保证 ⌘F 唤起时 100% 抢占 First Responder)
+// MARK: - AppKit Search Field (Ensures 100% First Responder acquisition on ⌘F)
 
 struct SearchFieldRepresentable: NSViewRepresentable {
     @Binding var text: String
@@ -275,7 +275,7 @@ struct SearchFieldRepresentable: NSViewRepresentable {
 
     func makeNSView(context: Context) -> NSSearchField {
         let field = NSSearchField()
-        field.placeholderString = "查找回滚内容..."
+        field.placeholderString = "Search scrollback..."
         field.font = .monospacedSystemFont(ofSize: 11.5, weight: .regular)
         field.delegate = context.coordinator
         field.focusRingType = .none
@@ -400,7 +400,7 @@ public struct PaneContainerView: View {
     }
 }
 
-// MARK: - 可拖拽调整宽高的分屏分割条 (基于 AppKit NSView 实现极致跟手、抗穿透与原生光标)
+// MARK: - Split Divider (AppKit NSView draggable split bar)
 
 public struct SplitDividerView: NSViewRepresentable {
     let axis: Axis
@@ -479,7 +479,7 @@ public final class SplitDividerNSView: NSView {
 
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        // 居中绘制 1pt 精准发丝分割线，其余区域保持透明作为跟手缓冲响应区
+        // Draw 1pt centered hairline divider
         let lineRect: NSRect = {
             if axis == .horizontal {
                 return NSRect(x: (bounds.width - 1) / 2.0, y: 0, width: 1, height: bounds.height)

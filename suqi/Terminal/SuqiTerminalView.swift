@@ -45,10 +45,10 @@ public struct SuqiTerminalView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .transaction { $0.animation = nil }
 
-            // 右侧原生极简滚动条 (仅 #9D9FA2 单一滑块，无任何背景范围条，默认隐藏，滑动时渐显)
+            // Minimalist scrollbar (clean #9D9FA2 thumb, hidden by default, fades in during scrolling)
             TerminalScrollbarView(session: session)
 
-            // 分屏模式下的活跃窗格微光细边框指示
+            // Subtle border indicator for active pane in split mode
             if isMultiPane && isActivePane {
                 Rectangle()
                     .strokeBorder(Color.white.opacity(0.18), lineWidth: 1)
@@ -75,7 +75,7 @@ public struct SuqiTerminalView: View {
     }
 }
 
-// MARK: - 极简终端滚动条 (#9D9FA2，无背景范围条，平时完全隐藏，仅上下滑动/拖拽时出现)
+// MARK: - Minimalist Scrollbar (#9D9FA2, auto-hiding)
 
 struct TerminalScrollbarView: View {
     @ObservedObject var session: SuqiTerminalSession
@@ -85,7 +85,7 @@ struct TerminalScrollbarView: View {
     @State private var dragStartThumbY: CGFloat = 0
     @State private var hideTask: DispatchWorkItem? = nil
 
-    // 用户指定专属颜色 #9D9FA2
+    // Color #9D9FA2
     private let thumbColor = Color(red: 157/255.0, green: 159/255.0, blue: 162/255.0)
 
     var body: some View {
@@ -107,7 +107,7 @@ struct TerminalScrollbarView: View {
                 let barWidth: CGFloat = (isHovering || isDragging) ? 6.5 : 4.5
 
                 ZStack(alignment: .topTrailing) {
-                    // 透明手势响应区域（无任何背景颜色与视觉范围条，不遮挡终端内容）
+                    // Transparent gesture target without obscuring terminal content
                     Color.clear
                         .frame(width: 16)
                         .contentShape(Rectangle())
@@ -131,7 +131,7 @@ struct TerminalScrollbarView: View {
                                 }
                         )
 
-                    // 仅单独渲染 #9D9FA2 滚动滑块，默认隐藏，滑动时平滑显示
+                    // Render #9D9FA2 scrollbar thumb
                     Capsule(style: .continuous)
                         .fill(thumbColor)
                         .frame(width: barWidth, height: thumbHeight)

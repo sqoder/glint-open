@@ -31,7 +31,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
-    // MARK: - Dock 右键菜单
+    // MARK: - Dock Context Menu
     public func applicationDockMenu(_ sender: NSApplication) -> NSMenu? {
         let menu = NSMenu()
 

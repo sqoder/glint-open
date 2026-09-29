@@ -31,7 +31,7 @@ public final class QuickTerminalController: ObservableObject {
     }
 
     private func setupLocalShortcut() {
-        // 1. 本地键盘监听：在 suqi 处于活跃状态时响应 ⌃`，以及在 Quick Terminal 处于焦点时分发所有快捷键 (⌘V / ⌘D / ⌘W 等)
+        // 1. Local keyboard monitor: Toggle on ⌃` when active, and dispatch all shortcuts (⌘V / ⌘D / ⌘W etc.) when Quick Terminal is focused
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
@@ -56,7 +56,7 @@ public final class QuickTerminalController: ObservableObject {
             return event
         }
 
-        // 2. 全局键盘监听：当用户在任意其他 App 界面时，按下 ⌃` 自动滑出下拉终端
+        // 2. Global keyboard monitor: When in any other app, ⌃` smoothly slides out the drop-down Quick Terminal
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             if flags == .control && (event.charactersIgnoringModifiers == "`" || event.charactersIgnoringModifiers == "~") {

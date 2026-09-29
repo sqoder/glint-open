@@ -178,7 +178,7 @@ public final class TerminalContextMenuBridge: NSObject {
 }
 
 extension AppTerminalView {
-    /// 激活原生 Ghostty 右键上下文菜单流水线
+    /// Enables native Ghostty context menu pipeline
     public static let enableContextMenuPipeline: Void = {
         // 1. Swizzle rightMouseDown
         if let originalMethod = class_getInstanceMethod(AppTerminalView.self, #selector(NSResponder.rightMouseDown(with:))) {

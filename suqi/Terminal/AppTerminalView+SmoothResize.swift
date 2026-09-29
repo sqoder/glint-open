@@ -11,11 +11,11 @@ import GhosttyTerminal
 extension AppTerminalView {
     private static var originalSetFrameSizeIMP: IMP?
 
-    /// 对齐 Ghostty 官方 macOS 原生渲染流水线：
-    /// 1. 彻底跳过 libghostty-spm 中的 capturePresentationFrame 截图图层黑魔法与 4 帧强制同步阻塞渲染
-    /// 2. 贯彻 Ghostty 官方 IOSurfaceLayer 的 contentsGravity = .topLeft 原生机制，杜绝 Core Animation 在实时拉伸时拉扯形变终端网格
-    /// 3. 设置 layerContentsRedrawPolicy = .never，阻止 AppKit 在 Live Resize 期间清空或重绘图层
-    /// 4. 纯净调用 fitToSize()，与 Ghostty 官方的 sizeDidChange 流水线完全对齐
+    /// Aligns with Ghostty macOS native rendering pipeline:
+    /// 1. Bypasses screenshot layer magic and multi-frame synchronous blocking render
+    /// 2. Adopts official Ghostty IOSurfaceLayer contentsGravity = .topLeft to eliminate Core Animation stretch distortion during live resize
+    /// 3. Sets layerContentsRedrawPolicy = .never to prevent AppKit from clearing layers during live resize
+    /// 4. Direct invocation of fitToSize() matching official sizeDidChange pipeline
     public static let enableSmoothResizePipeline: Void = {
         guard let method = class_getInstanceMethod(AppTerminalView.self, #selector(NSView.setFrameSize(_:))) else {
             return
@@ -32,14 +32,14 @@ extension AppTerminalView {
 
             let sizeChanged = (newSize.width != view.frame.size.width || newSize.height != view.frame.size.height)
 
-            // 1. 调用 NSView 原生底层 setFrameSize
+            // 1. Call NSView native underlying setFrameSize
             if let originalIMP = AppTerminalView.originalSetFrameSizeIMP {
                 typealias Fn = @convention(c) (AnyObject, Selector, NSSize) -> Void
                 let fn = unsafeBitCast(originalIMP, to: Fn.self)
                 fn(view, #selector(NSView.setFrameSize(_:)), newSize)
             }
 
-            // 2. 严格对齐 Ghostty 官方设计：锚定 top-left，防止缩放帧间隔内的位图拉伸变形
+            // 2. Anchor top-left to eliminate raster bitmap stretching during live resizing
             view.layer?.contentsGravity = .topLeft
             if let sublayers = view.layer?.sublayers {
                 for sub in sublayers {
@@ -48,7 +48,7 @@ extension AppTerminalView {
             }
             view.layerContentsRedrawPolicy = .never
 
-            // 3. 尺寸变更时，直接通知 Ghostty 核心同步最新尺寸并安排下一帧 DisplayLink 刷新
+            // 3. Notify Ghostty core to synchronize dimensions and schedule next DisplayLink frame
             if sizeChanged {
                 view.fitToSize()
             }
