@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>suqi Terminal - App Icon 概念设计方案预览 (A/B/C/D)</title>
+    <style>
+        :root {
+            --bg-color: #0d1117;
+            --card-bg: rgba(22, 27, 34, 0.85);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-main: #f0f6fc;
+            --text-sub: #8b949e;
+            --accent: #58a6ff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 40px 24px 120px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 15%, rgba(88, 166, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(186, 104, 200, 0.08) 0%, transparent 40%);
+        }
+
+        header {
+            text-align: center;
+            max-width: 760px;
+            margin-bottom: 48px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.desc {
+            font-size: 15px;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+            width: 100%;
+            max-width: 1360px;
+            margin-bottom: 60px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 28px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            backdrop-filter: blur(20px);
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .card-tag {
+            align-self: flex-start;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+
+        .tag-a { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+        .tag-b { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .tag-c { background: rgba(236, 72, 153, 0.15); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.3); }
+        .tag-d { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.3); }
+
+        .icon-stage {
+            width: 196px;
+            height: 196px;
+            margin: 12px 0 28px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45));
+        }
+
+        .icon-squircle {
+            width: 172px;
+            height: 172px;
+            border-radius: 38px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.12) inset,
+                0 2px 4px rgba(255, 255, 255, 0.25) inset,
+                0 -2px 4px rgba(0, 0, 0, 0.4) inset;
+        }
+
+        .card h2 {
+            font-size: 19px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .card p.info {
+            font-size: 13.5px;
+            color: var(--text-sub);
+            line-height: 1.55;
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 64px;
+        }
+
+        .highlights {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 12.5px;
+            color: #c9d1d9;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .highlights li {
+            list-style: none;
+            position: relative;
+            padding-left: 16px;
+            margin-bottom: 4px;
+        }
+        .highlights li:last-child { margin-bottom: 0; }
+        .highlights li::before {
+            content: "•";
+            position: absolute;
+            left: 4px;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* ================================================================= */
+        /* ICON A: 二次元海风荧光蝶 (Cinematic Anime Sea & Ethereal Butterfly) */
+        /* ================================================================= */
+        .icon-a {
+            background: linear-gradient(180deg, #A8EDFE 0%, #68D8D6 32%, #3895D3 65%, #184A7E 100%);
+        }
+        .icon-a-sun {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 70%);
+            filter: blur(4px);
+        }
+        .icon-a-sea {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 48%;
+            background: linear-gradient(180deg, rgba(20, 80, 140, 0.85) 0%, #0d2c4d 100%);
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .icon-a-grass {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 38%;
+            background: linear-gradient(180deg, transparent 0%, rgba(10, 30, 50, 0.95) 80%);
+            clip-path: polygon(0% 100%, 0% 40%, 15% 55%, 30% 35%, 45% 60%, 60% 45%, 75% 70%, 90% 50%, 100% 65%, 100% 100%);
+        }
+        .icon-a-butterfly {
+            position: absolute;
+            z-index: 5;
+            filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 24px rgba(56, 189, 248, 0.8));
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* ================================================================= */
+        /* ICON B: Apple 原生 3D 拟物流体玻璃 (Liquid Glass 3D Crystal Butterfly) */
+        /* ================================================================= */
+        .icon-b {
+            background: linear-gradient(145deg, #1f232b 0%, #12141a 100%);
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+                0 3px 6px rgba(255, 255, 255, 0.20) inset,
+                0 -4px 12px rgba(0, 0, 0, 0.6) inset;
+        }
+        .icon-b-grid {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 16px 16px;
+            background-position: center;
+        }
+        .icon-b-glow {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, rgba(56, 189, 248, 0.2) 50%, transparent 70%);
+            filter: blur(12px);
+        }
+        .icon-b-butterfly {
+            position: relative;
+            z-index: 5;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 8px rgba(192, 132, 252, 0.6));
+        }
+
+        /* ================================================================= */
+        /* ICON C: 暗夜极光霓虹 · 光子羽翼 (Cyber Aurora Neon Photon Butterfly) */
+        /* ================================================================= */
+        .icon-c {
+            background: linear-gradient(135deg, #090a10 0%, #0f121d 60%, #151022 100%);
+            box-shadow: 
+                0 0 0 1px rgba(236, 72, 153, 0.25) inset,
+                0 2px 8px rgba(56, 189, 248, 0.25) inset;
+        }
+        .icon-c-bg-aurora {
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.25) 0%, transparent 60%),
+                radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.25) 0%, transparent 60%);
+        }
+        .icon-c-terminal-prompt {
+            position: absolute;
+            top: 22px;
+            left: 22px;
+            font-family: "SF Mono", monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(56, 189, 248, 0.7);
+            letter-spacing: 0.5px;
+        }
+        .icon-c-butterfly {
+            position: relative;
+            z-index: 5;
+            filter: drop-shadow(0 0 14px #38bdf8) drop-shadow(0 0 28px #ec4899);
+            animation: pulseGlow 3s ease-in-out infinite alternate;
+        }
+
+        /* ================================================================= */
+        /* ICON D: 极简大师几何 · 符号隐喻 (Minimalist Swiss Master Geometry) */
+        /* ================================================================= */
+        .icon-d {
+            background: linear-gradient(145deg, #181b22 0%, #0d1017 100%);
+            box-shadow: 
+                0 0 0 1px rgba(255, 255, 255, 0.14) inset,
+                0 3px 6px rgba(255, 255, 255, 0.15) inset;
+        }
+        .icon-d-butterfly {
+            position: relative;
+            z-index: 5;
+            filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-4px) scale(1.02); }
+        }
+
+        @keyframes pulseGlow {
+            0% { filter: drop-shadow(0 0 10px #38bdf8) drop-shadow(0 0 20px #ec4899); }
+            100% { filter: drop-shadow(0 0 18px #38bdf8) drop-shadow(0 0 35px #f43f5e); }
+        }
+
+        /* ================================================================= */
+        /* macOS Dock 模拟器 */
+        /* ================================================================= */
+        .dock-container {
+            width: 100%;
+            max-width: 1060px;
+            background: rgba(30, 35, 45, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px 24px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            backdrop-filter: blur(30px);
+        }
+
+        .dock-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dock-bar {
+            background: rgba(255, 255, 255, 0.18);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 26px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: flex-end;
+            gap: 16px;
+            box-shadow: 
+                0 20px 50px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+            backdrop-filter: blur(40px) saturate(180%);
+        }
+
+        .dock-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .dock-item:hover {
+            transform: scale(1.18) translateY(-8px);
+        }
+
+        .dock-app-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 
+                0 0 0 0.5px rgba(255, 255, 255, 0.2) inset,
+                0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .dock-indicator {
+            width: 4px;
+            height: 4px;
+            background: #ffffff;
+            border-radius: 50%;
+            margin-top: 5px;
+            box-shadow: 0 0 4px #ffffff;
+        }
+
+        .dock-divider {
+            width: 1px;
+            height: 48px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+
+        .dock-label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>suqi Terminal 图标设计方案精选</h1>
+        <p class="desc">为您量身定制 4 款不同审美梯度的 macOS 原生 Squircle 图标方案。请在下方对比画面细节，并查看在 Dock 栏与其它常用应用的实景搭配效果。</p>
+    </header>
+
+    <div class="grid">
+
+        <!-- 方案 A -->
+        <div class="card">
+            <span class="card-tag tag-a">方案 A · 唯美插画</span>
+            <div class="icon-stage">
+                <div class="icon-squircle icon-a">
+                    <div class="icon-a-sun"></div>
+                    <div class="icon-a-sea"></div>
+                    <div class="icon-a-grass"></div>
+                    <!-- 唯美发光发晶蝴蝶 SVG -->
+                    <svg class="icon-a-butterfly" width="104" height="104" viewBox="0 0 100 100" fill="none">
+                        <!-- 发光外轮廓 -->
+                        <path d="M50 48 C42 22 18 20 12 36 C8 48 20 66 46 62 Z" fill="url(#grad-a-wing-l)" opacity="0.9"/>
+                        <path d="M50 48 C58 22 82 20 88 36 C92 48 80 66 54 62 Z" fill="url(#grad-a-wing-r)" opacity="0.9"/>
+                        <path d="M48 58 C36 62 26 74 34 84 C42 90 48 76 50 64 Z" fill="url(#grad-a-subwing-l)" opacity="0.85"/>
+                        <path d="M52 58 C64 62 74 74 66 84 C58 90 52 76 50 64 Z" fill="url(#grad-a-subwing-r)" opacity="0.85"/>
+                        <!-- 琉璃叶脉纹理 -->
+                        <path d="M50 48 Q32 36 20 38 M50 52 Q30 50 22 58 M50 48 Q68 36 80 38 M50 52 Q70 50 78 58" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" opacity="0.95"/>
+                        <ellipse cx="50" cy="56" rx="2.2" ry="15" fill="#ffffff"/>
+                        <!-- 触角 -->
+                        <path d="M49 44 Q44 32 38 30 M51 44 Q56 32 62 30" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round"/>
+                        <defs>
+                            <linearGradient id="grad-a-wing-l" x1="50" y1="20" x2="12" y2="60" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+                                <stop offset="60%" stop-color="#7dd3fc" stop-opacity="0.8"/>
+                                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.6"/>
+                            </linearGradient>
+                            <linearGradient id="grad-a-wing-r" x1="50" y1="20" x2="88" y2="60" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+                                <stop offset="60%" stop-color="#7dd3fc" stop-opacity="0.8"/>
+                                <stop offset="100%" stop-color="#0284c7" stop-opacity="0.6"/>
+                            </linearGradient>
+                            <linearGradient id="grad-a-subwing-l" x1="50" y1="60" x2="30" y2="85" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#38bdf8"/>
+                                <stop offset="100%" stop-color="#0369a1"/>
+                            </linearGradient>
+                            <linearGradient id="grad-a-subwing-r" x1="50" y1="60" x2="70" y2="85" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#38bdf8"/>
+                                <stop offset="100%" stop-color="#0369a1"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+            <h2>二次元海风荧光蝶</h2>
+            <p class="info">延续 Glint 唯美海平线与清透天色。晶莹剔透的琉璃青蓝蝴蝶在晨曦海风中振翅，意境深远、治愈耐看。</p>
+            <div class="highlights">
+                <li>与左侧 Glint 图标形成绝配姐妹篇</li>
+                <li>海风、晨曦天空与草地多层景深</li>
+                <li>发光微粒与琉璃翅膀，Dock 栏辨识度极高</li>
+            </div>
+        </div>
+
+        <!-- 方案 B -->
+        <div class="card">
+            <span class="card-tag tag-b">方案 B · 苹果拟物</span>
+            <div class="icon-stage">
+                <div class="icon-squircle icon-b">
+                    <div class="icon-b-grid"></div>
+                    <div class="icon-b-glow"></div>
+                    <!-- 3D 琉璃玻璃雕刻蝴蝶 SVG -->
+                    <svg class="icon-b-butterfly" width="108" height="108" viewBox="0 0 100 100" fill="none">
+                        <!-- 翅膀物理玻璃层 -->
+                        <path d="M50 48 C38 20 12 18 8 38 C5 52 20 70 47 62 Z" fill="url(#grad-b-glass-l)" stroke="url(#stroke-b-rim)" stroke-width="1.2"/>
+                        <path d="M50 48 C62 20 88 18 92 38 C95 52 80 70 53 62 Z" fill="url(#grad-b-glass-r)" stroke="url(#stroke-b-rim)" stroke-width="1.2"/>
+                        <path d="M47 58 C34 64 24 76 34 86 C44 92 48 76 50 63 Z" fill="url(#grad-b-sub-l)" stroke="url(#stroke-b-rim)" stroke-width="1"/>
+                        <path d="M53 58 C66 64 76 76 66 86 C56 92 52 76 50 63 Z" fill="url(#grad-b-sub-r)" stroke="url(#stroke-b-rim)" stroke-width="1"/>
+                        <!-- 菲涅尔高光倒角弧 -->
+                        <path d="M12 36 C16 26 36 26 48 46" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
+                        <path d="M88 36 C84 26 64 26 52 46" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity="0.9"/>
+                        <!-- 内部折射光柱核心 -->
+                        <rect x="48.5" y="42" width="3" height="28" rx="1.5" fill="url(#core-b)"/>
+                        <defs>
+                            <linearGradient id="grad-b-glass-l" x1="10" y1="20" x2="50" y2="60" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+                                <stop offset="50%" stop-color="rgba(192,132,252,0.3)"/>
+                                <stop offset="100%" stop-color="rgba(56,189,248,0.15)"/>
+                            </linearGradient>
+                            <linearGradient id="grad-b-glass-r" x1="90" y1="20" x2="50" y2="60" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+                                <stop offset="50%" stop-color="rgba(192,132,252,0.3)"/>
+                                <stop offset="100%" stop-color="rgba(56,189,248,0.15)"/>
+                            </linearGradient>
+                            <linearGradient id="grad-b-sub-l" x1="30" y1="60" x2="50" y2="85" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="rgba(168,85,247,0.4)"/>
+                                <stop offset="100%" stop-color="rgba(56,189,248,0.1)"/>
+                            </linearGradient>
+                            <linearGradient id="grad-b-sub-r" x1="70" y1="60" x2="50" y2="85" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="rgba(168,85,247,0.4)"/>
+                                <stop offset="100%" stop-color="rgba(56,189,248,0.1)"/>
+                            </linearGradient>
+                            <linearGradient id="stroke-b-rim" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+                                <stop offset="50%" stop-color="#c084fc" stop-opacity="0.4"/>
+                                <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.8"/>
+                            </linearGradient>
+                            <linearGradient id="core-b" x1="50" y1="42" x2="50" y2="70" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#ffffff"/>
+                                <stop offset="100%" stop-color="#a855f7"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+            <h2>3D 琉璃冰晶蝶</h2>
+            <p class="info">macOS 原生深度拟物设计。黑曜石微网格底座配合物理 Liquid Glass 琉璃雕刻羽翼，菲涅尔白边光感极其高级。</p>
+            <div class="highlights">
+                <li>Apple 原生精致倒角与顶级材质感</li>
+                <li>深色底板，与任何桌面壁纸皆能和谐融入</li>
+                <li>透镜折射与高光弧，专业级开发者工具气质</li>
+            </div>
+        </div>
+
+        <!-- 方案 C -->
+        <div class="card">
+            <span class="card-tag tag-c">方案 C · 赛博光子</span>
+            <div class="icon-stage">
+                <div class="icon-squircle icon-c">
+                    <div class="icon-c-bg-aurora"></div>
+                    <span class="icon-c-terminal-prompt">&gt;_</span>
+                    <!-- 极光光子霓虹蝴蝶 SVG -->
+                    <svg class="icon-c-butterfly" width="108" height="108" viewBox="0 0 100 100" fill="none">
+                        <!-- 光子线条翅膀 -->
+                        <path d="M48 48 C36 18 10 16 6 36 C3 50 18 68 45 60 Z" stroke="url(#grad-c-neon-l)" stroke-width="2.5" stroke-linejoin="round"/>
+                        <path d="M52 48 C64 18 90 16 94 36 C97 50 82 68 55 60 Z" stroke="url(#grad-c-neon-r)" stroke-width="2.5" stroke-linejoin="round"/>
+                        <!-- 内羽翼脉冲线 -->
+                        <path d="M46 50 C36 32 20 30 16 42 C14 50 24 60 44 56 Z" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.85"/>
+                        <path d="M54 50 C64 32 80 30 84 42 C86 50 76 60 56 56 Z" stroke="#ec4899" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.85"/>
+                        <!-- 下翼 -->
+                        <path d="M46 58 C32 64 22 76 32 86 C42 92 46 76 48 62 Z" stroke="url(#grad-c-neon-l)" stroke-width="2"/>
+                        <path d="M54 58 C68 64 78 76 68 86 C58 92 54 76 52 62 Z" stroke="url(#grad-c-neon-r)" stroke-width="2"/>
+                        <!-- 光标中轴 -->
+                        <rect x="48" y="44" width="4" height="24" rx="2" fill="#38bdf8" filter="drop-shadow(0 0 4px #38bdf8)"/>
+                        <defs>
+                            <linearGradient id="grad-c-neon-l" x1="0" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#38bdf8"/>
+                                <stop offset="60%" stop-color="#818cf8"/>
+                                <stop offset="100%" stop-color="#ec4899"/>
+                            </linearGradient>
+                            <linearGradient id="grad-c-neon-r" x1="100" y1="20" x2="50" y2="80" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#ec4899"/>
+                                <stop offset="60%" stop-color="#818cf8"/>
+                                <stop offset="100%" stop-color="#38bdf8"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+            <h2>暗夜极光光子蝶</h2>
+            <p class="info">深黑夜幕底色搭配电光青（Electric Cyan）与幻彩粉紫霓虹光子线条，在翅膀中轴巧妙融入终端光标与命令行隐喻。</p>
+            <div class="highlights">
+                <li>暗黑深邃，霓虹发光线条极具未来科技感</li>
+                <li>巧妙结合命令行光标与代码符</li>
+                <li>夜间模式与深色桌面极其耀眼吸睛</li>
+            </div>
+        </div>
+
+        <!-- 方案 D -->
+        <div class="card">
+            <span class="card-tag tag-d">方案 D · 极简大师</span>
+            <div class="icon-stage">
+                <div class="icon-squircle icon-d">
+                    <!-- 瑞士极简双翼几何 SVG -->
+                    <svg class="icon-d-butterfly" width="112" height="112" viewBox="0 0 100 100" fill="none">
+                        <!-- 左翼：> 符号演变 -->
+                        <path d="M47 28 C26 28 14 42 14 60 C14 74 26 82 38 82 C44 82 47 76 47 68 Z" fill="url(#grad-d-l)"/>
+                        <!-- 右翼：< 符号演变 -->
+                        <path d="M53 28 C74 28 86 42 86 60 C86 74 74 82 62 82 C56 82 53 76 53 68 Z" fill="url(#grad-d-r)"/>
+                        <!-- 负空间中央形成极简灵动核心 -->
+                        <circle cx="50" cy="46" r="3.5" fill="#ffffff" opacity="0.95"/>
+                        <circle cx="50" cy="58" r="2.5" fill="#ffffff" opacity="0.6"/>
+                        <defs>
+                            <linearGradient id="grad-d-l" x1="14" y1="28" x2="47" y2="82" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#38bdf8"/>
+                                <stop offset="100%" stop-color="#2563eb"/>
+                            </linearGradient>
+                            <linearGradient id="grad-d-r" x1="86" y1="28" x2="53" y2="82" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#60a5fa"/>
+                                <stop offset="100%" stop-color="#3b82f6"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+            </div>
+            <h2>极简大师几何蝶</h2>
+            <p class="info">类似 Arc / Linear 的高阶几何美学。双翼由终端大于号“>”与优雅曲线构成，克制纯粹、永不过时。</p>
+            <div class="highlights">
+                <li>极度克制的大师级几何排版</li>
+                <li>负空间隐喻终端命令交互</li>
+                <li>大厂旗舰级规范，耐看不审美疲劳</li>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- macOS Dock 模拟实景 -->
+    <div class="dock-container">
+        <div class="dock-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            macOS Dock 栏实景预览（对比系统常用 App）
+        </div>
+
+        <div class="dock-bar">
+            <!-- Finder -->
+            <div class="dock-item">
+                <div class="dock-app-icon" style="background: linear-gradient(180deg, #38bdf8, #0284c7);">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/><path d="M9 4v16"/><circle cx="9" cy="14" r="1.5" fill="#fff"/><circle cx="15" cy="14" r="1.5" fill="#fff"/><path d="M9 17c1.5 1.5 4.5 1.5 6 0"/></svg>
+                </div>
+                <div class="dock-indicator"></div>
+                <span class="dock-label">Finder</span>
+            </div>
+
+            <!-- Glint (左侧姐妹 App) -->
+            <div class="dock-item">
+                <div class="dock-app-icon icon-a" style="border: 0.5px solid rgba(255,255,255,0.4);">
+                    <div class="icon-a-sun" style="width: 28px; height: 28px; top: 6px; left: 10px;"></div>
+                    <div class="icon-a-sea" style="height: 48%;"></div>
+                    <div class="icon-a-grass" style="height: 38%;"></div>
+                    <!-- 简略少女插画剪影 -->
+                    <svg width="40" height="40" viewBox="0 0 100 100" fill="#1e3a5f" style="position: absolute; bottom: 0; right: 8px;">
+                        <circle cx="65" cy="45" r="14" fill="#a5f3fc" opacity="0.9"/>
+                        <path d="M50 40 Q40 32 30 35 Q40 45 48 50 Z" fill="#38bdf8"/>
+                        <path d="M50 42 Q35 48 24 45 Q38 56 52 56 Z" fill="#0284c7"/>
+                        <path d="M55 58 L75 100 L45 100 Z" fill="#38bdf8"/>
+                    </svg>
+                </div>
+                <div class="dock-indicator"></div>
+                <span class="dock-label">Glint</span>
+            </div>
+
+            <div class="dock-divider"></div>
+
+            <!-- suqi 方案 A -->
+            <div class="dock-item">
+                <div class="dock-app-icon icon-a">
+                    <div class="icon-a-sun" style="width: 24px; height: 24px; top: 6px; left: 8px;"></div>
+                    <div class="icon-a-sea"></div>
+                    <div class="icon-a-grass"></div>
+                    <svg class="icon-a-butterfly" width="38" height="38" viewBox="0 0 100 100" fill="none">
+                        <path d="M50 48 C42 22 18 20 12 36 C8 48 20 66 46 62 Z" fill="url(#grad-a-wing-l)"/>
+                        <path d="M50 48 C58 22 82 20 88 36 C92 48 80 66 54 62 Z" fill="url(#grad-a-wing-r)"/>
+                        <path d="M48 58 C36 62 26 74 34 84 C42 90 48 76 50 64 Z" fill="#38bdf8"/>
+                        <path d="M52 58 C64 62 74 74 66 84 C58 90 52 76 50 64 Z" fill="#38bdf8"/>
+                    </svg>
+                </div>
+                <div class="dock-indicator"></div>
+                <span class="dock-label">suqi (A)</span>
+            </div>
+
+            <!-- suqi 方案 B -->
+            <div class="dock-item">
+                <div class="dock-app-icon icon-b">
+                    <div class="icon-b-glow" style="width: 44px; height: 44px;"></div>
+                    <svg class="icon-b-butterfly" width="38" height="38" viewBox="0 0 100 100" fill="none">
+                        <path d="M50 48 C38 20 12 18 8 38 C5 52 20 70 47 62 Z" fill="url(#grad-b-glass-l)" stroke="#fff" stroke-width="1.2"/>
+                        <path d="M50 48 C62 20 88 18 92 38 C95 52 80 70 53 62 Z" fill="url(#grad-b-glass-r)" stroke="#fff" stroke-width="1.2"/>
+                        <path d="M47 58 C34 64 24 76 34 86 C44 92 48 76 50 63 Z" fill="url(#grad-b-sub-l)" stroke="#fff" stroke-width="1"/>
+                        <path d="M53 58 C66 64 76 76 66 86 C56 92 52 76 50 63 Z" fill="url(#grad-b-sub-r)" stroke="#fff" stroke-width="1"/>
+                    </svg>
+                </div>
+                <div class="dock-indicator"></div>
+                <span class="dock-label">suqi (B)</span>
+            </div>
+
+            <!-- suqi 方案 C -->
+            <div class="dock-item">
+                <div class="dock-app-icon icon-c">
+                    <div class="icon-c-bg-aurora"></div>
+                    <svg class="icon-c-butterfly" width="38" height="38" viewBox="0 0 100 100" fill="none">
+                        <path d="M48 48 C36 18 10 16 6 36 C3 50 18 68 45 60 Z" stroke="url(#grad-c-neon-l)" stroke-width="3"/>
+                        <path d="M52 48 C64 18 90 16 94 36 C97 50 82 68 55 60 Z" stroke="url(#grad-c-neon-r)" stroke-width="3"/>
+                        <path d="M46 58 C32 64 22 76 32 86 C42 92 46 76 48 62 Z" stroke="url(#grad-c-neon-l)" stroke-width="2.5"/>
+                        <path d="M54 58 C68 64 78 76 68 86 C58 92 54 76 52 62 Z" stroke="url(#grad-c-neon-r)" stroke-width="2.5"/>
+                    </svg>
+                </div>
+                <div class="dock-indicator"></div>
+                <span class="dock-label">suqi (C)</span>
+            </div>
+
+            <!-- suqi 方案 D -->
+            <div class="dock-item">
+                <div class="dock-app-icon icon-d">
+                    <svg class="icon-d-butterfly" width="40" height="40" viewBox="0 0 100 100" fill="none">
+                        <path d="M47 28 C26 28 14 42 14 60 C14 74 26 82 38 82 C44 82 47 76 47 68 Z" fill="url(#grad-d-l)"/>
+                        <path d="M53 28 C74 28 86 42 86 60 C86 74 74 82 62 82 C56 82 53 76 53 68 Z" fill="url(#grad-d-r)"/>
+                    </svg>
+                </div>
+                <div class="dock-indicator"></div>
+                <span class="dock-label">suqi (D)</span>
+            </div>
+
+            <div class="dock-divider"></div>
+
+            <!-- Xcode -->
+            <div class="dock-item">
+                <div class="dock-app-icon" style="background: linear-gradient(180deg, #38bdf8, #1d4ed8);">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+                </div>
+                <div class="dock-indicator"></div>
+                <span class="dock-label">Xcode</span>
+            </div>
+
+            <!-- Ghostty -->
+            <div class="dock-item">
+                <div class="dock-app-icon" style="background: #11111b; border: 1px solid rgba(255,255,255,0.15);">
+                    <span style="font-family: 'SF Mono', monospace; font-size: 24px; color: #fab387; font-weight: 800;">👻</span>
+                </div>
+                <div class="dock-indicator"></div>
+                <span class="dock-label">Ghostty</span>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
