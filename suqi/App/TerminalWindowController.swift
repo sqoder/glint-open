@@ -9,6 +9,16 @@ import AppKit
 import SwiftUI
 import GhosttyTerminal
 
+public final class SuqiHostingView<Content: View>: NSHostingView<Content> {
+    public override var intrinsicContentSize: NSSize {
+        NSSize(width: 80, height: 32)
+    }
+
+    public override var fittingSize: NSSize {
+        NSSize(width: 80, height: 32)
+    }
+}
+
 public final class SuqiTerminalWindow: NSWindow {
     public var isFullScreenTransitioning: Bool = false
 
@@ -38,8 +48,8 @@ public final class SuqiTerminalWindow: NSWindow {
               let mini = standardWindowButton(.miniaturizeButton),
               let zoom = standardWindowButton(.zoomButton) else { return }
 
-        // Modern macOS breathing room: center traffic light buttons vertically
-        let superHeight = close.superview?.frame.height ?? 28.0
+        // Modern macOS breathing room: center traffic light buttons vertically in 32pt titlebar
+        let superHeight = close.superview?.frame.height ?? 32.0
         let targetY: CGFloat = max(0, (superHeight - 14.0) / 2.0)
         let targetStartX: CGFloat = 13.0
         let spacing: CGFloat = 20.0
@@ -109,8 +119,8 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             window.isOpaque = true
         }
         window.hasShadow = true
-        window.minSize = NSSize(width: 78, height: 28)
-        window.contentMinSize = NSSize(width: 78, height: 28)
+        window.minSize = NSSize(width: 80, height: 32)
+        window.contentMinSize = NSSize(width: 80, height: 32)
         window.isReleasedWhenClosed = false
 
         // Align with Ghostty window-save-state: persist window size and position
@@ -119,7 +129,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         }
 
         let contentView = ContentView(model: model)
-        window.contentView = NSHostingView(rootView: contentView)
+        window.contentView = SuqiHostingView(rootView: contentView)
 
         super.init(window: window)
         window.delegate = self
@@ -210,6 +220,13 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
     }
 
     // MARK: - NSWindowDelegate
+
+    public func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+        NSSize(
+            width: max(80, frameSize.width),
+            height: max(32, frameSize.height)
+        )
+    }
 
     public func windowDidResize(_ notification: Notification) {
         saveWindowFrameIfNeeded()

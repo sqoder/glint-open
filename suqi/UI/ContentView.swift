@@ -56,7 +56,7 @@ public struct ContentView: View {
         GeometryReader { windowProxy in
             let windowWidth = windowProxy.size.width
             let windowHeight = windowProxy.size.height
-            let isMiniCapsule = windowHeight <= 54 || windowWidth < 120
+            let isMiniCapsule = windowHeight <= 36 || windowWidth < 120
 
             ZStack(alignment: .topLeading) {
                 // Background: Adaptively renders solid color or visual effect blur per Ghostty config
@@ -125,7 +125,7 @@ public struct ContentView: View {
                 }
             }
         }
-        .frame(minWidth: 78, minHeight: 28)
+        .frame(minWidth: 80, minHeight: 32)
         .ignoresSafeArea()
         .transaction { $0.animation = nil }
         // Support dragging files from Finder directly into terminal window
