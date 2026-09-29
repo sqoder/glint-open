@@ -34,8 +34,10 @@ public final class SuqiTerminalWindow: NSWindow {
 
     override public func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
         var rect = super.constrainFrameRect(frameRect, to: screen)
-        rect.size.width = max(80, rect.size.width)
-        rect.size.height = max(32, rect.size.height)
+        if rect.size.width < 140 || rect.size.height < 60 {
+            rect.size.width = 80
+            rect.size.height = 32
+        }
         return rect
     }
 
@@ -213,6 +215,11 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         guard let window = self.window else { return }
         let (userConfig, _) = GhosttyUserConfig.load()
         if userConfig.windowSaveState.lowercased() != "never" {
+            if window.frame.width < 140 || window.frame.height < 60 {
+                var f = window.frame
+                f.size = NSSize(width: 80, height: 32)
+                window.setFrame(f, display: false)
+            }
             window.saveFrame(usingName: "SuqiTerminalWindow")
         }
     }
@@ -239,7 +246,10 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
     // MARK: - NSWindowDelegate
 
     public func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
-        NSSize(
+        if frameSize.width < 140 || frameSize.height < 60 {
+            return NSSize(width: 80, height: 32)
+        }
+        return NSSize(
             width: max(80, frameSize.width),
             height: max(32, frameSize.height)
         )

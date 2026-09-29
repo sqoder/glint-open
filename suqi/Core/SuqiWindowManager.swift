@@ -56,6 +56,11 @@ public final class SuqiWindowManager: ObservableObject {
             var didRestore = false
             if shouldSaveState {
                 didRestore = win.setFrameUsingName("SuqiTerminalWindow")
+                if didRestore && (win.frame.width < 140 || win.frame.height < 60) {
+                    var f = win.frame
+                    f.size = NSSize(width: 80, height: 32)
+                    win.setFrame(f, display: true)
+                }
             }
             if !didRestore {
                 win.center()
