@@ -24,6 +24,9 @@ public struct GhosttyUserConfig: Sendable {
     public var adjustCellHeight: Int = 0
     public var macosTitlebarStyle: String = "tabs"
     public var shellIntegration: String = "zsh"
+    public var windowSaveState: String = "always"
+    public var windowWidth: Int? = nil
+    public var windowHeight: Int? = nil
 
     public static func load() -> (config: GhosttyUserConfig, filePath: String?) {
         let ghosttyPath = NSString(string: "~/.config/ghostty/config").expandingTildeInPath
@@ -73,6 +76,12 @@ public struct GhosttyUserConfig: Sendable {
                 if let v = Int(val) { cfg.windowPaddingY = v }
             case "macos-titlebar-style":
                 cfg.macosTitlebarStyle = val
+            case "window-save-state":
+                cfg.windowSaveState = val
+            case "window-width":
+                if let v = Int(val) { cfg.windowWidth = v }
+            case "window-height":
+                if let v = Int(val) { cfg.windowHeight = v }
             case "cursor-style":
                 cfg.cursorStyle = val
             case "cursor-style-blink":

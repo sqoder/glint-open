@@ -20,8 +20,22 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         let (userConfig, _) = GhosttyUserConfig.load()
         let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
 
+        // 支持从配置文件读取 window-width / window-height（支持像素或字符列数，默认 880 × 540）
+        let initialWidth: CGFloat = {
+            if let w = userConfig.windowWidth {
+                return w > 200 ? CGFloat(w) : CGFloat(w) * (userConfig.fontSize * 0.62) + CGFloat(userConfig.windowPaddingX * 2)
+            }
+            return 880
+        }()
+        let initialHeight: CGFloat = {
+            if let h = userConfig.windowHeight {
+                return h > 150 ? CGFloat(h) : CGFloat(h) * (userConfig.fontSize * 1.35) + CGFloat(userConfig.windowPaddingY * 2) + 28
+            }
+            return 540
+        }()
+
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 880, height: 540),
+            contentRect: NSRect(x: 0, y: 0, width: initialWidth, height: initialHeight),
             styleMask: [
                 .titled,
                 .closable,
@@ -49,6 +63,11 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         window.hasShadow = true
         window.minSize = NSSize(width: 480, height: 280)
         window.isReleasedWhenClosed = false
+
+        // 对齐 Ghostty 的 window-save-state：持久化记忆用户调整过的窗口大小与位置
+        if userConfig.windowSaveState.lowercased() != "never" {
+            window.setFrameAutosaveName("SuqiTerminalWindow")
+        }
 
         let contentView = ContentView(model: model)
         window.contentView = NSHostingView(rootView: contentView)

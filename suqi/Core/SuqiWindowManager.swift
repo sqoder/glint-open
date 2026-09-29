@@ -40,8 +40,20 @@ public final class SuqiWindowManager: ObservableObject {
         let model = SuqiWindowModel(initialWorkingDirectory: initialDir)
         let controller = TerminalWindowController(model: model)
 
-        // 窗口级联错位布局 (Cascade)，避免新旧窗口完全重叠，呈现标准的 macOS 原生多窗口体验
-        if let lastPoint = lastWindowTopLeft, let win = controller.window {
+        // 首个窗口优先恢复用户上次调整过的大小与坐标 (window-save-state)，无历史记录时居中；
+        // 后续窗口 (⌘N) 进行级联错位布局 (Cascade)，提供标准的 macOS 多窗口体验
+        if windowControllers.isEmpty, let win = controller.window {
+            let (cfg, _) = GhosttyUserConfig.load()
+            var didRestore = false
+            if cfg.windowSaveState.lowercased() != "never" {
+                didRestore = win.setFrameUsingName("SuqiTerminalWindow")
+            }
+            if !didRestore {
+                win.center()
+            }
+            lastWindowTopLeft = win.frame.origin
+            lastWindowTopLeft?.y += win.frame.height
+        } else if let lastPoint = lastWindowTopLeft, let win = controller.window {
             let nextPoint = win.cascadeTopLeft(from: lastPoint)
             win.setFrameTopLeftPoint(nextPoint)
             lastWindowTopLeft = nextPoint
