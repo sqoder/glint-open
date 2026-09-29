@@ -21,6 +21,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     public var initialWorkingDirectory: String
     public var onFocused: (() -> Void)?
     public var onClosed: (() -> Void)?
+    public let terminalView: AppTerminalView
     private var cancellables = Set<AnyCancellable>()
 
     public static func == (lhs: SuqiTerminalSession, rhs: SuqiTerminalSession) -> Bool {
@@ -32,7 +33,15 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         self.createdAt = Date()
         let initialDir = workingDirectory ?? NSHomeDirectory()
         self.initialWorkingDirectory = initialDir
-        self.state = Self.buildTerminalViewState(workingDirectory: initialDir)
+        let state = Self.buildTerminalViewState(workingDirectory: initialDir)
+        self.state = state
+
+        let view = AppTerminalView(frame: .zero)
+        view.delegate = state
+        view.controller = state.controller
+        view.configuration = state.configuration
+        self.terminalView = view
+
         bindState()
     }
 
@@ -120,6 +129,9 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     public func restart() {
         let currentCwd = state.workingDirectory ?? initialWorkingDirectory
         self.state = Self.buildTerminalViewState(workingDirectory: currentCwd)
+        terminalView.delegate = state
+        terminalView.controller = state.controller
+        terminalView.configuration = state.configuration
         bindState()
     }
 

@@ -177,7 +177,7 @@ public struct ActiveTabView: View {
                 }
             } else {
                 PaneContainerView(node: tab.rootPane, model: model)
-                    .id("\(tab.id)-\(tab.paneVersion)")
+                    .id(tab.id)
             }
         }
     }

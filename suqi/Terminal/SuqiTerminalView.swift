@@ -9,10 +9,21 @@ import SwiftUI
 import AppKit
 import GhosttyTerminal
 
+public struct PersistentTerminalSurfaceView: NSViewRepresentable {
+    let session: SuqiTerminalSession
+
+    public func makeNSView(context: Context) -> AppTerminalView {
+        session.terminalView.removeFromSuperview()
+        return session.terminalView
+    }
+
+    public func updateNSView(_ nsView: AppTerminalView, context: Context) {}
+}
+
 public struct SuqiTerminalView: View {
+    @Environment(\.colorScheme) private var colorScheme
     @ObservedObject var session: SuqiTerminalSession
     @ObservedObject var model: SuqiWindowModel
-    @FocusState private var isFocused: Bool
 
     public init(session: SuqiTerminalSession, model: SuqiWindowModel) {
         self.session = session
@@ -29,8 +40,7 @@ public struct SuqiTerminalView: View {
 
     public var body: some View {
         ZStack(alignment: .trailing) {
-            TerminalSurfaceView(context: session.state)
-                .terminalFocused($isFocused)
+            PersistentTerminalSurfaceView(session: session)
                 .id(session.id)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .transaction { $0.animation = nil }
@@ -47,20 +57,19 @@ public struct SuqiTerminalView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
+            session.state.adopt(colorScheme: colorScheme)
             if model.activeSessionId == session.id {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    isFocused = true
+                    session.terminalView.window?.makeFirstResponder(session.terminalView)
                 }
             }
         }
+        .onChange(of: colorScheme) { _, newScheme in
+            session.state.adopt(colorScheme: newScheme)
+        }
         .onChange(of: model.activeSessionId) { _, newId in
             if newId == session.id {
-                isFocused = true
-            }
-        }
-        .onChange(of: isFocused) { _, focused in
-            if focused && model.activeSessionId != session.id {
-                model.activeSessionId = session.id
+                session.terminalView.window?.makeFirstResponder(session.terminalView)
             }
         }
     }
