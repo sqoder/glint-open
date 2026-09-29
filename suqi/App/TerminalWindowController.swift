@@ -20,18 +20,26 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         let (userConfig, _) = GhosttyUserConfig.load()
         let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
 
-        // 支持从配置文件读取 window-width / window-height（支持像素或字符列数，默认 880 × 540）
+        // 支持从配置文件读取 window-width / window-height（支持像素或字符列数，默认对齐 Ghostty 终端网格）
         let initialWidth: CGFloat = {
+            let font = NSFont(name: userConfig.fontFamily, size: userConfig.fontSize)
+                ?? NSFont.monospacedSystemFont(ofSize: userConfig.fontSize, weight: .regular)
+            let cellWidth = font.maximumAdvancement.width > 0 ? font.maximumAdvancement.width : (userConfig.fontSize * 0.60)
+            let padding = CGFloat(userConfig.windowPaddingX * 2)
             if let w = userConfig.windowWidth {
-                return w > 200 ? CGFloat(w) : CGFloat(w) * (userConfig.fontSize * 0.62) + CGFloat(userConfig.windowPaddingX * 2)
+                return w > 200 ? CGFloat(w) : CGFloat(w) * cellWidth + padding
             }
-            return 880
+            return 100 * cellWidth + padding // 默认 100 列
         }()
         let initialHeight: CGFloat = {
+            let font = NSFont(name: userConfig.fontFamily, size: userConfig.fontSize)
+                ?? NSFont.monospacedSystemFont(ofSize: userConfig.fontSize, weight: .regular)
+            let cellHeight = ceil(font.ascender - font.descender + font.leading) + CGFloat(userConfig.adjustCellHeight)
+            let padding = CGFloat(userConfig.windowPaddingY * 2) + 28 // 28pt 标题栏
             if let h = userConfig.windowHeight {
-                return h > 150 ? CGFloat(h) : CGFloat(h) * (userConfig.fontSize * 1.35) + CGFloat(userConfig.windowPaddingY * 2) + 28
+                return h > 150 ? CGFloat(h) : CGFloat(h) * cellHeight + padding
             }
-            return 540
+            return 30 * cellHeight + padding // 默认 30 行
         }()
 
         let window = NSWindow(
@@ -391,12 +399,21 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
     }
 
     public func closeWindow() {
+        saveWindowFrameIfNeeded()
         if let eventMonitor {
             NSEvent.removeMonitor(eventMonitor)
             self.eventMonitor = nil
         }
         SuqiWindowManager.shared.removeWindow(self)
         window?.close()
+    }
+
+    public func saveWindowFrameIfNeeded() {
+        guard let window = self.window else { return }
+        let (userConfig, _) = GhosttyUserConfig.load()
+        if userConfig.windowSaveState.lowercased() != "never" {
+            window.saveFrame(usingName: "SuqiTerminalWindow")
+        }
     }
 
     public func updateThemeBackground() {
@@ -420,7 +437,16 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
 
     // MARK: - NSWindowDelegate
 
+    public func windowDidResize(_ notification: Notification) {
+        saveWindowFrameIfNeeded()
+    }
+
+    public func windowDidMove(_ notification: Notification) {
+        saveWindowFrameIfNeeded()
+    }
+
     public func windowWillClose(_ notification: Notification) {
+        saveWindowFrameIfNeeded()
         if let eventMonitor {
             NSEvent.removeMonitor(eventMonitor)
             self.eventMonitor = nil

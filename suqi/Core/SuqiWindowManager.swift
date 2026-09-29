@@ -42,10 +42,19 @@ public final class SuqiWindowManager: ObservableObject {
 
         // 首个窗口优先恢复用户上次调整过的大小与坐标 (window-save-state)，无历史记录时居中；
         // 后续窗口 (⌘N) 进行级联错位布局 (Cascade)，提供标准的 macOS 多窗口体验
-        if windowControllers.isEmpty, let win = controller.window {
-            let (cfg, _) = GhosttyUserConfig.load()
+        guard let win = controller.window else {
+            windowControllers.append(controller)
+            controller.showWindow()
+            return controller
+        }
+
+        let (cfg, _) = GhosttyUserConfig.load()
+        let shouldSaveState = cfg.windowSaveState.lowercased() != "never"
+
+        if windowControllers.isEmpty {
+            // 首个窗口：优先从 window-save-state 恢复保存的尺寸与位置；无记录时居中
             var didRestore = false
-            if cfg.windowSaveState.lowercased() != "never" {
+            if shouldSaveState {
                 didRestore = win.setFrameUsingName("SuqiTerminalWindow")
             }
             if !didRestore {
@@ -53,23 +62,36 @@ public final class SuqiWindowManager: ObservableObject {
             }
             lastWindowTopLeft = win.frame.origin
             lastWindowTopLeft?.y += win.frame.height
-        } else if let lastPoint = lastWindowTopLeft, let win = controller.window {
-            let nextPoint = win.cascadeTopLeft(from: lastPoint)
+        } else {
+            // 后续新建窗口 (⌘N)：继承当前活跃窗口的尺寸，并级联 (Cascade) 错位布局，完全对齐 Ghostty / macOS 原生行为
+            if let activeWin = activeWindowController?.window {
+                var newFrame = win.frame
+                newFrame.size = activeWin.frame.size
+                win.setFrame(newFrame, display: false)
+            }
+
+            let refPoint = lastWindowTopLeft
+                ?? activeWindowController?.window?.frame.origin.applying(.init(translationX: 0, y: activeWindowController?.window?.frame.height ?? 0))
+                ?? win.frame.origin
+            let nextPoint = win.cascadeTopLeft(from: refPoint)
             win.setFrameTopLeftPoint(nextPoint)
             lastWindowTopLeft = nextPoint
-        } else if let win = controller.window {
-            win.center()
-            lastWindowTopLeft = win.frame.origin
-            lastWindowTopLeft?.y += win.frame.height
         }
 
         windowControllers.append(controller)
         controller.showWindow()
+
+        // 窗口展示后同步记录
+        if shouldSaveState {
+            controller.saveWindowFrameIfNeeded()
+        }
+
         return controller
     }
 
     /// 移除已关闭的窗口控制器
     public func removeWindow(_ controller: TerminalWindowController) {
+        controller.saveWindowFrameIfNeeded()
         windowControllers.removeAll { $0 === controller }
         if windowControllers.isEmpty {
             lastWindowTopLeft = nil

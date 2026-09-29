@@ -344,7 +344,8 @@ public struct PaneContainerView: View {
                 let size = proxy.size
                 if size.width > 20 && size.height > 20 {
                     if axis == .horizontal {
-                        let availableWidth = max(0, size.width - 1)
+                        let dividerThickness: CGFloat = 8
+                        let availableWidth = max(0, size.width - dividerThickness)
                         let firstWidth = availableWidth * fraction
                         let secondWidth = max(0, availableWidth - firstWidth)
 
@@ -359,14 +360,15 @@ public struct PaneContainerView: View {
                                 availableLength: availableWidth,
                                 model: model
                             )
-                            .frame(width: 1, height: size.height)
+                            .frame(width: dividerThickness, height: size.height)
 
                             PaneContainerView(node: second, model: model)
                                 .frame(width: secondWidth, height: size.height)
                         }
                         .frame(width: size.width, height: size.height)
                     } else {
-                        let availableHeight = max(0, size.height - 1)
+                        let dividerThickness: CGFloat = 8
+                        let availableHeight = max(0, size.height - dividerThickness)
                         let firstHeight = availableHeight * fraction
                         let secondHeight = max(0, availableHeight - firstHeight)
 
@@ -381,7 +383,7 @@ public struct PaneContainerView: View {
                                 availableLength: availableHeight,
                                 model: model
                             )
-                            .frame(width: size.width, height: 1)
+                            .frame(width: size.width, height: dividerThickness)
 
                             PaneContainerView(node: second, model: model)
                                 .frame(width: size.width, height: secondHeight)
@@ -465,17 +467,11 @@ public final class SplitDividerNSView: NSView {
     public override func resetCursorRects() {
         super.resetCursorRects()
         let cursor = (axis == .horizontal) ? NSCursor.resizeLeftRight : NSCursor.resizeUpDown
-        let hitRect = (axis == .horizontal)
-            ? bounds.insetBy(dx: -4, dy: 0)
-            : bounds.insetBy(dx: 0, dy: -4)
-        addCursorRect(hitRect, cursor: cursor)
+        addCursorRect(bounds, cursor: cursor)
     }
 
     public override func hitTest(_ point: NSPoint) -> NSView? {
-        let hitRect = (axis == .horizontal)
-            ? bounds.insetBy(dx: -4, dy: 0)
-            : bounds.insetBy(dx: 0, dy: -4)
-        if hitRect.contains(point) {
+        if bounds.contains(point) {
             return self
         }
         return super.hitTest(point)
@@ -483,11 +479,20 @@ public final class SplitDividerNSView: NSView {
 
     public override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
+        // 居中绘制 1pt 精准发丝分割线，其余区域保持透明作为跟手缓冲响应区
+        let lineRect: NSRect = {
+            if axis == .horizontal {
+                return NSRect(x: (bounds.width - 1) / 2.0, y: 0, width: 1, height: bounds.height)
+            } else {
+                return NSRect(x: 0, y: (bounds.height - 1) / 2.0, width: bounds.width, height: 1)
+            }
+        }()
+
         let color = isHovering
-            ? NSColor.white.withAlphaComponent(0.35)
+            ? NSColor.white.withAlphaComponent(0.45)
             : NSColor.white.withAlphaComponent(0.12)
         color.setFill()
-        bounds.fill()
+        lineRect.fill()
     }
 
     public override func updateTrackingAreas() {
@@ -495,11 +500,8 @@ public final class SplitDividerNSView: NSView {
         for area in trackingAreas {
             removeTrackingArea(area)
         }
-        let hitRect = (axis == .horizontal)
-            ? bounds.insetBy(dx: -4, dy: 0)
-            : bounds.insetBy(dx: 0, dy: -4)
         let area = NSTrackingArea(
-            rect: hitRect,
+            rect: bounds,
             options: [.mouseEnteredAndExited, .activeInActiveApp, .cursorUpdate],
             owner: self,
             userInfo: nil
