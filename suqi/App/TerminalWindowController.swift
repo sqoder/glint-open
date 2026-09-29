@@ -22,6 +22,23 @@ public final class SuqiHostingView<Content: View>: NSHostingView<Content> {
 public final class SuqiTerminalWindow: NSWindow {
     public var isFullScreenTransitioning: Bool = false
 
+    override public var minSize: NSSize {
+        get { NSSize(width: 80, height: 32) }
+        set { super.minSize = NSSize(width: 80, height: 32) }
+    }
+
+    override public var contentMinSize: NSSize {
+        get { NSSize(width: 80, height: 32) }
+        set { super.contentMinSize = NSSize(width: 80, height: 32) }
+    }
+
+    override public func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+        var rect = super.constrainFrameRect(frameRect, to: screen)
+        rect.size.width = max(80, rect.size.width)
+        rect.size.height = max(32, rect.size.height)
+        return rect
+    }
+
     override public func layoutIfNeeded() {
         super.layoutIfNeeded()
         adjustTrafficLights()
