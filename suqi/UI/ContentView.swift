@@ -53,70 +53,79 @@ public struct ContentView: View {
     }
 
     public var body: some View {
-        ZStack(alignment: .topLeading) {
-            // Background: Adaptively renders solid color or visual effect blur per Ghostty config
-            if isTranslucent {
-                VisualEffectBackground()
-                    .ignoresSafeArea()
-                themeBg.opacity(userConfig.backgroundOpacity)
-                    .ignoresSafeArea()
-            } else {
-                themeBg
-                    .ignoresSafeArea()
-            }
+        GeometryReader { windowProxy in
+            let windowWidth = windowProxy.size.width
+            let windowHeight = windowProxy.size.height
+            let isMiniCapsule = windowHeight <= 54 || windowWidth < 120
 
-            VStack(spacing: 0) {
-                // Top title/tab bar area (height: 32): background handles native drag/double-click zoom, foreground renders tabs
-                GeometryReader { titleBarProxy in
-                    let barWidth = titleBarProxy.size.width
-                    ZStack(alignment: .center) {
-                        WindowDragArea()
-                            .frame(height: 32)
+            ZStack(alignment: .topLeading) {
+                // Background: Adaptively renders solid color or visual effect blur per Ghostty config
+                if isTranslucent {
+                    VisualEffectBackground()
+                        .ignoresSafeArea()
+                    themeBg.opacity(userConfig.backgroundOpacity)
+                        .ignoresSafeArea()
+                } else {
+                    themeBg
+                        .ignoresSafeArea()
+                }
 
-                        if model.tabs.count > 1 && barWidth > 140 {
-                            GhosttyTabBar(model: model)
+                if isMiniCapsule {
+                    // Mini compact state: pure window drag & double-click surface with only traffic light buttons
+                    WindowDragArea()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    VStack(spacing: 0) {
+                        // Top title/tab bar area (height: 32): background handles native drag/double-click zoom, foreground renders tabs
+                        ZStack(alignment: .center) {
+                            WindowDragArea()
                                 .frame(height: 32)
-                        } else if let activeTab = model.activeTab, barWidth > 180 {
-                            VStack(spacing: 2) {
-                                Text(activeTab.displayPathFormatted)
-                                    .font(.system(size: 11.5, weight: .regular, design: .default))
-                                    .foregroundStyle(Color.white.opacity(0.85))
-                                    .lineLimit(1)
-                                Text("···")
-                                    .font(.system(size: 7, weight: .bold))
-                                    .foregroundStyle(Color.white.opacity(0.40))
+
+                            if model.tabs.count > 1 && windowWidth > 140 {
+                                GhosttyTabBar(model: model)
+                                    .frame(height: 32)
+                            } else if let activeTab = model.activeTab, windowWidth > 180 {
+                                VStack(spacing: 2) {
+                                    Text(activeTab.displayPathFormatted)
+                                        .font(.system(size: 11.5, weight: .regular, design: .default))
+                                        .foregroundStyle(Color.white.opacity(0.85))
+                                        .lineLimit(1)
+                                    Text("···")
+                                        .font(.system(size: 7, weight: .bold))
+                                        .foregroundStyle(Color.white.opacity(0.40))
+                                }
+                                .offset(y: 6.5)
+                                .frame(maxWidth: .infinity, maxHeight: 32)
+                                .allowsHitTesting(false)
                             }
-                            .offset(y: 6.5)
-                            .frame(maxWidth: .infinity, maxHeight: 32)
-                            .allowsHitTesting(false)
                         }
-                    }
-                    .frame(height: 32)
-                }
-                .frame(height: 32)
+                        .frame(height: 32)
 
-                // Terminal workspace (multi-tab, split panes, zoom, and scrollback search)
-                ZStack(alignment: .topTrailing) {
-                    if let activeTab = model.activeTab {
-                        ActiveTabView(tab: activeTab, model: model)
-                            .id(activeTab.id)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        Color.clear
-                    }
+                        // Terminal workspace (multi-tab, split panes, zoom, and scrollback search)
+                        ZStack(alignment: .topTrailing) {
+                            if let activeTab = model.activeTab {
+                                ActiveTabView(tab: activeTab, model: model)
+                                    .id(activeTab.id)
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            } else {
+                                Color.clear
+                            }
 
-                    if model.isSearching {
-                        TerminalSearchBar(model: model)
-                            .padding(.top, 6)
-                            .padding(.trailing, 14)
-                            .transition(.opacity)
-                            .zIndex(999)
+                            if model.isSearching {
+                                TerminalSearchBar(model: model)
+                                    .padding(.top, 6)
+                                    .padding(.trailing, 14)
+                                    .transition(.opacity)
+                                    .zIndex(999)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .clipped()
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(minWidth: 80, minHeight: 32)
+        .frame(minWidth: 78, minHeight: 28)
         .ignoresSafeArea()
         .transaction { $0.animation = nil }
         // Support dragging files from Finder directly into terminal window

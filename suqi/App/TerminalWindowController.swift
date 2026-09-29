@@ -38,10 +38,11 @@ public final class SuqiTerminalWindow: NSWindow {
               let mini = standardWindowButton(.miniaturizeButton),
               let zoom = standardWindowButton(.zoomButton) else { return }
 
-        // Modern macOS breathing room: offset traffic light buttons
-        let targetY: CGFloat = 4.0
+        // Modern macOS breathing room: center traffic light buttons vertically
+        let superHeight = close.superview?.frame.height ?? 28.0
+        let targetY: CGFloat = max(0, (superHeight - 14.0) / 2.0)
         let targetStartX: CGFloat = 13.0
-        let spacing: CGFloat = 22.0
+        let spacing: CGFloat = 20.0
 
         close.setFrameOrigin(NSPoint(x: targetStartX, y: targetY))
         mini.setFrameOrigin(NSPoint(x: targetStartX + spacing, y: targetY))
@@ -108,8 +109,8 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             window.isOpaque = true
         }
         window.hasShadow = true
-        window.minSize = NSSize(width: 80, height: 32)
-        window.contentMinSize = NSSize(width: 80, height: 32)
+        window.minSize = NSSize(width: 78, height: 28)
+        window.contentMinSize = NSSize(width: 78, height: 28)
         window.isReleasedWhenClosed = false
 
         // Align with Ghostty window-save-state: persist window size and position

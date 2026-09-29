@@ -3,3 +3,5 @@ screenshots/
 DerivedData/
 *.xcworkspace
 xcuserdata/
+build_release/
+build/
