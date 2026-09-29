@@ -35,7 +35,7 @@ public struct SuqiTerminalView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .transaction { $0.animation = nil }
 
-            // 右侧原生交互式回滚导航滚动条 (Terminal Scrollbar)
+            // 右侧原生极简滚动条 (仅 #9D9FA2 单一滑块，无任何背景范围条，默认隐藏，滑动时渐显)
             TerminalScrollbarView(session: session)
 
             // 分屏模式下的活跃窗格微光细边框指示
@@ -66,13 +66,18 @@ public struct SuqiTerminalView: View {
     }
 }
 
-// MARK: - 原生交互式终端滚动条 (Terminal Scrollbar)
+// MARK: - 极简终端滚动条 (#9D9FA2，无背景范围条，平时完全隐藏，仅上下滑动/拖拽时出现)
 
 struct TerminalScrollbarView: View {
     @ObservedObject var session: SuqiTerminalSession
-    @State private var isHovering = false
-    @State private var isDragging = false
+    @State private var isVisible: Bool = false
+    @State private var isDragging: Bool = false
+    @State private var isHovering: Bool = false
     @State private var dragStartThumbY: CGFloat = 0
+    @State private var hideTask: DispatchWorkItem? = nil
+
+    // 用户指定专属颜色 #9D9FA2
+    private let thumbColor = Color(red: 157/255.0, green: 159/255.0, blue: 162/255.0)
 
     var body: some View {
         if let scrollbar = session.state.scrollbar, scrollbar.total > scrollbar.len {
@@ -90,33 +95,13 @@ struct TerminalScrollbarView: View {
                 let progress = CGFloat(min(offset, maxOffset)) / CGFloat(maxOffset)
                 let currentThumbY = trackDistance * progress
 
-                let barWidth: CGFloat = (isHovering || isDragging) ? 8 : 4.5
+                let barWidth: CGFloat = (isHovering || isDragging) ? 6.5 : 4.5
 
                 ZStack(alignment: .topTrailing) {
-                    // 鼠标移入时显示的轻量响应背景轨道，支持点击页面快速跳转 (PageUp / PageDown)
-                    Rectangle()
-                        .fill(Color.black.opacity((isHovering || isDragging) ? 0.22 : 0.0))
-                        .frame(width: 14)
+                    // 透明手势响应区域（无任何背景颜色与视觉范围条，不遮挡终端内容）
+                    Color.clear
+                        .frame(width: 16)
                         .contentShape(Rectangle())
-                        .onTapGesture { location in
-                            if location.y < currentThumbY {
-                                let target = UInt(max(0, Int64(offset) - Int64(len)))
-                                _ = session.state.scrollToRow(target)
-                            } else if location.y > currentThumbY + thumbHeight {
-                                let target = UInt(min(Int64(maxOffset), Int64(offset) + Int64(len)))
-                                _ = session.state.scrollToRow(target)
-                            }
-                        }
-
-                    // 滚动滑块 (Thumb)：支持鼠标拖拽上下平滑滚动
-                    Capsule(style: .continuous)
-                        .fill(Color.white.opacity(isDragging ? 0.75 : (isHovering ? 0.55 : 0.30)))
-                        .overlay(
-                            Capsule(style: .continuous)
-                                .strokeBorder(Color.white.opacity(0.20), lineWidth: 0.5)
-                        )
-                        .frame(width: barWidth, height: thumbHeight)
-                        .offset(x: -2.5, y: currentThumbY)
                         .gesture(
                             DragGesture(minimumDistance: 0)
                                 .onChanged { value in
@@ -124,6 +109,7 @@ struct TerminalScrollbarView: View {
                                         isDragging = true
                                         dragStartThumbY = currentThumbY
                                     }
+                                    showScrollbar()
                                     let deltaY = value.translation.height
                                     let newThumbY = min(max(0, dragStartThumbY + deltaY), trackDistance)
                                     let newProgress = trackDistance > 0 ? (newThumbY / trackDistance) : 1.0
@@ -132,17 +118,63 @@ struct TerminalScrollbarView: View {
                                 }
                                 .onEnded { _ in
                                     isDragging = false
+                                    scheduleHide()
                                 }
                         )
+
+                    // 仅单独渲染 #9D9FA2 滚动滑块，默认隐藏，滑动时平滑显示
+                    Capsule(style: .continuous)
+                        .fill(thumbColor)
+                        .frame(width: barWidth, height: thumbHeight)
+                        .offset(x: -2.5, y: currentThumbY)
+                        .opacity(isVisible ? (isDragging ? 1.0 : (isHovering ? 0.95 : 0.85)) : 0.0)
+                        .animation(.easeInOut(duration: 0.25), value: isVisible)
+                        .animation(.easeInOut(duration: 0.15), value: barWidth)
+                        .allowsHitTesting(false)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
                 .onHover { hovering in
-                    withAnimation(.easeInOut(duration: 0.15)) {
-                        isHovering = hovering
+                    isHovering = hovering
+                    if hovering {
+                        showScrollbar()
+                    } else if !isDragging {
+                        scheduleHide()
                     }
                 }
             }
-            .transition(.opacity)
+            .onChange(of: session.state.scrollbar?.offset) { _, _ in
+                showAndScheduleHide()
+            }
+            .onChange(of: session.state.scrollbar?.total) { _, _ in
+                showAndScheduleHide()
+            }
+        }
+    }
+
+    private func showScrollbar() {
+        hideTask?.cancel()
+        hideTask = nil
+        withAnimation(.easeInOut(duration: 0.15)) {
+            isVisible = true
+        }
+    }
+
+    private func scheduleHide() {
+        hideTask?.cancel()
+        let task = DispatchWorkItem {
+            guard !isHovering && !isDragging else { return }
+            withAnimation(.easeInOut(duration: 0.40)) {
+                isVisible = false
+            }
+        }
+        hideTask = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: task)
+    }
+
+    private func showAndScheduleHide() {
+        showScrollbar()
+        if !isHovering && !isDragging {
+            scheduleHide()
         }
     }
 }
