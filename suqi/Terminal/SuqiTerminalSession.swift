@@ -24,7 +24,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     public let terminalView: AppTerminalView
     private var cancellables = Set<AnyCancellable>()
 
-    public static func == (lhs: SuqiTerminalSession, rhs: SuqiTerminalSession) -> Bool {
+    public nonisolated static func == (lhs: SuqiTerminalSession, rhs: SuqiTerminalSession) -> Bool {
         lhs.id == rhs.id
     }
 
@@ -81,8 +81,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
 
         NotificationCenter.default.publisher(for: .ghosttyConfigDidChange)
             .sink { [weak self] _ in
-                _ = self?.state.surface?.performBindingAction("reload_config")
-                self?.objectWillChange.send()
+                self?.reloadConfiguration()
             }
             .store(in: &cancellables)
     }
@@ -126,6 +125,28 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         state.workingDirectory ?? initialWorkingDirectory
     }
 
+    /// 原位热重载主题配色、字号字体、光标与 Ghostty 配置，无需重启或杀死正在运行的 Shell / agy 进程
+    public func reloadConfiguration() {
+        let (userConfig, _) = GhosttyUserConfig.load()
+        let theme = GhosttyThemeCatalog.theme(named: userConfig.themeName)?.toTerminalTheme() ?? .default
+        state.setTheme(theme)
+        let config = Self.buildTerminalConfiguration(userConfig: userConfig)
+        state.setTerminalConfiguration(config)
+        _ = state.surface?.performBindingAction("reload_config")
+        objectWillChange.send()
+    }
+
+    /// 彻底销毁当前终端会话，释放 Metal、DisplayLink 以及观察者资源
+    public func tearDown() {
+        cancellables.removeAll()
+        terminalView.removeFromSuperview()
+        _ = state.surface?.performBindingAction("close_surface")
+    }
+
+    deinit {
+        cancellables.removeAll()
+    }
+
     public func restart() {
         let currentCwd = state.workingDirectory ?? initialWorkingDirectory
         self.state = Self.buildTerminalViewState(workingDirectory: currentCwd)
@@ -143,10 +164,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         state.send("clear\n")
     }
 
-    public static func buildTerminalViewState(workingDirectory: String) -> TerminalViewState {
-        let (userConfig, resolvedPath) = GhosttyUserConfig.load()
-        let theme = GhosttyThemeCatalog.theme(named: userConfig.themeName)?.toTerminalTheme() ?? .default
-
+    public static func buildTerminalConfiguration(userConfig: GhosttyUserConfig) -> TerminalConfiguration {
         let cursorStyle: TerminalCursorStyle
         switch userConfig.cursorStyle {
         case "block":
@@ -157,7 +175,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             cursorStyle = .bar
         }
 
-        let config = TerminalConfiguration { builder in
+        return TerminalConfiguration { builder in
             builder.withFontSize(Float(userConfig.fontSize))
             builder.withFontFamily(userConfig.fontFamily)
             builder.withCursorStyle(cursorStyle)
@@ -186,6 +204,12 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             builder.withCustom("keybind", "super+c=copy_to_clipboard")
             builder.withCustom("keybind", "super+a=select_all")
         }
+    }
+
+    public static func buildTerminalViewState(workingDirectory: String) -> TerminalViewState {
+        let (userConfig, resolvedPath) = GhosttyUserConfig.load()
+        let theme = GhosttyThemeCatalog.theme(named: userConfig.themeName)?.toTerminalTheme() ?? .default
+        let config = buildTerminalConfiguration(userConfig: userConfig)
 
         let configSource: TerminalController.ConfigSource = {
             if let resolvedPath {

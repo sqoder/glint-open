@@ -197,6 +197,9 @@ public final class SuqiTab: ObservableObject, Identifiable {
     }
 
     public func closeSession(id: UUID) -> Bool {
+        if let session = rootPane.findSession(id: id) {
+            session.tearDown()
+        }
         if let newRoot = rootPane.remove(sessionId: id) {
             rootPane = newRoot
             if activeSessionId == id {
@@ -337,6 +340,14 @@ public final class SuqiWindowModel: ObservableObject {
         }
     }
 
+    /// 立即将键盘输入焦点（First Responder）转移至当前活跃的终端视图
+    public func focusActiveSession() {
+        DispatchQueue.main.async { [weak self] in
+            guard let session = self?.activeSession else { return }
+            session.terminalView.window?.makeFirstResponder(session.terminalView)
+        }
+    }
+
     /// 关闭指定 ID 的终端会话（当进程 exit 时自动调用，或由分屏关闭触发）
     @discardableResult
     public func closeSession(id: UUID) -> Bool {
@@ -348,6 +359,7 @@ public final class SuqiWindowModel: ObservableObject {
                 if !hasPanesRemaining {
                     return closeTab(id: tab.id)
                 }
+                focusActiveSession()
                 return true
             }
         }
@@ -364,6 +376,7 @@ public final class SuqiWindowModel: ObservableObject {
         let tab = SuqiTab(session: session)
         tabs.append(tab)
         activeTabId = tab.id
+        focusActiveSession()
         return session
     }
 
@@ -394,6 +407,7 @@ public final class SuqiWindowModel: ObservableObject {
             tabs.append(tab)
             activeTabId = tab.id
         }
+        focusActiveSession()
         return session
     }
 
@@ -413,6 +427,7 @@ public final class SuqiWindowModel: ObservableObject {
         if !hasPanesRemaining {
             return closeTab(id: currentTab.id)
         }
+        focusActiveSession()
         return true
     }
 
@@ -426,11 +441,15 @@ public final class SuqiWindowModel: ObservableObject {
         }
 
         if let index = tabs.firstIndex(where: { $0.id == id }) {
-            tabs.remove(at: index)
+            let tab = tabs.remove(at: index)
+            for session in tab.allSessions {
+                session.tearDown()
+            }
             if activeTabId == id {
                 let newIndex = max(0, min(index, tabs.count - 1))
                 activeTabId = tabs[newIndex].id
             }
+            focusActiveSession()
         }
         return true
     }
@@ -438,12 +457,14 @@ public final class SuqiWindowModel: ObservableObject {
     public func selectTab(id: UUID) {
         if tabs.contains(where: { $0.id == id }) {
             activeTabId = id
+            focusActiveSession()
         }
     }
 
     public func selectTab(at index: Int) {
         guard index >= 0, index < tabs.count else { return }
         activeTabId = tabs[index].id
+        focusActiveSession()
     }
 
     public func selectSession(id: UUID) {
@@ -451,6 +472,7 @@ public final class SuqiWindowModel: ObservableObject {
             if tab.allSessions.contains(where: { $0.id == id }) {
                 activeTabId = tab.id
                 tab.activeSessionId = id
+                focusActiveSession()
                 return
             }
         }
@@ -460,12 +482,14 @@ public final class SuqiWindowModel: ObservableObject {
         guard !tabs.isEmpty else { return }
         let next = (activeIndex + 1) % tabs.count
         activeTabId = tabs[next].id
+        focusActiveSession()
     }
 
     public func previousTab() {
         guard !tabs.isEmpty else { return }
         let prev = (activeIndex - 1 + tabs.count) % tabs.count
         activeTabId = tabs[prev].id
+        focusActiveSession()
     }
 
     public func nextPane() {
@@ -475,6 +499,7 @@ public final class SuqiWindowModel: ObservableObject {
         if let idx = all.firstIndex(where: { $0.id == currentTab.activeSessionId }) {
             let next = (idx + 1) % all.count
             currentTab.activeSessionId = all[next].id
+            focusActiveSession()
         }
     }
 
@@ -485,6 +510,7 @@ public final class SuqiWindowModel: ObservableObject {
         if let idx = all.firstIndex(where: { $0.id == currentTab.activeSessionId }) {
             let prev = (idx - 1 + all.count) % all.count
             currentTab.activeSessionId = all[prev].id
+            focusActiveSession()
         }
     }
 
@@ -496,9 +522,10 @@ public final class SuqiWindowModel: ObservableObject {
         activeSession?.clearScreen()
     }
 
+    /// 热重载所有终端会话配置（修改主题、字号、光标时不杀死正在运行的 agy / 终端程序）
     public func reloadAllSessions() {
         for session in sessions {
-            session.restart()
+            session.reloadConfiguration()
         }
     }
 
@@ -512,10 +539,12 @@ public final class SuqiWindowModel: ObservableObject {
 
     public func toggleZoom() {
         activeTab?.toggleZoom()
+        focusActiveSession()
     }
 
     public func focusPane(in direction: PaneDirection) {
         activeTab?.focusPane(in: direction)
+        focusActiveSession()
     }
 
     public func moveTab(from sourceIndex: Int, to destinationIndex: Int) {

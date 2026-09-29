@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		1C8AF7221BA331EFBC3EC823 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0CA1DBDA76BC2D1EE1A95D7B /* Assets.xcassets */; };
 		4BBB4F3672C2980AC2C1E57A /* WindowDragArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F026B6776BE8F54802752AE /* WindowDragArea.swift */; };
-		5769423471533DE9D49292A0 /* SuqiSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288A5F9CEDCE4C5282866182 /* SuqiSettings.swift */; };
 		600281785E0BB9B05B2B33CB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4878471FB485E2C59461BA84 /* ContentView.swift */; };
 		623DD342294CA4174D623900 /* GhosttyTheme in Frameworks */ = {isa = PBXBuildFile; productRef = D0A104A00C20DB3A2C495424 /* GhosttyTheme */; };
 		667C70ED3BD3D760E769945C /* AppTerminalView+SmoothResize.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEFE82710EA5046473FA1A3B /* AppTerminalView+SmoothResize.swift */; };
@@ -37,7 +36,6 @@
 		0119385D9912FA0CB136D963 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0CA1DBDA76BC2D1EE1A95D7B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0DB61B0358E51D788578220F /* GhosttyTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyTabBar.swift; sourceTree = "<group>"; };
-		288A5F9CEDCE4C5282866182 /* SuqiSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiSettings.swift; sourceTree = "<group>"; };
 		2A55F9B778CFADA8535586F9 /* SuqiTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTheme.swift; sourceTree = "<group>"; };
 		38356A190F4A4CB490BCBAF5 /* SuqiTerminalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTerminalView.swift; sourceTree = "<group>"; };
 		430DC079E285DD7A421F88E2 /* TerminalActionBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalActionBridge.swift; sourceTree = "<group>"; };
@@ -101,7 +99,6 @@
 			isa = PBXGroup;
 			children = (
 				B9A267F01646B2D48A9B39D8 /* GhosttyConfigLoader.swift */,
-				288A5F9CEDCE4C5282866182 /* SuqiSettings.swift */,
 				685F51842B1DB3E6E992F976 /* SuqiWindowManager.swift */,
 			);
 			path = Core;
@@ -257,7 +254,6 @@
 				B8F4942D7AD906582FA42B79 /* QuickTerminalController.swift in Sources */,
 				9B9B42DCF1ADAB43C96DFC7A /* SettingsView.swift in Sources */,
 				7FABD35078400B22BF9A0571 /* SuqiApp.swift in Sources */,
-				5769423471533DE9D49292A0 /* SuqiSettings.swift in Sources */,
 				EC17C4A245342DEDC51BF192 /* SuqiTerminalSession.swift in Sources */,
 				EFB405AEDA97715249476B41 /* SuqiTerminalView.swift in Sources */,
 				74DDB09A0FAC7C1DD4A1C9D9 /* SuqiTheme.swift in Sources */,

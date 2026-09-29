@@ -10,6 +10,8 @@ import SwiftUI
 import GhosttyTerminal
 
 public final class SuqiTerminalWindow: NSWindow {
+    public var isFullScreenTransitioning: Bool = false
+
     override public func layoutIfNeeded() {
         super.layoutIfNeeded()
         adjustTrafficLights()
@@ -31,7 +33,7 @@ public final class SuqiTerminalWindow: NSWindow {
     }
 
     public func adjustTrafficLights() {
-        guard !styleMask.contains(.fullScreen) else { return }
+        guard !styleMask.contains(.fullScreen), !isFullScreenTransitioning else { return }
         guard let close = standardWindowButton(.closeButton),
               let mini = standardWindowButton(.miniaturizeButton),
               let zoom = standardWindowButton(.zoomButton) else { return }
@@ -230,6 +232,26 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         (window as? SuqiTerminalWindow)?.adjustTrafficLights()
         if let terminalView = getActiveTerminalView() {
             window?.makeFirstResponder(terminalView)
+        }
+    }
+
+    public func windowWillEnterFullScreen(_ notification: Notification) {
+        (window as? SuqiTerminalWindow)?.isFullScreenTransitioning = true
+    }
+
+    public func windowDidEnterFullScreen(_ notification: Notification) {
+        (window as? SuqiTerminalWindow)?.isFullScreenTransitioning = false
+    }
+
+    public func windowWillExitFullScreen(_ notification: Notification) {
+        (window as? SuqiTerminalWindow)?.isFullScreenTransitioning = true
+    }
+
+    public func windowDidExitFullScreen(_ notification: Notification) {
+        let terminalWin = window as? SuqiTerminalWindow
+        terminalWin?.isFullScreenTransitioning = false
+        DispatchQueue.main.async {
+            terminalWin?.adjustTrafficLights()
         }
     }
 }

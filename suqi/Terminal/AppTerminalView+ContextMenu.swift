@@ -91,58 +91,89 @@ public final class TerminalContextMenuBridge: NSObject {
         return menu
     }
 
+    private var targetModel: SuqiWindowModel? {
+        guard let view = currentTerminalView else {
+            return SuqiWindowManager.shared.activeWindowController?.model
+        }
+        if let window = view.window {
+            if window is QuickTerminalPanel {
+                return QuickTerminalController.shared.model
+            }
+            if let wc = window.windowController as? TerminalWindowController {
+                return wc.model
+            }
+        }
+        return SuqiWindowManager.shared.activeWindowController?.model
+    }
+
+    private var targetWindow: NSWindow? {
+        currentTerminalView?.window ?? SuqiWindowManager.shared.activeWindowController?.window
+    }
+
     @objc private func menuCopy() {
         if let tv = currentTerminalView, tv.copySelectedTextToPasteboard() {
             // Copied
-        } else {
-            SuqiWindowManager.shared.activeWindowController?.handleCopy()
+        } else if let model = targetModel {
+            TerminalActionBridge.handleCopy(in: targetWindow, model: model)
         }
     }
 
     @objc private func menuPaste() {
-        SuqiWindowManager.shared.activeWindowController?.handlePaste()
-    }
-
-    @objc private func menuSelectAll() {
-        _ = SuqiWindowManager.shared.activeWindowController?.model.activeSession?.state.performBindingAction("select_all")
-    }
-
-    @objc private func menuSplitRight() {
-        SuqiWindowManager.shared.activeWindowController?.model.splitRight()
-    }
-
-    @objc private func menuSplitDown() {
-        SuqiWindowManager.shared.activeWindowController?.model.splitDown()
-    }
-
-    @objc private func menuEqualizeSplits() {
-        SuqiWindowManager.shared.activeWindowController?.model.equalizeSplits()
-    }
-
-    @objc private func menuToggleZoom() {
-        SuqiWindowManager.shared.activeWindowController?.model.toggleZoom()
-    }
-
-    @objc private func menuFind() {
-        if let model = SuqiWindowManager.shared.activeWindowController?.model {
-            model.isSearching = true
+        if let model = targetModel {
+            TerminalActionBridge.handlePaste(in: targetWindow, model: model)
         }
     }
 
+    @objc private func menuSelectAll() {
+        if let model = targetModel {
+            TerminalActionBridge.handleSelectAll(model: model)
+        }
+    }
+
+    @objc private func menuSplitRight() {
+        targetModel?.splitRight()
+    }
+
+    @objc private func menuSplitDown() {
+        targetModel?.splitDown()
+    }
+
+    @objc private func menuEqualizeSplits() {
+        targetModel?.equalizeSplits()
+    }
+
+    @objc private func menuToggleZoom() {
+        targetModel?.toggleZoom()
+    }
+
+    @objc private func menuFind() {
+        targetModel?.isSearching = true
+    }
+
     @objc private func menuClear() {
-        SuqiWindowManager.shared.activeWindowController?.model.clearActiveSession()
+        targetModel?.clearActiveSession()
     }
 
     @objc private func menuNewTab() {
-        SuqiWindowManager.shared.activeWindowController?.model.createNewTab()
+        targetModel?.createNewTab()
     }
 
     @objc private func menuNewWindow() {
-        SuqiWindowManager.shared.createWindow()
+        SuqiWindowManager.shared.createWindow(workingDirectory: targetModel?.activeSession?.fullDirectory)
     }
 
     @objc private func menuClosePane() {
-        SuqiWindowManager.shared.activeWindowController?.closeCurrentTabOrWindow()
+        guard let view = currentTerminalView, let window = view.window else {
+            targetModel?.closeActiveSession()
+            return
+        }
+        if window is QuickTerminalPanel {
+            targetModel?.closeActiveSession()
+        } else if let wc = window.windowController as? TerminalWindowController {
+            wc.closeCurrentTabOrWindow()
+        } else {
+            targetModel?.closeActiveSession()
+        }
     }
 }
 

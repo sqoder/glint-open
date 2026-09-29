@@ -33,7 +33,6 @@ public struct VisualEffectBackground: NSViewRepresentable {
 
 public struct ContentView: View {
     @ObservedObject public var model: SuqiWindowModel
-    @ObservedObject private var settings = SuqiSettings.shared
     @State private var configReloadToken = UUID()
 
     public init(model: SuqiWindowModel) {

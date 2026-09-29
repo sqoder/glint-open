@@ -8,21 +8,26 @@
 import AppKit
 import SwiftUI
 
-private final class QuickTerminalPanel: NSPanel {
-    override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
+public final class QuickTerminalPanel: NSPanel {
+    override public var canBecomeKey: Bool { true }
+    override public var canBecomeMain: Bool { true }
 }
 
 @MainActor
 public final class QuickTerminalController: ObservableObject {
     public static let shared = QuickTerminalController()
 
-    private var panel: QuickTerminalPanel?
-    private var model: SuqiWindowModel?
+    public private(set) var panel: QuickTerminalPanel?
+    public private(set) var model: SuqiWindowModel?
     @Published public private(set) var isVisible: Bool = false
 
     private init() {
         setupLocalShortcut()
+    }
+
+    private var currentActiveScreen: NSScreen? {
+        let mouseLocation = NSEvent.mouseLocation
+        return NSScreen.screens.first { NSMouseInRect(mouseLocation, $0.frame, false) } ?? NSScreen.main
     }
 
     private func setupLocalShortcut() {
@@ -71,7 +76,7 @@ public final class QuickTerminalController: ObservableObject {
     }
 
     public func show() {
-        guard let screen = NSScreen.main else { return }
+        guard let screen = currentActiveScreen else { return }
         let screenFrame = screen.visibleFrame
 
         if panel == nil {
