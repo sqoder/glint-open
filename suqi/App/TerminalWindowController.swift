@@ -9,6 +9,44 @@ import AppKit
 import SwiftUI
 import GhosttyTerminal
 
+public final class SuqiTerminalWindow: NSWindow {
+    override public func layoutIfNeeded() {
+        super.layoutIfNeeded()
+        adjustTrafficLights()
+    }
+
+    override public func setFrame(_ frameRect: NSRect, display displayFlag: Bool) {
+        super.setFrame(frameRect, display: displayFlag)
+        adjustTrafficLights()
+    }
+
+    override public func makeKeyAndOrderFront(_ sender: Any?) {
+        super.makeKeyAndOrderFront(sender)
+        adjustTrafficLights()
+    }
+
+    override public func orderFront(_ sender: Any?) {
+        super.orderFront(sender)
+        adjustTrafficLights()
+    }
+
+    public func adjustTrafficLights() {
+        guard !styleMask.contains(.fullScreen) else { return }
+        guard let close = standardWindowButton(.closeButton),
+              let mini = standardWindowButton(.miniaturizeButton),
+              let zoom = standardWindowButton(.zoomButton) else { return }
+
+        // 对齐现代 macOS 呼吸感：下移左上角红绿灯（y 调至 4.0）并优化左边距，消除贴顶太高的紧绷感
+        let targetY: CGFloat = 4.0
+        let targetStartX: CGFloat = 13.0
+        let spacing: CGFloat = 22.0
+
+        close.setFrameOrigin(NSPoint(x: targetStartX, y: targetY))
+        mini.setFrameOrigin(NSPoint(x: targetStartX + spacing, y: targetY))
+        zoom.setFrameOrigin(NSPoint(x: targetStartX + spacing * 2, y: targetY))
+    }
+}
+
 @MainActor
 public final class TerminalWindowController: NSWindowController, NSWindowDelegate {
     public let model: SuqiWindowModel
@@ -35,14 +73,14 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             let font = NSFont(name: userConfig.fontFamily, size: userConfig.fontSize)
                 ?? NSFont.monospacedSystemFont(ofSize: userConfig.fontSize, weight: .regular)
             let cellHeight = ceil(font.ascender - font.descender + font.leading) + CGFloat(userConfig.adjustCellHeight)
-            let padding = CGFloat(userConfig.windowPaddingY * 2) + 28 // 28pt 标题栏
+            let padding = CGFloat(userConfig.windowPaddingY * 2) + 32 // 32pt 标题栏
             if let h = userConfig.windowHeight {
                 return h > 150 ? CGFloat(h) : CGFloat(h) * cellHeight + padding
             }
             return 30 * cellHeight + padding // 默认 30 行
         }()
 
-        let window = NSWindow(
+        let window = SuqiTerminalWindow(
             contentRect: NSRect(x: 0, y: 0, width: initialWidth, height: initialHeight),
             styleMask: [
                 .titled,
@@ -439,6 +477,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
 
     public func windowDidResize(_ notification: Notification) {
         saveWindowFrameIfNeeded()
+        (window as? SuqiTerminalWindow)?.adjustTrafficLights()
     }
 
     public func windowDidMove(_ notification: Notification) {
@@ -455,6 +494,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
     }
 
     public func windowDidBecomeKey(_ notification: Notification) {
+        (window as? SuqiTerminalWindow)?.adjustTrafficLights()
         if let terminalView = getActiveTerminalView() {
             window?.makeFirstResponder(terminalView)
         }

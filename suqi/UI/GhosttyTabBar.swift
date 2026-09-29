@@ -18,9 +18,9 @@ public struct GhosttyTabBar: View {
 
     public var body: some View {
         HStack(spacing: 2) {
-            // 红绿灯安全间距
+            // 红绿灯安全间距 (适配下移与微调后的交通灯)
             Spacer()
-                .frame(width: 76)
+                .frame(width: 82)
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
@@ -99,7 +99,7 @@ public struct GhosttyTabBar: View {
 
             Spacer()
         }
-        .frame(height: 28)
+        .frame(height: 32)
         .background(Color.clear)
     }
 }

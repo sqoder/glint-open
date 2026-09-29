@@ -67,16 +67,16 @@ public struct ContentView: View {
             }
 
             VStack(spacing: 0) {
-                // 顶部标题/标签栏区域（高度 28）：底层承载原生可拖拽/双击缩放交互，上层渲染标签页
+                // 顶部标题/标签栏区域（高度 32）：底层承载原生可拖拽/双击缩放交互，上层渲染标签页
                 ZStack(alignment: .center) {
                     WindowDragArea()
-                        .frame(height: 28)
+                        .frame(height: 32)
 
                     if model.tabs.count > 1 {
                         GhosttyTabBar(model: model)
-                            .frame(height: 28)
+                            .frame(height: 32)
                     } else if let activeTab = model.activeTab {
-                        VStack(spacing: 1) {
+                        VStack(spacing: 2) {
                             Text(activeTab.displayPathFormatted)
                                 .font(.system(size: 11.5, weight: .regular, design: .default))
                                 .foregroundStyle(Color.white.opacity(0.85))
@@ -85,11 +85,11 @@ public struct ContentView: View {
                                 .font(.system(size: 7, weight: .bold))
                                 .foregroundStyle(Color.white.opacity(0.40))
                         }
-                        .frame(maxWidth: .infinity, maxHeight: 28)
+                        .frame(maxWidth: .infinity, maxHeight: 32)
                         .allowsHitTesting(false)
                     }
                 }
-                .frame(height: 28)
+                .frame(height: 32)
 
                 // 终端渲染工作区（全幅贴合，支持多标签、多分屏、全屏聚焦与滚动搜索）
                 ZStack(alignment: .topTrailing) {
