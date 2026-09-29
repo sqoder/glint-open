@@ -14,8 +14,8 @@ public struct GhosttyUserConfig: Sendable {
     public var fontFamily: String = "Maple Mono NF"
     public var fontSize: Double = 13.0
     public var fontThicken: Bool = true
-    public var backgroundOpacity: Double = 0.60
-    public var backgroundBlur: Int = 20
+    public var backgroundOpacity: Double = 1.0
+    public var backgroundBlur: Int = 0
     public var windowPaddingX: Int = 12
     public var windowPaddingY: Int = 8
     public var cursorStyle: String = "bar"
