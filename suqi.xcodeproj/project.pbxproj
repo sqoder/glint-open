@@ -24,6 +24,7 @@
 		B8F4942D7AD906582FA42B79 /* QuickTerminalController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F255C2E4967F7B0D77CE40 /* QuickTerminalController.swift */; };
 		C444DC2163132C1A3CDD21C7 /* AppTerminalView+Paste.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6A606433D31CF15D4E3070A /* AppTerminalView+Paste.swift */; };
 		D169B7676DA84876637D5D73 /* GhosttyTerminal in Frameworks */ = {isa = PBXBuildFile; productRef = 026D1368FE29CC719D26D23A /* GhosttyTerminal */; };
+		DEEC68AE60576CBF07C4C20B /* AppIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = CF935DA16E3F7B4A1BCADDA8 /* AppIcon.icns */; };
 		DF65D175EE3E7DEEC2067078 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBE890933D9DF182030884D9 /* AppDelegate.swift */; };
 		E5372661C8D65B4E7EF15DCD /* GhosttyTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DB61B0358E51D788578220F /* GhosttyTabBar.swift */; };
 		EC17C4A245342DEDC51BF192 /* SuqiTerminalSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE3117CFA51D306A25BED0B7 /* SuqiTerminalSession.swift */; };
@@ -47,6 +48,7 @@
 		B9A267F01646B2D48A9B39D8 /* GhosttyConfigLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyConfigLoader.swift; sourceTree = "<group>"; };
 		BE3117CFA51D306A25BED0B7 /* SuqiTerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTerminalSession.swift; sourceTree = "<group>"; };
 		C68E7248FBDD6BCF85625B38 /* SuqiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiApp.swift; sourceTree = "<group>"; };
+		CF935DA16E3F7B4A1BCADDA8 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		D65A5DFF5600AB429AE361CE /* TerminalWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalWindowController.swift; sourceTree = "<group>"; };
 		D6A606433D31CF15D4E3070A /* AppTerminalView+Paste.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppTerminalView+Paste.swift"; sourceTree = "<group>"; };
 		DBE890933D9DF182030884D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -73,6 +75,7 @@
 		015C5E40BAA039E7B840FF69 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				CF935DA16E3F7B4A1BCADDA8 /* AppIcon.icns */,
 				0CA1DBDA76BC2D1EE1A95D7B /* Assets.xcassets */,
 				0119385D9912FA0CB136D963 /* Info.plist */,
 				588B61BA645F396A9D2FF15E /* suqi.entitlements */,
@@ -228,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEEC68AE60576CBF07C4C20B /* AppIcon.icns in Resources */,
 				1C8AF7221BA331EFBC3EC823 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -270,7 +274,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = suqi/Resources/suqi.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = suqi/Resources/Info.plist;
@@ -278,7 +282,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.0.1;
+				MARKETING_VERSION = 0.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suqi.terminal;
 				PRODUCT_NAME = suqi;
 				SDKROOT = macosx;
@@ -356,7 +360,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = suqi/Resources/suqi.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = suqi/Resources/Info.plist;
@@ -364,7 +368,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.0.1;
+				MARKETING_VERSION = 0.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suqi.terminal;
 				PRODUCT_NAME = suqi;
 				SDKROOT = macosx;

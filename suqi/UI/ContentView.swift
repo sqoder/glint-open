@@ -85,6 +85,7 @@ public struct ContentView: View {
                                 .font(.system(size: 7, weight: .bold))
                                 .foregroundStyle(Color.white.opacity(0.40))
                         }
+                        .offset(y: 6.5)
                         .frame(maxWidth: .infinity, maxHeight: 32)
                         .allowsHitTesting(false)
                     }

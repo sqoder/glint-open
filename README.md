@@ -1,4 +1,4 @@
-# suqi (素气) 桌面终端 · v0.0.1
+# suqi (素气) 桌面终端 · v0.0.2
 
 > 基于 Ghostty Metal GPU 硬件加速核心，视觉极致干净纯粹，彻底解决 Ghostty 痛点——直接用 `⌘V` (Cmd+V) 一键粘贴图片到 AI 命令行（Codex / agy / Claude Code）的独立 macOS 桌面终端。
 
