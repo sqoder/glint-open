@@ -179,7 +179,7 @@ private struct GhosttyTabItemView: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 26)
-        .contentShape(Rectangle())
+        .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
         .onTapGesture {
             onSelect()
         }
@@ -230,10 +230,10 @@ private struct GhosttyTabItemView: View {
 
         let shadowColor: Color = isActive ? Color.black.opacity(0.18) : Color.clear
 
-        return RoundedRectangle(cornerRadius: 7, style: .continuous)
+        return RoundedRectangle(cornerRadius: 11, style: .continuous)
             .fill(fillColor)
             .overlay(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
                     .strokeBorder(strokeColor, lineWidth: isActive ? 0.75 : 0.5)
             )
             .shadow(color: shadowColor, radius: 2, y: 1)
