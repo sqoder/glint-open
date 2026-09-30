@@ -132,6 +132,15 @@ public final class QuickTerminalController: ObservableObject {
         let targetY = screenFrame.maxY - height
         let targetFrame = NSRect(x: x, y: targetY, width: width, height: height)
 
+        let (userConfig, _) = GhosttyUserConfig.load()
+        let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
+        if isTranslucent {
+            let blurRadius = userConfig.backgroundBlur > 0 ? Int32(userConfig.backgroundBlur) : 20
+            TerminalWindowController.applyWindowBlur(window: panel, radius: blurRadius)
+        } else {
+            TerminalWindowController.applyWindowBlur(window: panel, radius: 0)
+        }
+
         panel.setFrame(NSRect(x: x, y: screenFrame.maxY, width: width, height: height), display: false)
         panel.orderFrontRegardless()
         panel.makeKeyAndOrderFront(nil)

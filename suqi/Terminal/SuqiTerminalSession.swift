@@ -159,7 +159,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     /// In-place hot reload of themes, fonts, cursor, and configuration without restarting running processes
     public func reloadConfiguration() {
         let (userConfig, _) = GhosttyUserConfig.load()
-        let theme = GhosttyThemeCatalog.theme(named: userConfig.themeName)?.toTerminalTheme() ?? .default
+        let theme = Self.buildTerminalTheme(userConfig: userConfig)
         state.setTheme(theme)
         let config = Self.buildTerminalConfiguration(userConfig: userConfig)
         state.setTerminalConfiguration(config)
@@ -215,6 +215,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             builder.withCursorStyleBlink(userConfig.cursorBlink)
             // Render terminal canvas transparent; unified visual effect layer provides background
             builder.withBackgroundOpacity(0)
+            builder.withCustom("background-opacity-cells", "true")
             builder.withWindowPaddingX(userConfig.windowPaddingX)
             builder.withWindowPaddingY(userConfig.windowPaddingY)
             // Disable window-padding-balance to anchor top padding strictly and prevent prompt jitter during resizing
@@ -238,9 +239,34 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         }
     }
 
+    public static func buildTerminalTheme(userConfig: GhosttyUserConfig) -> TerminalTheme {
+        let cleanBg: String? = userConfig.background?.trimmingCharacters(in: CharacterSet(charactersIn: "#\"\' "))
+
+        guard let themeDef = GhosttyThemeCatalog.theme(named: userConfig.themeName) else {
+            let defConfig = TerminalConfiguration { builder in
+                builder.withBackgroundOpacity(0)
+                builder.withCustom("background-opacity-cells", "true")
+                if let cleanBg {
+                    builder.withBackground("#\(cleanBg)")
+                }
+            }
+            return TerminalTheme(light: defConfig, dark: defConfig)
+        }
+
+        let baseConfig = themeDef.toTerminalConfiguration()
+        let customConfig = TerminalConfiguration(startingFrom: baseConfig) { builder in
+            builder.withBackgroundOpacity(0)
+            builder.withCustom("background-opacity-cells", "true")
+            if let cleanBg {
+                builder.withBackground("#\(cleanBg)")
+            }
+        }
+        return TerminalTheme(light: customConfig, dark: customConfig)
+    }
+
     public static func buildTerminalViewState(workingDirectory: String) -> TerminalViewState {
         let (userConfig, resolvedPath) = GhosttyUserConfig.load()
-        let theme = GhosttyThemeCatalog.theme(named: userConfig.themeName)?.toTerminalTheme() ?? .default
+        let theme = buildTerminalTheme(userConfig: userConfig)
         let config = buildTerminalConfiguration(userConfig: userConfig)
 
         let configSource: TerminalController.ConfigSource = {

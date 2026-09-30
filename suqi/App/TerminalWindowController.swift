@@ -79,10 +79,26 @@ public final class SuqiTerminalWindow: NSWindow {
     }
 }
 
+// MARK: - Native WindowServer Blur Bridge (Ghostty Parity)
+
+private typealias CGSConnectionID = UnsafeMutableRawPointer
+
+@_silgen_name("CGSDefaultConnectionForThread")
+private func CGSDefaultConnectionForThread() -> CGSConnectionID?
+
+@_silgen_name("CGSSetWindowBackgroundBlurRadius")
+private func CGSSetWindowBackgroundBlurRadius(_ connection: CGSConnectionID?, _ windowNumber: Int, _ radius: Int32) -> Int32
+
 @MainActor
 public final class TerminalWindowController: NSWindowController, NSWindowDelegate {
     public let model: SuqiWindowModel
     private var eventMonitor: Any?
+
+    public static func applyWindowBlur(window: NSWindow, radius: Int32) {
+        if let conn = CGSDefaultConnectionForThread() {
+            _ = CGSSetWindowBackgroundBlurRadius(conn, window.windowNumber, radius)
+        }
+    }
 
     public init(model: SuqiWindowModel) {
         self.model = model
@@ -133,9 +149,12 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         if isTranslucent {
             window.isOpaque = false
             window.backgroundColor = .clear
+            let blurRadius = userConfig.backgroundBlur > 0 ? Int32(userConfig.backgroundBlur) : 20
+            Self.applyWindowBlur(window: window, radius: blurRadius)
         } else {
             window.backgroundColor = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
             window.isOpaque = true
+            Self.applyWindowBlur(window: window, radius: 0)
         }
         window.hasShadow = true
         window.minSize = NSSize(width: 80, height: 32)
@@ -266,9 +285,12 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         if isTranslucent {
             window.isOpaque = false
             window.backgroundColor = .clear
+            let blurRadius = userConfig.backgroundBlur > 0 ? Int32(userConfig.backgroundBlur) : 20
+            Self.applyWindowBlur(window: window, radius: blurRadius)
         } else {
             window.backgroundColor = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
             window.isOpaque = true
+            Self.applyWindowBlur(window: window, radius: 0)
         }
     }
 

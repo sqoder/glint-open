@@ -59,10 +59,8 @@ public struct ContentView: View {
             let isMiniCapsule = windowHeight <= 36 || windowWidth < 120
 
             ZStack(alignment: .topLeading) {
-                // Background: Adaptively renders solid color or visual effect blur per Ghostty config
+                // Background: Adaptively renders solid color or translucent color per Ghostty config
                 if isTranslucent {
-                    VisualEffectBackground()
-                        .ignoresSafeArea()
                     themeBg.opacity(userConfig.backgroundOpacity)
                         .ignoresSafeArea()
                 } else {
