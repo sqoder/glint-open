@@ -203,10 +203,30 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         }
 
         setupKeyEventMonitor()
+        setupOcclusionStateObserver()
     }
+
+    private var occlusionObserver: Any?
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private func setupOcclusionStateObserver() {
+        guard let window else { return }
+        occlusionObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didChangeOcclusionStateNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self, let window = self.window else { return }
+            let isVisible = window.occlusionState.contains(.visible)
+            if isVisible {
+                self.model.resumeBackgroundRendering()
+            } else {
+                self.model.pauseBackgroundRendering()
+            }
+        }
     }
 
     private func setupKeyEventMonitor() {
@@ -252,6 +272,10 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         if let eventMonitor {
             NSEvent.removeMonitor(eventMonitor)
             self.eventMonitor = nil
+        }
+        if let occlusionObserver {
+            NotificationCenter.default.removeObserver(occlusionObserver)
+            self.occlusionObserver = nil
         }
         SuqiWindowManager.shared.removeWindow(self)
         model.tearDownAllSessions()

@@ -21,6 +21,9 @@ public struct SettingsView: View {
     @State private var cursorBlink: Bool
     @State private var isAccessibilityTrusted: Bool = QuickTerminalController.isAccessibilityTrusted
 
+    @State private var showingThemePicker: Bool = false
+    @State private var themeSearchQuery: String = ""
+
     private static let popularThemes = [
         "Catppuccin Mocha",
         "Catppuccin Macchiato",
@@ -38,15 +41,28 @@ public struct SettingsView: View {
         "Monokai Pro"
     ]
 
-    private static let availableFonts = [
-        "Maple Mono NF",
-        "SF Mono",
-        "Menlo",
-        "Monaco",
-        "Fira Code",
-        "JetBrains Mono",
-        "Courier New"
-    ]
+    private static func loadSystemMonospacedFonts() -> [String] {
+        let fm = NSFontManager.shared
+        var families = Set<String>()
+        for family in fm.availableFontFamilies {
+            let name = family.lowercased()
+            if let font = fm.font(withFamily: family, traits: .unboldFontMask, weight: 5, size: 12),
+               font.isFixedPitch || name.contains("mono") || name.contains("code") || name.contains("nf") || name.contains("nerd") || name.contains("courier") || name.contains("menlo") || name.contains("monaco") {
+                families.insert(family)
+            }
+        }
+        var sorted = Array(families).sorted()
+        let priority = ["Maple Mono NF", "SF Mono", "JetBrains Mono", "Fira Code", "Menlo", "Monaco", "Courier New"]
+        for p in priority.reversed() {
+            if let idx = sorted.firstIndex(of: p) {
+                sorted.remove(at: idx)
+                sorted.insert(p, at: 0)
+            } else if fm.availableFontFamilies.contains(p) {
+                sorted.insert(p, at: 0)
+            }
+        }
+        return sorted.isEmpty ? priority : sorted
+    }
 
     public init() {
         let (cfg, _) = GhosttyUserConfig.load()
@@ -71,7 +87,7 @@ public struct SettingsView: View {
     }
 
     private var allFonts: [String] {
-        var list = Self.availableFonts
+        var list = Self.loadSystemMonospacedFonts()
         if !list.contains(fontFamily) {
             list.insert(fontFamily, at: 0)
         }
@@ -81,14 +97,32 @@ public struct SettingsView: View {
     public var body: some View {
         Form {
             Section("Appearance & Theme") {
-                Picker("Theme", selection: $themeName) {
-                    ForEach(allThemes, id: \.self) { name in
-                        Text(name).tag(name)
+                HStack {
+                    Picker("Theme", selection: $themeName) {
+                        ForEach(allThemes, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
                     }
+                    .onChange(of: themeName) { _, newTheme in
+                        GhosttyUserConfig.saveValues(["theme": newTheme])
+                        SuqiWindowManager.shared.reloadAllWindows()
+                    }
+
+                    Button("Browse 300+...") {
+                        showingThemePicker = true
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
-                .onChange(of: themeName) { _, newTheme in
-                    GhosttyUserConfig.saveValues(["theme": newTheme])
-                    SuqiWindowManager.shared.reloadAllWindows()
+                .sheet(isPresented: $showingThemePicker) {
+                    ThemeSearchSheet(
+                        isPresented: $showingThemePicker,
+                        selectedTheme: $themeName,
+                        onSelect: { newTheme in
+                            GhosttyUserConfig.saveValues(["theme": newTheme])
+                            SuqiWindowManager.shared.reloadAllWindows()
+                        }
+                    )
                 }
 
                 Slider(value: $backgroundOpacity, in: 0.4...1.0, step: 0.02) {
@@ -225,5 +259,83 @@ public struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 460, height: 500)
         .navigationTitle("Settings")
+    }
+}
+
+// MARK: - 300+ Theme Search Sheet
+
+struct ThemeSearchSheet: View {
+    @Binding var isPresented: Bool
+    @Binding var selectedTheme: String
+    var onSelect: (String) -> Void
+
+    @State private var searchQuery: String = ""
+
+    private var filteredThemes: [GhosttyThemeDefinition] {
+        if searchQuery.trimmingCharacters(in: .whitespaces).isEmpty {
+            return GhosttyThemeCatalog.allThemes
+        }
+        return GhosttyThemeCatalog.search(searchQuery)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Search header
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                TextField("Search 300+ Ghostty themes...", text: $searchQuery)
+                    .textFieldStyle(.plain)
+                if !searchQuery.isEmpty {
+                    Button {
+                        searchQuery = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(10)
+            .background(Color(nsColor: .controlBackgroundColor))
+
+            Divider()
+
+            // Theme list
+            List(filteredThemes, id: \.name) { theme in
+                HStack {
+                    Text(theme.name)
+                        .font(.system(size: 12.5, weight: selectedTheme == theme.name ? .semibold : .regular))
+                    Spacer()
+                    if selectedTheme == theme.name {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(Color.accentColor)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selectedTheme = theme.name
+                    onSelect(theme.name)
+                    isPresented = false
+                }
+            }
+            .listStyle(.inset)
+
+            Divider()
+
+            // Footer
+            HStack {
+                Text("\(filteredThemes.count) themes available")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button("Done") {
+                    isPresented = false
+                }
+                .keyboardShortcut(.defaultAction)
+            }
+            .padding(10)
+        }
+        .frame(width: 380, height: 440)
     }
 }

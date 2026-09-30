@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		1C8AF7221BA331EFBC3EC823 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0CA1DBDA76BC2D1EE1A95D7B /* Assets.xcassets */; };
 		4BBB4F3672C2980AC2C1E57A /* WindowDragArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F026B6776BE8F54802752AE /* WindowDragArea.swift */; };
+		54D41B9923E4C9190A77683E /* SafePasteModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B3F534C853061A2B19F24B /* SafePasteModalView.swift */; };
 		600281785E0BB9B05B2B33CB /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4878471FB485E2C59461BA84 /* ContentView.swift */; };
 		623DD342294CA4174D623900 /* GhosttyTheme in Frameworks */ = {isa = PBXBuildFile; productRef = D0A104A00C20DB3A2C495424 /* GhosttyTheme */; };
 		667C70ED3BD3D760E769945C /* AppTerminalView+SmoothResize.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEFE82710EA5046473FA1A3B /* AppTerminalView+SmoothResize.swift */; };
 		734CC4189FAB9FEE7A96BFD8 /* AppTerminalView+IME.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6710207CA0BD2C3E412175F8 /* AppTerminalView+IME.swift */; };
 		74DDB09A0FAC7C1DD4A1C9D9 /* SuqiTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A55F9B778CFADA8535586F9 /* SuqiTheme.swift */; };
 		7FABD35078400B22BF9A0571 /* SuqiApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C68E7248FBDD6BCF85625B38 /* SuqiApp.swift */; };
+		89363B2FE0834ED9D91162BE /* SafePasteGuard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C28B2121765CAE574534042D /* SafePasteGuard.swift */; };
 		8DC9CADBC8EA4BDAE2A26212 /* SuqiWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685F51842B1DB3E6E992F976 /* SuqiWindowManager.swift */; };
 		92D460DF1C9380361DDCD1B9 /* TerminalActionBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430DC079E285DD7A421F88E2 /* TerminalActionBridge.swift */; };
 		9B9B42DCF1ADAB43C96DFC7A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8100FEA1B96F6EC5FCCBBF21 /* SettingsView.swift */; };
@@ -45,8 +47,10 @@
 		6710207CA0BD2C3E412175F8 /* AppTerminalView+IME.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppTerminalView+IME.swift"; sourceTree = "<group>"; };
 		685F51842B1DB3E6E992F976 /* SuqiWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiWindowManager.swift; sourceTree = "<group>"; };
 		8100FEA1B96F6EC5FCCBBF21 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		A3B3F534C853061A2B19F24B /* SafePasteModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafePasteModalView.swift; sourceTree = "<group>"; };
 		B9A267F01646B2D48A9B39D8 /* GhosttyConfigLoader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhosttyConfigLoader.swift; sourceTree = "<group>"; };
 		BE3117CFA51D306A25BED0B7 /* SuqiTerminalSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiTerminalSession.swift; sourceTree = "<group>"; };
+		C28B2121765CAE574534042D /* SafePasteGuard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafePasteGuard.swift; sourceTree = "<group>"; };
 		C68E7248FBDD6BCF85625B38 /* SuqiApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuqiApp.swift; sourceTree = "<group>"; };
 		CF935DA16E3F7B4A1BCADDA8 /* AppIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = AppIcon.icns; sourceTree = "<group>"; };
 		D65A5DFF5600AB429AE361CE /* TerminalWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalWindowController.swift; sourceTree = "<group>"; };
@@ -88,6 +92,7 @@
 			children = (
 				4878471FB485E2C59461BA84 /* ContentView.swift */,
 				0DB61B0358E51D788578220F /* GhosttyTabBar.swift */,
+				A3B3F534C853061A2B19F24B /* SafePasteModalView.swift */,
 				8100FEA1B96F6EC5FCCBBF21 /* SettingsView.swift */,
 				5F026B6776BE8F54802752AE /* WindowDragArea.swift */,
 				2D687235DBA6D5A26C8FA599 /* Theme */,
@@ -135,6 +140,7 @@
 				6710207CA0BD2C3E412175F8 /* AppTerminalView+IME.swift */,
 				D6A606433D31CF15D4E3070A /* AppTerminalView+Paste.swift */,
 				FEFE82710EA5046473FA1A3B /* AppTerminalView+SmoothResize.swift */,
+				C28B2121765CAE574534042D /* SafePasteGuard.swift */,
 				BE3117CFA51D306A25BED0B7 /* SuqiTerminalSession.swift */,
 				38356A190F4A4CB490BCBAF5 /* SuqiTerminalView.swift */,
 				EE7F1F265537572EC00C0DF8 /* SuqiWindowModel.swift */,
@@ -252,6 +258,8 @@
 				A6264D803D40E6EA80C5E34C /* GhosttyConfigLoader.swift in Sources */,
 				E5372661C8D65B4E7EF15DCD /* GhosttyTabBar.swift in Sources */,
 				B8F4942D7AD906582FA42B79 /* QuickTerminalController.swift in Sources */,
+				89363B2FE0834ED9D91162BE /* SafePasteGuard.swift in Sources */,
+				54D41B9923E4C9190A77683E /* SafePasteModalView.swift in Sources */,
 				9B9B42DCF1ADAB43C96DFC7A /* SettingsView.swift in Sources */,
 				7FABD35078400B22BF9A0571 /* SuqiApp.swift in Sources */,
 				EC17C4A245342DEDC51BF192 /* SuqiTerminalSession.swift in Sources */,
@@ -274,7 +282,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = suqi/Resources/suqi.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = suqi/Resources/Info.plist;
@@ -282,7 +290,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.0.7;
+				MARKETING_VERSION = 0.0.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suqi.terminal;
 				PRODUCT_NAME = suqi;
 				SDKROOT = macosx;
@@ -360,7 +368,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = suqi/Resources/suqi.entitlements;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = suqi/Resources/Info.plist;
@@ -368,7 +376,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.0.7;
+				MARKETING_VERSION = 0.0.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.suqi.terminal;
 				PRODUCT_NAME = suqi;
 				SDKROOT = macosx;

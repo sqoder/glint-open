@@ -297,6 +297,7 @@ public final class SuqiWindowModel: ObservableObject {
     @Published public private(set) var tabs: [SuqiTab] = []
     @Published public var activeTabId: UUID?
     @Published public var isSearching: Bool = false
+    @Published public var pendingSafePaste: SafePasteRequest? = nil
 
     /// Window close callback
     public var onCloseWindowRequested: (() -> Void)?
@@ -335,6 +336,14 @@ public final class SuqiWindowModel: ObservableObject {
         self.tabs = [tab]
         self.activeTabId = tab.id
         attachSessionCallbacks(session)
+    }
+
+    public init(withTab tab: SuqiTab) {
+        self.tabs = [tab]
+        self.activeTabId = tab.id
+        for session in tab.allSessions {
+            attachSessionCallbacks(session)
+        }
     }
 
     private func attachSessionCallbacks(_ session: SuqiTerminalSession) {
@@ -625,5 +634,55 @@ public final class SuqiWindowModel: ObservableObject {
         objectWillChange.send()
         let tab = tabs.remove(at: sourceIndex)
         tabs.insert(tab, at: destinationIndex)
+    }
+
+    /// Confirms and pastes the safe-paste text into the active session
+    public func confirmSafePaste(asSingleLine: Bool = false) {
+        guard let req = pendingSafePaste else { return }
+        let textToSend: String
+        if asSingleLine {
+            let lines = req.text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
+            textToSend = lines.joined(separator: " && ") + "\n"
+        } else {
+            textToSend = req.text
+        }
+        pendingSafePaste = nil
+        activeSession?.send(textToSend)
+        focusActiveSession()
+    }
+
+    /// Cancels the pending safe-paste operation
+    public func cancelSafePaste() {
+        pendingSafePaste = nil
+        focusActiveSession()
+    }
+
+    /// Detaches a tab into a new standalone window
+    public func detachTabToNewWindow(id: UUID) {
+        guard let index = tabs.firstIndex(where: { $0.id == id }) else { return }
+        objectWillChange.send()
+        let tab = tabs.remove(at: index)
+        if activeTabId == id {
+            activeTabId = tabs.first?.id
+        }
+        SuqiWindowManager.shared.createWindow(withTab: tab)
+        if tabs.isEmpty {
+            onCloseWindowRequested?()
+        } else {
+            focusActiveSession()
+        }
+    }
+
+    /// Background occlusion state handling for power efficiency
+    public func pauseBackgroundRendering() {
+        for session in sessions {
+            _ = session.state.surface?.performBindingAction("pause")
+        }
+    }
+
+    public func resumeBackgroundRendering() {
+        for session in sessions {
+            _ = session.state.surface?.performBindingAction("resume")
+        }
     }
 }

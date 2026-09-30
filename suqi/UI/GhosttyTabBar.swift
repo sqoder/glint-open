@@ -69,6 +69,32 @@ public struct GhosttyTabBar: View {
                         .onHover { hovering in
                             hoveredTabId = hovering ? tab.id : nil
                         }
+                        .contextMenu {
+                            Button("New Tab") {
+                                model.createNewTab()
+                            }
+                            Button("Split Right") {
+                                model.splitRight()
+                            }
+                            Button("Split Down") {
+                                model.splitDown()
+                            }
+                            if model.tabs.count > 1 {
+                                Divider()
+                                Button("Move Tab to New Window") {
+                                    model.detachTabToNewWindow(id: tab.id)
+                                }
+                                Button("Close Other Tabs") {
+                                    for other in model.tabs where other.id != tab.id {
+                                        _ = model.closeTab(id: other.id)
+                                    }
+                                }
+                            }
+                            Divider()
+                            Button("Close Tab") {
+                                model.closeTabWithConfirmation(id: tab.id, in: NSApp.keyWindow)
+                            }
+                        }
                         // Support tab drag-and-drop reordering
                         .onDrag {
                             self.draggingTabId = tab.id

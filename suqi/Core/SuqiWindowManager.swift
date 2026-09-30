@@ -94,6 +94,36 @@ public final class SuqiWindowManager: ObservableObject {
         return controller
     }
 
+    /// Creates a new standalone terminal window with an existing detached tab
+    @discardableResult
+    public func createWindow(withTab tab: SuqiTab) -> TerminalWindowController {
+        let model = SuqiWindowModel(withTab: tab)
+        let controller = TerminalWindowController(model: model)
+
+        guard let win = controller.window else {
+            windowControllers.append(controller)
+            controller.showWindow()
+            return controller
+        }
+
+        if let activeWin = activeWindowController?.window {
+            var newFrame = win.frame
+            newFrame.size = activeWin.frame.size
+            win.setFrame(newFrame, display: false)
+            let refPoint = lastWindowTopLeft
+                ?? activeWin.frame.origin.applying(.init(translationX: 0, y: activeWin.frame.height))
+            let nextPoint = win.cascadeTopLeft(from: refPoint)
+            win.setFrameTopLeftPoint(nextPoint)
+            lastWindowTopLeft = nextPoint
+        } else {
+            win.center()
+        }
+
+        windowControllers.append(controller)
+        controller.showWindow()
+        return controller
+    }
+
     /// Removes a closed window controller
     public func removeWindow(_ controller: TerminalWindowController) {
         controller.saveWindowFrameIfNeeded()

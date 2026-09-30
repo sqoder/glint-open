@@ -131,7 +131,14 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 4. Standard text paste from clipboard
+        // 4. Standard text paste from clipboard (Safe Paste Guard evaluation)
+        if let clipText = pb.string(forType: .string), !clipText.isEmpty {
+            if let request = SafePasteGuard.evaluate(text: clipText) {
+                model.pendingSafePaste = request
+                return
+            }
+        }
+
         if let session = model.activeSession {
             _ = session.state.performBindingAction("paste_from_clipboard")
         }
@@ -187,6 +194,20 @@ public enum TerminalActionBridge {
                     return nil
                 }
             }
+        }
+
+        // Safe Paste modal active: intercept Return and Esc
+        if model.pendingSafePaste != nil {
+            if event.keyCode == 53 { // Esc: Cancel
+                model.cancelSafePaste()
+                return nil
+            }
+            if event.keyCode == 36 || event.charactersIgnoringModifiers == "\r" { // Return / Enter
+                let asSingleLine = flags.contains(.option)
+                model.confirmSafePaste(asSingleLine: asSingleLine)
+                return nil
+            }
+            return nil // Block terminal keystrokes while confirmation modal is visible
         }
 
         // 1. ⌥⌘V (Save clipboard image to disk and paste escaped file path)
@@ -276,13 +297,29 @@ public enum TerminalActionBridge {
             return nil
         }
 
-        // 12. ⌥⌘Left / ⌥⌘Right (Pane navigation)
+        // 12. ⌥⌘Left / ⌥⌘Right / ⌥⌘Up / ⌥⌘Down / ⌥⌘[ / ⌥⌘] (Directional and sequential pane navigation)
         if flags == [.command, .option] {
-            if event.specialKey == .leftArrow || event.specialKey == .upArrow {
+            if event.specialKey == .leftArrow {
+                model.focusPane(in: .left)
+                return nil
+            }
+            if event.specialKey == .rightArrow {
+                model.focusPane(in: .right)
+                return nil
+            }
+            if event.specialKey == .upArrow {
+                model.focusPane(in: .up)
+                return nil
+            }
+            if event.specialKey == .downArrow {
+                model.focusPane(in: .down)
+                return nil
+            }
+            if event.charactersIgnoringModifiers == "[" {
                 model.previousPane()
                 return nil
             }
-            if event.specialKey == .rightArrow || event.specialKey == .downArrow {
+            if event.charactersIgnoringModifiers == "]" {
                 model.nextPane()
                 return nil
             }
