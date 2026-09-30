@@ -10,7 +10,7 @@ import AppKit
 import GhosttyTheme
 
 public enum SuqiTheme {
-    public static let defaultBackgroundHex = "2F343F"
+    public static let defaultBackgroundHex = "30333E"
 
     public static func backgroundColor(for themeName: String, customBackground: String? = nil) -> Color {
         if let customBackground, !customBackground.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -36,7 +36,7 @@ public enum SuqiTheme {
 // MARK: - Color Hex Extensions
 
 public extension Color {
-    init(hex: String, defaultColor: Color = Color(red: 47/255.0, green: 52/255.0, blue: 63/255.0)) {
+    init(hex: String, defaultColor: Color = Color(red: 48/255.0, green: 51/255.0, blue: 62/255.0)) {
         let clean = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         if Scanner(string: clean).scanHexInt64(&int) {
@@ -57,7 +57,7 @@ public extension Color {
 }
 
 public extension NSColor {
-    convenience init(hex: String, defaultColor: NSColor = NSColor(srgbRed: 47/255.0, green: 52/255.0, blue: 63/255.0, alpha: 1.0)) {
+    convenience init(hex: String, defaultColor: NSColor = NSColor(srgbRed: 48/255.0, green: 51/255.0, blue: 62/255.0, alpha: 1.0)) {
         let clean = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
         if Scanner(string: clean).scanHexInt64(&int) {

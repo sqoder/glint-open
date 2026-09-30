@@ -27,7 +27,7 @@ public struct GhosttyUserConfig: Sendable {
     public var windowSaveState: String = "always"
     public var windowWidth: Int? = nil
     public var windowHeight: Int? = nil
-    public var background: String? = "2F343F"
+    public var background: String? = "30333E"
     public var foreground: String? = nil
 
     public static func load() -> (config: GhosttyUserConfig, filePath: String?) {
