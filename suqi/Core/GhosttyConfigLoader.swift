@@ -15,6 +15,7 @@ public struct GhosttyUserConfig: Sendable {
     public var fontSize: Double = 13.0
     public var fontThicken: Bool = true
     public var backgroundOpacity: Double = 1.0
+    public var backgroundOpacityCells: Bool = false
     public var backgroundBlur: Int = 0
     public var windowPaddingX: Int = 12
     public var windowPaddingY: Int = 8
@@ -69,6 +70,8 @@ public struct GhosttyUserConfig: Sendable {
                 if let v = Int(val) { cfg.adjustCellHeight = v }
             case "background-opacity":
                 if let v = Double(val) { cfg.backgroundOpacity = v }
+            case "background-opacity-cells":
+                cfg.backgroundOpacityCells = (val.lowercased() == "true")
             case "background-blur":
                 if let v = Int(val) { cfg.backgroundBlur = v }
                 else if val.lowercased() == "true" { cfg.backgroundBlur = 20 }

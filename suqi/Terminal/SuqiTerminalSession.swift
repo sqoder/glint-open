@@ -213,9 +213,13 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             builder.withFontFamily(userConfig.fontFamily)
             builder.withCursorStyle(cursorStyle)
             builder.withCursorStyleBlink(userConfig.cursorBlink)
-            // Render terminal canvas transparent; unified visual effect layer provides background
-            builder.withBackgroundOpacity(0)
-            builder.withCustom("background-opacity-cells", "true")
+            // Render default terminal canvas transparent; unified visual effect layer provides background
+            if userConfig.backgroundOpacityCells {
+                builder.withCustom("background-opacity-cells", "true")
+                builder.withBackgroundOpacity(userConfig.backgroundOpacity)
+            } else {
+                builder.withBackgroundOpacity(0)
+            }
             builder.withWindowPaddingX(userConfig.windowPaddingX)
             builder.withWindowPaddingY(userConfig.windowPaddingY)
             // Disable window-padding-balance to anchor top padding strictly and prevent prompt jitter during resizing
@@ -244,8 +248,12 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
 
         guard let themeDef = GhosttyThemeCatalog.theme(named: userConfig.themeName) else {
             let defConfig = TerminalConfiguration { builder in
-                builder.withBackgroundOpacity(0)
-                builder.withCustom("background-opacity-cells", "true")
+                if userConfig.backgroundOpacityCells {
+                    builder.withCustom("background-opacity-cells", "true")
+                    builder.withBackgroundOpacity(userConfig.backgroundOpacity)
+                } else {
+                    builder.withBackgroundOpacity(0)
+                }
                 if let cleanBg {
                     builder.withBackground("#\(cleanBg)")
                 }
@@ -255,8 +263,12 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
 
         let baseConfig = themeDef.toTerminalConfiguration()
         let customConfig = TerminalConfiguration(startingFrom: baseConfig) { builder in
-            builder.withBackgroundOpacity(0)
-            builder.withCustom("background-opacity-cells", "true")
+            if userConfig.backgroundOpacityCells {
+                builder.withCustom("background-opacity-cells", "true")
+                builder.withBackgroundOpacity(userConfig.backgroundOpacity)
+            } else {
+                builder.withBackgroundOpacity(0)
+            }
             if let cleanBg {
                 builder.withBackground("#\(cleanBg)")
             }
