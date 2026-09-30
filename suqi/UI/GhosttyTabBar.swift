@@ -21,35 +21,34 @@ public struct GhosttyTabBar: View {
 
     public var body: some View {
         HStack(spacing: 0) {
-            // Traffic lights inset breathing room (macOS standard: ~78pt)
+            // macOS traffic lights clearance (~76pt)
             Spacer()
-                .frame(width: 78)
+                .frame(width: 76)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 5) {
-                    ForEach(model.tabs) { tab in
-                        tabItem(tab)
-                    }
-
-                    plusButton
+            // Equal-width tab segments filling remaining horizontal space
+            HStack(spacing: 4) {
+                ForEach(Array(model.tabs.enumerated()), id: \.element.id) { index, tab in
+                    tabItem(tab: tab, index: index)
                 }
-                .padding(.horizontal, 4)
-                .padding(.vertical, 5)
-            }
 
-            Spacer()
+                plusButton
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 5)
+            .padding(.trailing, 4)
         }
         .frame(height: 36)
         .background(Color.clear)
     }
 
     @ViewBuilder
-    private func tabItem(_ tab: SuqiTab) -> some View {
+    private func tabItem(tab: SuqiTab, index: Int) -> some View {
         let isActive = model.activeTabId == tab.id
         let isHovered = hoveredTabId == tab.id
 
         GhosttyTabItemView(
             tab: tab,
+            index: index,
             isActive: isActive,
             isTabHovered: isHovered,
             onSelect: {
@@ -112,15 +111,15 @@ public struct GhosttyTabBar: View {
             model.createNewTab()
         } label: {
             Image(systemName: "plus")
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(isPlusHovered ? Color.white.opacity(0.90) : Color.white.opacity(0.55))
+                .font(.system(size: 10.5, weight: .semibold))
+                .foregroundStyle(isPlusHovered ? Color.white.opacity(0.95) : Color.white.opacity(0.60))
                 .frame(width: 24, height: 24)
                 .background(
-                    RoundedRectangle(cornerRadius: 6.5, style: .continuous)
-                        .fill(isPlusHovered ? Color.white.opacity(0.12) : Color.white.opacity(0.04))
+                    Circle()
+                        .fill(isPlusHovered ? Color.white.opacity(0.16) : Color.white.opacity(0.06))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 6.5, style: .continuous)
-                                .strokeBorder(Color.white.opacity(isPlusHovered ? 0.10 : 0.04), lineWidth: 0.5)
+                            Circle()
+                                .strokeBorder(Color.white.opacity(isPlusHovered ? 0.14 : 0.04), lineWidth: 0.5)
                         )
                 )
         }
@@ -130,8 +129,11 @@ public struct GhosttyTabBar: View {
     }
 }
 
+// MARK: - Individual Apple/Ghostty Tab Item View
+
 private struct GhosttyTabItemView: View {
     @ObservedObject var tab: SuqiTab
+    let index: Int
     let isActive: Bool
     let isTabHovered: Bool
     let onSelect: () -> Void
@@ -140,47 +142,63 @@ private struct GhosttyTabItemView: View {
     @State private var isCloseHovered: Bool = false
 
     var body: some View {
-        HStack(spacing: 6) {
-            tabIcon
-            tabTitle
-            if isTabHovered || isActive {
-                closeButton
+        ZStack {
+            // Background capsule
+            backgroundView
+
+            // Center: Tab title
+            HStack(spacing: 0) {
+                Spacer(minLength: 28)
+                tabTitle
+                Spacer(minLength: 28)
+            }
+
+            // Leading: active process indicator
+            HStack {
+                if tab.hasActiveProcess {
+                    Circle()
+                        .fill(Color(red: 1.0, green: 0.65, blue: 0.25))
+                        .frame(width: 5, height: 5)
+                        .shadow(color: Color.orange.opacity(0.60), radius: 2)
+                        .padding(.leading, 10)
+                }
+                Spacer()
+            }
+
+            // Trailing: shortcut badge (⌘N) or close button (on hover)
+            HStack {
+                Spacer()
+                if isTabHovered {
+                    closeButton
+                        .padding(.trailing, 6)
+                } else if index < 9 {
+                    shortcutBadge
+                        .padding(.trailing, 10)
+                }
             }
         }
-        .padding(.leading, 9)
-        .padding(.trailing, (isTabHovered || isActive) ? 6 : 9)
-        .frame(minWidth: 105, idealWidth: 145, maxWidth: 200)
+        .frame(maxWidth: .infinity)
         .frame(height: 26)
-        .background(backgroundView)
         .contentShape(Rectangle())
         .onTapGesture {
             onSelect()
         }
     }
 
-    @ViewBuilder
-    private var tabIcon: some View {
-        if tab.hasActiveProcess {
-            Circle()
-                .fill(Color(red: 1.0, green: 0.65, blue: 0.25))
-                .frame(width: 6, height: 6)
-                .shadow(color: Color.orange.opacity(0.50), radius: 2)
-        } else {
-            Image(systemName: "folder.fill")
-                .font(.system(size: 9.5))
-                .foregroundStyle(isActive ? Color.white.opacity(0.70) : Color.white.opacity(0.35))
-        }
-    }
-
     private var tabTitle: some View {
         let title = tab.tabDisplayTitle.isEmpty ? tab.title : tab.tabDisplayTitle
-        let textColor = isActive ? Color.white.opacity(0.96) : (isTabHovered ? Color.white.opacity(0.75) : Color.white.opacity(0.48))
+        let textColor = isActive ? Color.white.opacity(0.96) : (isTabHovered ? Color.white.opacity(0.85) : Color.white.opacity(0.55))
         return Text(title)
             .font(.system(size: 11.5, weight: isActive ? .medium : .regular, design: .default))
             .foregroundStyle(textColor)
             .lineLimit(1)
             .truncationMode(.middle)
-            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var shortcutBadge: some View {
+        Text("⌘\(index + 1)")
+            .font(.system(size: 10.5, weight: isActive ? .medium : .regular, design: .default))
+            .foregroundStyle(isActive ? Color.white.opacity(0.70) : Color.white.opacity(0.38))
     }
 
     private var closeButton: some View {
@@ -189,11 +207,11 @@ private struct GhosttyTabItemView: View {
         } label: {
             Image(systemName: "xmark")
                 .font(.system(size: 7.5, weight: .bold))
-                .foregroundStyle(isCloseHovered ? Color.white.opacity(0.95) : Color.white.opacity(0.60))
-                .frame(width: 15, height: 15)
+                .foregroundStyle(isCloseHovered ? Color.white.opacity(0.95) : Color.white.opacity(0.65))
+                .frame(width: 16, height: 16)
                 .background(
                     Circle()
-                        .fill(isCloseHovered ? Color.white.opacity(0.22) : Color.white.opacity(0.08))
+                        .fill(isCloseHovered ? Color.white.opacity(0.24) : Color.white.opacity(0.10))
                 )
         }
         .buttonStyle(.plain)
@@ -202,17 +220,23 @@ private struct GhosttyTabItemView: View {
     }
 
     private var backgroundView: some View {
-        let fillColor: Color = isActive ? Color.white.opacity(0.14) : (isTabHovered ? Color.white.opacity(0.065) : Color.white.opacity(0.02))
-        let strokeColor: Color = isActive ? Color.white.opacity(0.13) : (isTabHovered ? Color.white.opacity(0.08) : Color.white.opacity(0.03))
-        let shadowColor: Color = isActive ? Color.black.opacity(0.22) : Color.clear
+        let fillColor: Color = isActive
+            ? Color.white.opacity(0.16)
+            : (isTabHovered ? Color.white.opacity(0.08) : Color.white.opacity(0.035))
 
-        return RoundedRectangle(cornerRadius: 8, style: .continuous)
+        let strokeColor: Color = isActive
+            ? Color.white.opacity(0.20)
+            : (isTabHovered ? Color.white.opacity(0.08) : Color.white.opacity(0.03))
+
+        let shadowColor: Color = isActive ? Color.black.opacity(0.18) : Color.clear
+
+        return RoundedRectangle(cornerRadius: 7, style: .continuous)
             .fill(fillColor)
             .overlay(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(strokeColor, lineWidth: 0.6)
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .strokeBorder(strokeColor, lineWidth: isActive ? 0.75 : 0.5)
             )
-            .shadow(color: shadowColor, radius: 2.5, y: 1)
+            .shadow(color: shadowColor, radius: 2, y: 1)
     }
 }
 

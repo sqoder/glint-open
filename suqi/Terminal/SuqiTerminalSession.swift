@@ -146,14 +146,12 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         activeProcessName != nil
     }
 
-    /// Formatted tab title combining active process and directory
+    /// Formatted tab title combining active process or formatted path (e.g. ~/Desktop/siqi)
     public var tabDisplayTitle: String {
-        let dir = displayDirectory
         if let proc = activeProcessName {
-            let shortProc = proc.components(separatedBy: .whitespaces).first ?? proc
-            return "\(shortProc) · \(dir)"
+            return proc.components(separatedBy: .whitespaces).first ?? proc
         }
-        return dir
+        return displayPathFormatted
     }
 
     public var displayDirectory: String {
