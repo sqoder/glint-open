@@ -25,7 +25,7 @@ public struct GhosttyTabBar: View {
             Spacer()
                 .frame(width: 76)
 
-            // Equal-width tab segments filling remaining horizontal space
+            // Equal-width ultra-refined capsule tab segments
             HStack(spacing: 4) {
                 ForEach(Array(model.tabs.enumerated()), id: \.element.id) { index, tab in
                     tabItem(tab: tab, index: index)
@@ -34,7 +34,7 @@ public struct GhosttyTabBar: View {
                 plusButton
             }
             .padding(.horizontal, 4)
-            .padding(.vertical, 5)
+            .padding(.vertical, 6)
             .padding(.trailing, 4)
         }
         .frame(height: 36)
@@ -111,15 +111,15 @@ public struct GhosttyTabBar: View {
             model.createNewTab()
         } label: {
             Image(systemName: "plus")
-                .font(.system(size: 10.5, weight: .semibold))
-                .foregroundStyle(isPlusHovered ? Color.white.opacity(0.95) : Color.white.opacity(0.60))
-                .frame(width: 24, height: 24)
+                .font(.system(size: 9.5, weight: .semibold))
+                .foregroundStyle(isPlusHovered ? Color.white.opacity(0.95) : Color.white.opacity(0.55))
+                .frame(width: 22, height: 22)
                 .background(
                     Circle()
-                        .fill(isPlusHovered ? Color.white.opacity(0.16) : Color.white.opacity(0.06))
+                        .fill(isPlusHovered ? Color.white.opacity(0.14) : Color.white.opacity(0.045))
                         .overlay(
                             Circle()
-                                .strokeBorder(Color.white.opacity(isPlusHovered ? 0.14 : 0.04), lineWidth: 0.5)
+                                .strokeBorder(Color.white.opacity(isPlusHovered ? 0.12 : 0.03), lineWidth: 0.5)
                         )
                 )
         }
@@ -129,7 +129,7 @@ public struct GhosttyTabBar: View {
     }
 }
 
-// MARK: - Individual Apple/Ghostty Tab Item View
+// MARK: - Individual Ultra-Refined Apple Capsule Tab Item View
 
 private struct GhosttyTabItemView: View {
     @ObservedObject var tab: SuqiTab
@@ -143,14 +143,14 @@ private struct GhosttyTabItemView: View {
 
     var body: some View {
         ZStack {
-            // Background capsule
+            // Perfect continuous capsule background
             backgroundView
 
             // Center: Tab title
             HStack(spacing: 0) {
-                Spacer(minLength: 28)
+                Spacer(minLength: 26)
                 tabTitle
-                Spacer(minLength: 28)
+                Spacer(minLength: 26)
             }
 
             // Leading: active process indicator
@@ -158,9 +158,9 @@ private struct GhosttyTabItemView: View {
                 if tab.hasActiveProcess {
                     Circle()
                         .fill(Color(red: 1.0, green: 0.65, blue: 0.25))
-                        .frame(width: 5, height: 5)
-                        .shadow(color: Color.orange.opacity(0.60), radius: 2)
-                        .padding(.leading, 10)
+                        .frame(width: 4.5, height: 4.5)
+                        .shadow(color: Color.orange.opacity(0.60), radius: 1.5)
+                        .padding(.leading, 9)
                 }
                 Spacer()
             }
@@ -173,13 +173,13 @@ private struct GhosttyTabItemView: View {
                         .padding(.trailing, 6)
                 } else if index < 9 {
                     shortcutBadge
-                        .padding(.trailing, 10)
+                        .padding(.trailing, 9)
                 }
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 26)
-        .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+        .frame(height: 23)
+        .contentShape(Capsule(style: .continuous))
         .onTapGesture {
             onSelect()
         }
@@ -187,9 +187,9 @@ private struct GhosttyTabItemView: View {
 
     private var tabTitle: some View {
         let title = tab.tabDisplayTitle.isEmpty ? tab.title : tab.tabDisplayTitle
-        let textColor = isActive ? Color.white.opacity(0.96) : (isTabHovered ? Color.white.opacity(0.85) : Color.white.opacity(0.55))
+        let textColor = isActive ? Color.white.opacity(0.96) : (isTabHovered ? Color.white.opacity(0.85) : Color.white.opacity(0.52))
         return Text(title)
-            .font(.system(size: 11.5, weight: isActive ? .medium : .regular, design: .default))
+            .font(.system(size: 11, weight: isActive ? .medium : .regular, design: .default))
             .foregroundStyle(textColor)
             .lineLimit(1)
             .truncationMode(.middle)
@@ -197,8 +197,8 @@ private struct GhosttyTabItemView: View {
 
     private var shortcutBadge: some View {
         Text("⌘\(index + 1)")
-            .font(.system(size: 10.5, weight: isActive ? .medium : .regular, design: .default))
-            .foregroundStyle(isActive ? Color.white.opacity(0.70) : Color.white.opacity(0.38))
+            .font(.system(size: 9.5, weight: isActive ? .medium : .regular, design: .default))
+            .foregroundStyle(isActive ? Color.white.opacity(0.65) : Color.white.opacity(0.32))
     }
 
     private var closeButton: some View {
@@ -206,12 +206,12 @@ private struct GhosttyTabItemView: View {
             onClose()
         } label: {
             Image(systemName: "xmark")
-                .font(.system(size: 7.5, weight: .bold))
-                .foregroundStyle(isCloseHovered ? Color.white.opacity(0.95) : Color.white.opacity(0.65))
-                .frame(width: 16, height: 16)
+                .font(.system(size: 6.5, weight: .bold))
+                .foregroundStyle(isCloseHovered ? Color.white.opacity(0.95) : Color.white.opacity(0.60))
+                .frame(width: 14, height: 14)
                 .background(
                     Circle()
-                        .fill(isCloseHovered ? Color.white.opacity(0.24) : Color.white.opacity(0.10))
+                        .fill(isCloseHovered ? Color.white.opacity(0.24) : Color.white.opacity(0.08))
                 )
         }
         .buttonStyle(.plain)
@@ -221,22 +221,22 @@ private struct GhosttyTabItemView: View {
 
     private var backgroundView: some View {
         let fillColor: Color = isActive
-            ? Color.white.opacity(0.16)
-            : (isTabHovered ? Color.white.opacity(0.08) : Color.white.opacity(0.035))
+            ? Color.white.opacity(0.135)
+            : (isTabHovered ? Color.white.opacity(0.07) : Color.white.opacity(0.025))
 
         let strokeColor: Color = isActive
-            ? Color.white.opacity(0.20)
-            : (isTabHovered ? Color.white.opacity(0.08) : Color.white.opacity(0.03))
+            ? Color.white.opacity(0.18)
+            : (isTabHovered ? Color.white.opacity(0.06) : Color.white.opacity(0.015))
 
-        let shadowColor: Color = isActive ? Color.black.opacity(0.18) : Color.clear
+        let shadowColor: Color = isActive ? Color.black.opacity(0.15) : Color.clear
 
-        return RoundedRectangle(cornerRadius: 11, style: .continuous)
+        return Capsule(style: .continuous)
             .fill(fillColor)
             .overlay(
-                RoundedRectangle(cornerRadius: 11, style: .continuous)
-                    .strokeBorder(strokeColor, lineWidth: isActive ? 0.75 : 0.5)
+                Capsule(style: .continuous)
+                    .strokeBorder(strokeColor, lineWidth: isActive ? 0.65 : 0.5)
             )
-            .shadow(color: shadowColor, radius: 2, y: 1)
+            .shadow(color: shadowColor, radius: 1.5, y: 0.5)
     }
 }
 
