@@ -23,6 +23,8 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     public var onClosed: (() -> Void)?
     public let terminalView: AppTerminalView
     private var cancellables = Set<AnyCancellable>()
+    private var cwdMonitorTimer: Timer?
+    private var lastKnownDirectory: String = ""
 
     public nonisolated static func == (lhs: SuqiTerminalSession, rhs: SuqiTerminalSession) -> Bool {
         lhs.id == rhs.id
@@ -33,6 +35,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         self.createdAt = Date()
         let initialDir = SuqiDirectoryManager.resolvedInitialWorkingDirectory(explicit: workingDirectory)
         self.initialWorkingDirectory = initialDir
+        self.lastKnownDirectory = initialDir
         let state = Self.buildTerminalViewState(workingDirectory: initialDir)
         self.state = state
 
@@ -43,6 +46,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         self.terminalView = view
 
         bindState()
+        startCwdMonitor()
     }
 
     private func bindState() {
@@ -58,21 +62,28 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             .sink { [weak self] _ in
                 guard let self else { return }
                 self.onFocused?()
+                let current = self.fullDirectory
+                SuqiDirectoryManager.saveLastWorkingDirectory(current)
             }
             .store(in: &cancellables)
 
         state.$workingDirectory
             .sink { [weak self] newDir in
+                guard let self else { return }
                 if let newDir, !newDir.isEmpty {
+                    self.lastKnownDirectory = newDir
                     SuqiDirectoryManager.saveLastWorkingDirectory(newDir)
                 }
-                self?.objectWillChange.send()
+                self.objectWillChange.send()
             }
             .store(in: &cancellables)
 
         state.$title
             .sink { [weak self] _ in
-                self?.objectWillChange.send()
+                guard let self else { return }
+                let current = self.fullDirectory
+                SuqiDirectoryManager.saveLastWorkingDirectory(current)
+                self.objectWillChange.send()
             }
             .store(in: &cancellables)
 
@@ -87,6 +98,21 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
                 self?.reloadConfiguration()
             }
             .store(in: &cancellables)
+    }
+
+    private func startCwdMonitor() {
+        cwdMonitorTimer?.invalidate()
+        cwdMonitorTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let current = self.fullDirectory
+                if current != self.lastKnownDirectory {
+                    self.lastKnownDirectory = current
+                    SuqiDirectoryManager.saveLastWorkingDirectory(current)
+                    self.objectWillChange.send()
+                }
+            }
+        }
     }
 
     public var title: String {
@@ -131,16 +157,12 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     }
 
     public var displayDirectory: String {
-        if let cwd = state.workingDirectory, !cwd.isEmpty {
-            if cwd == NSHomeDirectory() {
-                return "~"
-            }
-            return URL(fileURLWithPath: cwd).lastPathComponent
-        }
-        if initialWorkingDirectory == NSHomeDirectory() {
+        let full = fullDirectory
+        if full == NSHomeDirectory() {
             return "~"
         }
-        return URL(fileURLWithPath: initialWorkingDirectory).lastPathComponent
+        let last = URL(fileURLWithPath: full).lastPathComponent
+        return last.isEmpty ? "~" : last
     }
 
     public var displayPathFormatted: String {
@@ -156,7 +178,14 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     }
 
     public var fullDirectory: String {
-        state.workingDirectory ?? initialWorkingDirectory
+        if let cwd = state.workingDirectory, !cwd.isEmpty, FileManager.default.fileExists(atPath: cwd) {
+            return cwd
+        }
+        if let childCwd = DarwinProcessHelper.findLatestChildCwd(),
+           FileManager.default.fileExists(atPath: childCwd) {
+            return childCwd
+        }
+        return initialWorkingDirectory
     }
 
     /// In-place hot reload of themes, fonts, cursor, and configuration without restarting running processes
@@ -172,6 +201,8 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
 
     /// Destroys terminal session, releasing Metal, DisplayLink, and observer resources
     public func tearDown() {
+        cwdMonitorTimer?.invalidate()
+        cwdMonitorTimer = nil
         SuqiDirectoryManager.saveLastWorkingDirectory(fullDirectory)
         cancellables.removeAll()
         onFocused = nil
@@ -181,6 +212,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     }
 
     deinit {
+        cwdMonitorTimer?.invalidate()
         cancellables.removeAll()
     }
 

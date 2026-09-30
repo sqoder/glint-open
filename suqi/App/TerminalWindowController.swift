@@ -145,7 +145,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             let font = NSFont(name: userConfig.fontFamily, size: userConfig.fontSize)
                 ?? NSFont.monospacedSystemFont(ofSize: userConfig.fontSize, weight: .regular)
             let cellHeight = ceil(font.ascender - font.descender + font.leading) + CGFloat(userConfig.adjustCellHeight)
-            let padding = CGFloat(userConfig.windowPaddingY * 2) + 32 // 32pt titlebar
+            let padding = CGFloat(userConfig.windowPaddingY * 2) + 36 // 36pt titlebar
             if let h = userConfig.windowHeight {
                 return h > 150 ? CGFloat(h) : CGFloat(h) * cellHeight + padding
             }

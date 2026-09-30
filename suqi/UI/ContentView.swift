@@ -83,14 +83,14 @@ public struct ContentView: View {
                     }
                 } else {
                     VStack(spacing: 0) {
-                        // Top title/tab bar area (height: 32): background handles native drag/double-click zoom, foreground renders tabs
+                        // Top title/tab bar area (height: 36): background handles native drag/double-click zoom, foreground renders tabs
                         ZStack(alignment: .center) {
                             WindowDragArea()
-                                .frame(height: 32)
+                                .frame(height: 36)
 
                             if model.tabs.count > 1 && windowWidth > 140 {
                                 GhosttyTabBar(model: model)
-                                    .frame(height: 32)
+                                    .frame(height: 36)
                             } else if let activeTab = model.activeTab, windowWidth > 180 {
                                 VStack(spacing: 2) {
                                     Text(activeTab.displayPathFormatted)
@@ -102,11 +102,11 @@ public struct ContentView: View {
                                         .foregroundStyle(Color.white.opacity(0.40))
                                 }
                                 .offset(y: 6.5)
-                                .frame(maxWidth: .infinity, maxHeight: 32)
+                                .frame(maxWidth: .infinity, maxHeight: 36)
                                 .allowsHitTesting(false)
                             }
                         }
-                        .frame(height: 32)
+                        .frame(height: 36)
 
                         // Terminal workspace (multi-tab, split panes, zoom, and scrollback search)
                         ZStack(alignment: .topTrailing) {

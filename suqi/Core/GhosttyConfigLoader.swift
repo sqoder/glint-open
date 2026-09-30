@@ -215,17 +215,68 @@ public final class GhosttyConfigFileWatcher: ObservableObject {
     }
 }
 
+// MARK: - Darwin Process Helper (Direct Kernel CWD Inspection)
+
+#if canImport(Darwin)
+import Darwin
+
+public enum DarwinProcessHelper {
+    public static func getCwd(for pid: pid_t) -> String? {
+        guard pid > 0 else { return nil }
+        var vpi = proc_vnodepathinfo()
+        let size = MemoryLayout<proc_vnodepathinfo>.stride
+        let result = proc_pidinfo(pid, PROC_PIDVNODEPATHINFO, 0, &vpi, Int32(size))
+        if result == size {
+            return withUnsafePointer(to: &vpi.pvi_cdir.vip_path) { ptr in
+                ptr.withMemoryRebound(to: CChar.self, capacity: Int(MAXPATHLEN)) { cStr in
+                    let path = String(cString: cStr).trimmingCharacters(in: .whitespacesAndNewlines)
+                    return path.isEmpty ? nil : path
+                }
+            }
+        }
+        return nil
+    }
+
+    public static func getChildPids(for parentPid: pid_t) -> [pid_t] {
+        let count = proc_listchildpids(parentPid, nil, 0)
+        guard count > 0 else { return [] }
+        var pids = [pid_t](repeating: 0, count: Int(count))
+        let actual = proc_listchildpids(parentPid, &pids, count * Int32(MemoryLayout<pid_t>.stride))
+        guard actual > 0 else { return [] }
+        return Array(pids.prefix(Int(actual)))
+    }
+
+    public static func findLatestChildCwd(for parentPid: pid_t = getpid()) -> String? {
+        let children = getChildPids(for: parentPid)
+        for child in children.reversed() {
+            let grandChildren = getChildPids(for: child)
+            for grandChild in grandChildren.reversed() {
+                if let cwd = getCwd(for: grandChild), FileManager.default.fileExists(atPath: cwd) {
+                    return cwd
+                }
+            }
+            if let cwd = getCwd(for: child), FileManager.default.fileExists(atPath: cwd) {
+                return cwd
+            }
+        }
+        return nil
+    }
+}
+#endif
+
 // MARK: - Working Directory Manager (Persistent Last Working Directory)
 
 @MainActor
 public enum SuqiDirectoryManager {
     public static let lastDirKey = "SuqiLastWorkingDirectory"
+    private static let cacheFilePath = NSString(string: "~/.cache/suqi/last_working_directory").expandingTildeInPath
 
     /// Resolves the preferred working directory in order:
     /// 1. Explicit directory passed by caller (if valid)
     /// 2. Ghostty / Suqi config `working-directory` or `initial-working-directory` (if valid)
-    /// 3. Last saved working directory in UserDefaults (if valid)
-    /// 4. User's Home directory (`NSHomeDirectory()`)
+    /// 3. Disk cache file ~/.cache/suqi/last_working_directory (if valid)
+    /// 4. Last saved working directory in UserDefaults (if valid)
+    /// 5. User's Home directory (`NSHomeDirectory()`)
     public static func resolvedInitialWorkingDirectory(explicit: String? = nil) -> String {
         if let explicit, !explicit.isEmpty {
             let expanded = NSString(string: explicit).expandingTildeInPath
@@ -244,6 +295,19 @@ public enum SuqiDirectoryManager {
             }
         }
 
+        // Check disk cache file
+        if let fileContent = try? String(contentsOfFile: cacheFilePath, encoding: .utf8) {
+            let trimmed = fileContent.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                let expanded = NSString(string: trimmed).expandingTildeInPath
+                var isDir: ObjCBool = false
+                if FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir), isDir.boolValue {
+                    return expanded
+                }
+            }
+        }
+
+        // Check UserDefaults
         if let saved = UserDefaults.standard.string(forKey: lastDirKey), !saved.isEmpty {
             let expanded = NSString(string: saved).expandingTildeInPath
             var isDir: ObjCBool = false
@@ -265,6 +329,11 @@ public enum SuqiDirectoryManager {
         var isDir: ObjCBool = false
         if FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir), isDir.boolValue {
             UserDefaults.standard.set(expanded, forKey: lastDirKey)
+
+            // Also atomically persist to disk cache file
+            let cacheDir = NSString(string: "~/.cache/suqi").expandingTildeInPath
+            try? FileManager.default.createDirectory(atPath: cacheDir, withIntermediateDirectories: true)
+            try? expanded.write(toFile: cacheFilePath, atomically: true, encoding: .utf8)
         }
     }
 }

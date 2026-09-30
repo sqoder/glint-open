@@ -6,133 +6,213 @@
 //
 
 import SwiftUI
+import AppKit
+import UniformTypeIdentifiers
 
 public struct GhosttyTabBar: View {
     @ObservedObject public var model: SuqiWindowModel
     @State private var hoveredTabId: UUID?
     @State private var draggingTabId: UUID?
+    @State private var isPlusHovered: Bool = false
 
     public init(model: SuqiWindowModel) {
         self.model = model
     }
 
     public var body: some View {
-        HStack(spacing: 2) {
-            // Traffic lights inset
+        HStack(spacing: 0) {
+            // Traffic lights inset breathing room (macOS standard: ~78pt)
             Spacer()
-                .frame(width: 82)
+                .frame(width: 78)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 4) {
+                HStack(spacing: 5) {
                     ForEach(model.tabs) { tab in
-                        let isActive = model.activeTabId == tab.id
-                        let isHovered = hoveredTabId == tab.id
-
-                        HStack(spacing: 6) {
-                            if tab.hasActiveProcess {
-                                Circle()
-                                    .fill(Color(red: 0.95, green: 0.65, blue: 0.25))
-                                    .frame(width: 5, height: 5)
-                            }
-
-                            Text(tab.tabDisplayTitle.isEmpty ? tab.title : tab.tabDisplayTitle)
-                                .font(.system(size: 11, weight: isActive ? .medium : .regular, design: .monospaced))
-                                .foregroundStyle(isActive ? Color.white.opacity(0.92) : Color.white.opacity(0.50))
-                                .lineLimit(1)
-
-                            if isHovered || isActive {
-                                Button {
-                                    model.closeTabWithConfirmation(id: tab.id, in: NSApp.keyWindow)
-                                } label: {
-                                    Image(systemName: "xmark")
-                                        .font(.system(size: 7.5, weight: .bold))
-                                        .foregroundStyle(Color.white.opacity(0.6))
-                                        .frame(width: 14, height: 14)
-                                        .background(
-                                            Circle()
-                                                .fill(Color.white.opacity(0.08))
-                                        )
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(
-                            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                .fill(isActive ? Color.white.opacity(0.12) : (isHovered ? Color.white.opacity(0.05) : Color.clear))
-                        )
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            model.selectTab(id: tab.id)
-                        }
-                        .onHover { hovering in
-                            hoveredTabId = hovering ? tab.id : nil
-                        }
-                        .contextMenu {
-                            Button("New Tab") {
-                                model.createNewTab()
-                            }
-                            Button("Split Right") {
-                                model.splitRight()
-                            }
-                            Button("Split Down") {
-                                model.splitDown()
-                            }
-                            if model.tabs.count > 1 {
-                                Divider()
-                                Button("Move Tab to New Window") {
-                                    model.detachTabToNewWindow(id: tab.id)
-                                }
-                                Button("Close Other Tabs") {
-                                    for other in model.tabs where other.id != tab.id {
-                                        _ = model.closeTab(id: other.id)
-                                    }
-                                }
-                            }
-                            Divider()
-                            Button("Close Tab") {
-                                model.closeTabWithConfirmation(id: tab.id, in: NSApp.keyWindow)
-                            }
-                        }
-                        // Support tab drag-and-drop reordering
-                        .onDrag {
-                            self.draggingTabId = tab.id
-                            return NSItemProvider(object: tab.id.uuidString as NSString)
-                        }
-                        .onDrop(
-                            of: [.text],
-                            delegate: TabDropDelegate(
-                                destinationTab: tab,
-                                model: model,
-                                draggingTabId: $draggingTabId
-                            )
-                        )
+                        tabItem(tab)
                     }
 
-                    // New tab button
-                    Button {
-                        model.createNewTab()
-                    } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 9.5, weight: .medium))
-                            .foregroundStyle(Color.white.opacity(0.55))
-                            .frame(width: 20, height: 20)
-                            .background(
-                                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                    .fill(Color.white.opacity(0.05))
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .help("New Tab (⌘T)")
+                    plusButton
                 }
-                .padding(.vertical, 3)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 5)
             }
 
             Spacer()
         }
-        .frame(height: 32)
+        .frame(height: 36)
         .background(Color.clear)
+    }
+
+    @ViewBuilder
+    private func tabItem(_ tab: SuqiTab) -> some View {
+        let isActive = model.activeTabId == tab.id
+        let isHovered = hoveredTabId == tab.id
+
+        GhosttyTabItemView(
+            tab: tab,
+            isActive: isActive,
+            isTabHovered: isHovered,
+            onSelect: {
+                model.selectTab(id: tab.id)
+            },
+            onClose: {
+                model.closeTabWithConfirmation(id: tab.id, in: NSApp.keyWindow)
+            }
+        )
+        .onHover { hovering in
+            hoveredTabId = hovering ? tab.id : nil
+        }
+        .contextMenu {
+            tabContextMenu(tab)
+        }
+        .onDrag {
+            self.draggingTabId = tab.id
+            return NSItemProvider(object: tab.id.uuidString as NSString)
+        }
+        .onDrop(
+            of: [UTType.text],
+            delegate: TabDropDelegate(
+                destinationTab: tab,
+                model: model,
+                draggingTabId: $draggingTabId
+            )
+        )
+    }
+
+    @ViewBuilder
+    private func tabContextMenu(_ tab: SuqiTab) -> some View {
+        Button("New Tab") {
+            model.createNewTab()
+        }
+        Button("Split Right") {
+            model.splitRight()
+        }
+        Button("Split Down") {
+            model.splitDown()
+        }
+        if model.tabs.count > 1 {
+            Divider()
+            Button("Move Tab to New Window") {
+                model.detachTabToNewWindow(id: tab.id)
+            }
+            Button("Close Other Tabs") {
+                for other in model.tabs where other.id != tab.id {
+                    _ = model.closeTab(id: other.id)
+                }
+            }
+        }
+        Divider()
+        Button("Close Tab") {
+            model.closeTabWithConfirmation(id: tab.id, in: NSApp.keyWindow)
+        }
+    }
+
+    private var plusButton: some View {
+        Button {
+            model.createNewTab()
+        } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(isPlusHovered ? Color.white.opacity(0.90) : Color.white.opacity(0.55))
+                .frame(width: 24, height: 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 6.5, style: .continuous)
+                        .fill(isPlusHovered ? Color.white.opacity(0.12) : Color.white.opacity(0.04))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6.5, style: .continuous)
+                                .strokeBorder(Color.white.opacity(isPlusHovered ? 0.10 : 0.04), lineWidth: 0.5)
+                        )
+                )
+        }
+        .buttonStyle(.plain)
+        .onHover { isPlusHovered = $0 }
+        .help("New Tab (⌘T)")
+    }
+}
+
+private struct GhosttyTabItemView: View {
+    @ObservedObject var tab: SuqiTab
+    let isActive: Bool
+    let isTabHovered: Bool
+    let onSelect: () -> Void
+    let onClose: () -> Void
+
+    @State private var isCloseHovered: Bool = false
+
+    var body: some View {
+        HStack(spacing: 6) {
+            tabIcon
+            tabTitle
+            if isTabHovered || isActive {
+                closeButton
+            }
+        }
+        .padding(.leading, 9)
+        .padding(.trailing, (isTabHovered || isActive) ? 6 : 9)
+        .frame(minWidth: 105, idealWidth: 145, maxWidth: 200)
+        .frame(height: 26)
+        .background(backgroundView)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onSelect()
+        }
+    }
+
+    @ViewBuilder
+    private var tabIcon: some View {
+        if tab.hasActiveProcess {
+            Circle()
+                .fill(Color(red: 1.0, green: 0.65, blue: 0.25))
+                .frame(width: 6, height: 6)
+                .shadow(color: Color.orange.opacity(0.50), radius: 2)
+        } else {
+            Image(systemName: "folder.fill")
+                .font(.system(size: 9.5))
+                .foregroundStyle(isActive ? Color.white.opacity(0.70) : Color.white.opacity(0.35))
+        }
+    }
+
+    private var tabTitle: some View {
+        let title = tab.tabDisplayTitle.isEmpty ? tab.title : tab.tabDisplayTitle
+        let textColor = isActive ? Color.white.opacity(0.96) : (isTabHovered ? Color.white.opacity(0.75) : Color.white.opacity(0.48))
+        return Text(title)
+            .font(.system(size: 11.5, weight: isActive ? .medium : .regular, design: .default))
+            .foregroundStyle(textColor)
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var closeButton: some View {
+        Button {
+            onClose()
+        } label: {
+            Image(systemName: "xmark")
+                .font(.system(size: 7.5, weight: .bold))
+                .foregroundStyle(isCloseHovered ? Color.white.opacity(0.95) : Color.white.opacity(0.60))
+                .frame(width: 15, height: 15)
+                .background(
+                    Circle()
+                        .fill(isCloseHovered ? Color.white.opacity(0.22) : Color.white.opacity(0.08))
+                )
+        }
+        .buttonStyle(.plain)
+        .onHover { isCloseHovered = $0 }
+        .help("Close Tab (⌘W)")
+    }
+
+    private var backgroundView: some View {
+        let fillColor: Color = isActive ? Color.white.opacity(0.14) : (isTabHovered ? Color.white.opacity(0.065) : Color.white.opacity(0.02))
+        let strokeColor: Color = isActive ? Color.white.opacity(0.13) : (isTabHovered ? Color.white.opacity(0.08) : Color.white.opacity(0.03))
+        let shadowColor: Color = isActive ? Color.black.opacity(0.22) : Color.clear
+
+        return RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .fill(fillColor)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(strokeColor, lineWidth: 0.6)
+            )
+            .shadow(color: shadowColor, radius: 2.5, y: 1)
     }
 }
 
