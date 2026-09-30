@@ -146,8 +146,9 @@ struct TerminalScrollbarView: View {
                     isHovering = hovering
                     if hovering {
                         showScrollbar()
+                        scheduleHide(delay: 0.8)
                     } else if !isDragging {
-                        scheduleHide()
+                        scheduleHide(delay: 0.5)
                     }
                 }
             }
@@ -157,33 +158,37 @@ struct TerminalScrollbarView: View {
             .onChange(of: session.state.scrollbar?.total) { _, _ in
                 showAndScheduleHide()
             }
+            .onDisappear {
+                hideTask?.cancel()
+                hideTask = nil
+            }
         }
     }
 
     private func showScrollbar() {
         hideTask?.cancel()
         hideTask = nil
-        withAnimation(.easeInOut(duration: 0.15)) {
+        withAnimation(.easeInOut(duration: 0.12)) {
             isVisible = true
         }
     }
 
-    private func scheduleHide() {
+    private func scheduleHide(delay: Double = 0.65) {
         hideTask?.cancel()
         let task = DispatchWorkItem {
-            guard !isHovering && !isDragging else { return }
-            withAnimation(.easeInOut(duration: 0.40)) {
+            guard !isDragging else { return }
+            withAnimation(.easeInOut(duration: 0.28)) {
                 isVisible = false
             }
         }
         hideTask = task
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: task)
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: task)
     }
 
     private func showAndScheduleHide() {
         showScrollbar()
-        if !isHovering && !isDragging {
-            scheduleHide()
+        if !isDragging {
+            scheduleHide(delay: 0.65)
         }
     }
 }

@@ -330,7 +330,7 @@ public final class SuqiWindowModel: ObservableObject {
     }
 
     public init(initialWorkingDirectory: String? = nil) {
-        let dir = initialWorkingDirectory ?? NSHomeDirectory()
+        let dir = SuqiDirectoryManager.resolvedInitialWorkingDirectory(explicit: initialWorkingDirectory)
         let session = SuqiTerminalSession(workingDirectory: dir)
         let tab = SuqiTab(session: session)
         self.tabs = [tab]
@@ -387,7 +387,9 @@ public final class SuqiWindowModel: ObservableObject {
     @discardableResult
     public func createNewTab(workingDirectory: String? = nil) -> SuqiTerminalSession {
         objectWillChange.send()
-        let initialDir = workingDirectory ?? activeSession?.fullDirectory ?? NSHomeDirectory()
+        let initialDir = SuqiDirectoryManager.resolvedInitialWorkingDirectory(
+            explicit: workingDirectory ?? activeSession?.fullDirectory
+        )
         let session = SuqiTerminalSession(workingDirectory: initialDir)
         attachSessionCallbacks(session)
         let tab = SuqiTab(session: session)
@@ -412,7 +414,9 @@ public final class SuqiWindowModel: ObservableObject {
     @discardableResult
     public func splitActivePane(axis: Axis, workingDirectory: String? = nil) -> SuqiTerminalSession {
         objectWillChange.send()
-        let initialDir = workingDirectory ?? activeSession?.fullDirectory ?? NSHomeDirectory()
+        let initialDir = SuqiDirectoryManager.resolvedInitialWorkingDirectory(
+            explicit: workingDirectory ?? activeSession?.fullDirectory
+        )
         let session = SuqiTerminalSession(workingDirectory: initialDir)
         attachSessionCallbacks(session)
 

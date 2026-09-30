@@ -30,6 +30,7 @@ public struct GhosttyUserConfig: Sendable {
     public var windowHeight: Int? = nil
     public var background: String? = "30333E"
     public var foreground: String? = nil
+    public var workingDirectory: String? = nil
 
     public static func load() -> (config: GhosttyUserConfig, filePath: String?) {
         let ghosttyPath = NSString(string: "~/.config/ghostty/config").expandingTildeInPath
@@ -95,6 +96,8 @@ public struct GhosttyUserConfig: Sendable {
                 cfg.copyOnSelect = (val.lowercased() == "clipboard" || val.lowercased() == "true")
             case "shell-integration":
                 cfg.shellIntegration = val
+            case "working-directory", "initial-working-directory":
+                cfg.workingDirectory = val
             case "background":
                 cfg.background = val
             case "foreground":
@@ -211,3 +214,58 @@ public final class GhosttyConfigFileWatcher: ObservableObject {
         fileDescriptor = -1
     }
 }
+
+// MARK: - Working Directory Manager (Persistent Last Working Directory)
+
+@MainActor
+public enum SuqiDirectoryManager {
+    public static let lastDirKey = "SuqiLastWorkingDirectory"
+
+    /// Resolves the preferred working directory in order:
+    /// 1. Explicit directory passed by caller (if valid)
+    /// 2. Ghostty / Suqi config `working-directory` or `initial-working-directory` (if valid)
+    /// 3. Last saved working directory in UserDefaults (if valid)
+    /// 4. User's Home directory (`NSHomeDirectory()`)
+    public static func resolvedInitialWorkingDirectory(explicit: String? = nil) -> String {
+        if let explicit, !explicit.isEmpty {
+            let expanded = NSString(string: explicit).expandingTildeInPath
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir), isDir.boolValue {
+                return expanded
+            }
+        }
+
+        let (config, _) = GhosttyUserConfig.load()
+        if let configDir = config.workingDirectory, !configDir.isEmpty {
+            let expanded = NSString(string: configDir).expandingTildeInPath
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir), isDir.boolValue {
+                return expanded
+            }
+        }
+
+        if let saved = UserDefaults.standard.string(forKey: lastDirKey), !saved.isEmpty {
+            let expanded = NSString(string: saved).expandingTildeInPath
+            var isDir: ObjCBool = false
+            if FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir), isDir.boolValue {
+                return expanded
+            }
+        }
+
+        return NSHomeDirectory()
+    }
+
+    public static var lastWorkingDirectory: String {
+        resolvedInitialWorkingDirectory()
+    }
+
+    public static func saveLastWorkingDirectory(_ path: String?) {
+        guard let path, !path.isEmpty else { return }
+        let expanded = NSString(string: path).expandingTildeInPath
+        var isDir: ObjCBool = false
+        if FileManager.default.fileExists(atPath: expanded, isDirectory: &isDir), isDir.boolValue {
+            UserDefaults.standard.set(expanded, forKey: lastDirKey)
+        }
+    }
+}
+

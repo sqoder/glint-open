@@ -33,9 +33,8 @@ public final class SuqiWindowManager: ObservableObject {
     /// Creates a new standalone terminal window
     @discardableResult
     public func createWindow(workingDirectory: String? = nil) -> TerminalWindowController {
-        let initialDir = workingDirectory
-            ?? activeWindowController?.model.activeSession?.fullDirectory
-            ?? NSHomeDirectory()
+        let fallbackDir = activeWindowController?.model.activeSession?.fullDirectory
+        let initialDir = SuqiDirectoryManager.resolvedInitialWorkingDirectory(explicit: workingDirectory ?? fallbackDir)
 
         let model = SuqiWindowModel(initialWorkingDirectory: initialDir)
         let controller = TerminalWindowController(model: model)

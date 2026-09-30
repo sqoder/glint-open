@@ -36,7 +36,7 @@ public enum SafePasteGuard {
     public static func evaluate(text: String) -> SafePasteRequest? {
         let lines = text.components(separatedBy: .newlines).filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }
         
-        // 1. Check dangerous command patterns
+        // Check dangerous command patterns
         for (regex, description) in dangerousPatterns {
             let range = NSRange(text.startIndex..<text.endIndex, in: text)
             if regex.firstMatch(in: text, options: [], range: range) != nil {
@@ -47,16 +47,6 @@ public enum SafePasteGuard {
                     reason: "检测到\(description)，可能对系统产生不可逆影响"
                 )
             }
-        }
-
-        // 2. Check multi-line scripts (contains 2 or more non-empty lines)
-        if lines.count >= 2 {
-            return SafePasteRequest(
-                text: text,
-                lineCount: lines.count,
-                isDangerous: false,
-                reason: "包含多行命令 (共 \(lines.count) 行)，粘贴将自动触发换行执行"
-            )
         }
 
         return nil

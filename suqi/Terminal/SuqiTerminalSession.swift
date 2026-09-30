@@ -31,7 +31,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     public init(id: UUID = UUID(), workingDirectory: String? = nil) {
         self.id = id
         self.createdAt = Date()
-        let initialDir = workingDirectory ?? NSHomeDirectory()
+        let initialDir = SuqiDirectoryManager.resolvedInitialWorkingDirectory(explicit: workingDirectory)
         self.initialWorkingDirectory = initialDir
         let state = Self.buildTerminalViewState(workingDirectory: initialDir)
         self.state = state
@@ -62,7 +62,10 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
             .store(in: &cancellables)
 
         state.$workingDirectory
-            .sink { [weak self] _ in
+            .sink { [weak self] newDir in
+                if let newDir, !newDir.isEmpty {
+                    SuqiDirectoryManager.saveLastWorkingDirectory(newDir)
+                }
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
@@ -169,6 +172,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
 
     /// Destroys terminal session, releasing Metal, DisplayLink, and observer resources
     public func tearDown() {
+        SuqiDirectoryManager.saveLastWorkingDirectory(fullDirectory)
         cancellables.removeAll()
         onFocused = nil
         onClosed = nil
