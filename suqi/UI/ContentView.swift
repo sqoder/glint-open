@@ -59,15 +59,6 @@ public struct ContentView: View {
             let isMiniCapsule = windowHeight <= 36 || windowWidth < 120
 
             ZStack(alignment: .topLeading) {
-                // Background: Adaptively renders solid color or translucent color per Ghostty config
-                if isTranslucent {
-                    themeBg.opacity(userConfig.backgroundOpacity)
-                        .ignoresSafeArea()
-                } else {
-                    themeBg
-                        .ignoresSafeArea()
-                }
-
                 if isMiniCapsule {
                     // Mini compact state: window drag surface with traffic light buttons and expand button
                     ZStack(alignment: .trailing) {
@@ -136,7 +127,6 @@ public struct ContentView: View {
                             }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .clipped()
                     }
                 }
             }

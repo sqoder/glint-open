@@ -44,21 +44,25 @@ public final class SuqiTerminalWindow: NSWindow {
     override public func layoutIfNeeded() {
         super.layoutIfNeeded()
         adjustTrafficLights()
+        cleanTitlebarDecorations()
     }
 
     override public func setFrame(_ frameRect: NSRect, display displayFlag: Bool) {
         super.setFrame(frameRect, display: displayFlag)
         adjustTrafficLights()
+        cleanTitlebarDecorations()
     }
 
     override public func makeKeyAndOrderFront(_ sender: Any?) {
         super.makeKeyAndOrderFront(sender)
         adjustTrafficLights()
+        cleanTitlebarDecorations()
     }
 
     override public func orderFront(_ sender: Any?) {
         super.orderFront(sender)
         adjustTrafficLights()
+        cleanTitlebarDecorations()
     }
 
     public func adjustTrafficLights() {
@@ -76,6 +80,26 @@ public final class SuqiTerminalWindow: NSWindow {
         close.setFrameOrigin(NSPoint(x: targetStartX, y: targetY))
         mini.setFrameOrigin(NSPoint(x: targetStartX + spacing, y: targetY))
         zoom.setFrameOrigin(NSPoint(x: targetStartX + spacing * 2, y: targetY))
+    }
+
+    /// Ghostty parity: hides redundant system titlebar background & decoration layers that cause double corner outlines
+    public func cleanTitlebarDecorations() {
+        guard let titlebarContainer = contentView?.superview?.subviews.first(where: {
+            NSStringFromClass(type(of: $0)).contains("NSTitlebarContainerView")
+        }) else { return }
+
+        for sub in titlebarContainer.subviews {
+            let subName = NSStringFromClass(type(of: sub))
+            if subName.contains("NSTitlebarBackgroundView") || subName.contains("_NSTitlebarDecorationView") {
+                sub.isHidden = true
+            }
+            for inner in sub.subviews {
+                let innerName = NSStringFromClass(type(of: inner))
+                if innerName.contains("NSTitlebarBackgroundView") || innerName.contains("NSVisualEffectView") {
+                    inner.isHidden = true
+                }
+            }
+        }
     }
 }
 
@@ -146,13 +170,14 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         window.titleVisibility = .hidden
         // Disable isMovableByWindowBackground so mouse dragging passes cleanly to Ghostty Terminal for text selection
         window.isMovableByWindowBackground = false
+        let baseBg = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
         if isTranslucent {
             window.isOpaque = false
-            window.backgroundColor = .clear
+            window.backgroundColor = baseBg.withAlphaComponent(CGFloat(userConfig.backgroundOpacity))
             let blurRadius = userConfig.backgroundBlur > 0 ? Int32(userConfig.backgroundBlur) : 20
             Self.applyWindowBlur(window: window, radius: blurRadius)
         } else {
-            window.backgroundColor = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
+            window.backgroundColor = baseBg
             window.isOpaque = true
             Self.applyWindowBlur(window: window, radius: 0)
         }
@@ -282,13 +307,14 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         guard let window = self.window else { return }
         let (userConfig, _) = GhosttyUserConfig.load()
         let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
+        let baseBg = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
         if isTranslucent {
             window.isOpaque = false
-            window.backgroundColor = .clear
+            window.backgroundColor = baseBg.withAlphaComponent(CGFloat(userConfig.backgroundOpacity))
             let blurRadius = userConfig.backgroundBlur > 0 ? Int32(userConfig.backgroundBlur) : 20
             Self.applyWindowBlur(window: window, radius: blurRadius)
         } else {
-            window.backgroundColor = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
+            window.backgroundColor = baseBg
             window.isOpaque = true
             Self.applyWindowBlur(window: window, radius: 0)
         }

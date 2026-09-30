@@ -134,10 +134,13 @@ public final class QuickTerminalController: ObservableObject {
 
         let (userConfig, _) = GhosttyUserConfig.load()
         let isTranslucent = userConfig.backgroundOpacity < 1.0 || userConfig.backgroundBlur > 0
+        let baseBg = SuqiTheme.nsBackgroundColor(for: userConfig.themeName, customBackground: userConfig.background)
         if isTranslucent {
+            panel.backgroundColor = baseBg.withAlphaComponent(CGFloat(userConfig.backgroundOpacity))
             let blurRadius = userConfig.backgroundBlur > 0 ? Int32(userConfig.backgroundBlur) : 20
             TerminalWindowController.applyWindowBlur(window: panel, radius: blurRadius)
         } else {
+            panel.backgroundColor = baseBg
             TerminalWindowController.applyWindowBlur(window: panel, radius: 0)
         }
 
