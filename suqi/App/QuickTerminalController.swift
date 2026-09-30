@@ -40,10 +40,6 @@ public final class QuickTerminalController: ObservableObject {
                 return nil
             }
             if self.isVisible, let panel = self.panel, let model = self.model, (panel.isKeyWindow || event.window === panel) {
-                if event.keyCode == 53 && model.isSearching != true {
-                    self.hide()
-                    return nil
-                }
                 return TerminalActionBridge.dispatchKeyEvent(
                     event: event,
                     window: panel,
@@ -57,6 +53,7 @@ public final class QuickTerminalController: ObservableObject {
         }
 
         // 2. Global keyboard monitor: When in any other app, ⌃` smoothly slides out the drop-down Quick Terminal
+        // Note: Global monitor requires macOS Accessibility permissions.
         NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             if flags == .control && (event.charactersIgnoringModifiers == "`" || event.charactersIgnoringModifiers == "~") {
@@ -65,6 +62,17 @@ public final class QuickTerminalController: ObservableObject {
                 }
             }
         }
+    }
+
+    /// Checks if the application currently has macOS Accessibility permissions for global hotkeys
+    public static var isAccessibilityTrusted: Bool {
+        AXIsProcessTrusted()
+    }
+
+    /// Prompts the system permission dialog for Accessibility
+    public static func requestAccessibilityPermissions() {
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
     }
 
     public func toggle() {

@@ -96,6 +96,37 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         return "zsh"
     }
 
+    /// Detects active foreground process running in this session (e.g. vim, nvim, ssh, python, cargo)
+    public var activeProcessName: String? {
+        let raw = state.title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty else { return nil }
+        let defaultShells: Set<String> = [
+            "zsh", "bash", "fish", "sh", "tcsh", "csh", "ksh", "login",
+            "-zsh", "-bash", "-fish", "suqi"
+        ]
+        let firstToken = raw.components(separatedBy: .whitespaces).first?.lowercased() ?? ""
+        let cleanToken = firstToken.hasPrefix("-") ? String(firstToken.dropFirst()) : firstToken
+        if defaultShells.contains(cleanToken) {
+            return nil
+        }
+        return raw
+    }
+
+    /// Indicates whether a non-shell foreground process is running
+    public var hasActiveProcess: Bool {
+        activeProcessName != nil
+    }
+
+    /// Formatted tab title combining active process and directory
+    public var tabDisplayTitle: String {
+        let dir = displayDirectory
+        if let proc = activeProcessName {
+            let shortProc = proc.components(separatedBy: .whitespaces).first ?? proc
+            return "\(shortProc) · \(dir)"
+        }
+        return dir
+    }
+
     public var displayDirectory: String {
         if let cwd = state.workingDirectory, !cwd.isEmpty {
             if cwd == NSHomeDirectory() {
@@ -139,6 +170,8 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
     /// Destroys terminal session, releasing Metal, DisplayLink, and observer resources
     public func tearDown() {
         cancellables.removeAll()
+        onFocused = nil
+        onClosed = nil
         terminalView.removeFromSuperview()
         _ = state.surface?.performBindingAction("close_surface")
     }

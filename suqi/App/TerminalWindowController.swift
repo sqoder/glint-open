@@ -197,8 +197,10 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
         TerminalActionBridge.handleSelectAll(model: model)
     }
 
+    public var previousExpandedFrame: NSRect?
+
     public func closeCurrentTabOrWindow() {
-        model.closeActiveSession()
+        model.closeActiveSessionWithConfirmation(in: window)
     }
 
     public func closeWindow() {
@@ -208,11 +210,16 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             self.eventMonitor = nil
         }
         SuqiWindowManager.shared.removeWindow(self)
+        model.tearDownAllSessions()
         window?.close()
     }
 
     public func saveWindowFrameIfNeeded() {
         guard let window = self.window else { return }
+        // Prevent secondary cascaded windows from overwriting the main window autosave geometry
+        guard SuqiWindowManager.shared.windowControllers.first === self || SuqiWindowManager.shared.windowControllers.count <= 1 else {
+            return
+        }
         let (userConfig, _) = GhosttyUserConfig.load()
         if userConfig.windowSaveState.lowercased() != "never" {
             if window.frame.width < 140 || window.frame.height < 60 {
@@ -221,6 +228,34 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
                 window.setFrame(f, display: false)
             }
             window.saveFrame(usingName: "SuqiTerminalWindow")
+        }
+    }
+
+    /// Smoothly restores the window from compact 80x32 capsule mode back to standard terminal dimensions
+    public func restoreFromCapsule() {
+        guard let window = self.window else { return }
+        let targetFrame: NSRect = {
+            if let prev = previousExpandedFrame, prev.width >= 200, prev.height >= 100 {
+                return prev
+            }
+            let screen = window.screen ?? NSScreen.main
+            let screenFrame = screen?.visibleFrame ?? NSRect(x: 100, y: 100, width: 900, height: 600)
+            let width: CGFloat = 800
+            let height: CGFloat = 500
+            let x = window.frame.minX
+            let y = window.frame.maxY - height
+            return NSRect(
+                x: max(screenFrame.minX, min(x, screenFrame.maxX - width)),
+                y: max(screenFrame.minY, min(y, screenFrame.maxY - height)),
+                width: width,
+                height: height
+            )
+        }()
+
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.22
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            window.animator().setFrame(targetFrame, display: true)
         }
     }
 
@@ -245,7 +280,25 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
 
     // MARK: - NSWindowDelegate
 
+    public func windowShouldClose(_ sender: NSWindow) -> Bool {
+        let running = model.sessions.filter { $0.hasActiveProcess }
+        if let first = running.first, let proc = first.activeProcessName {
+            let alert = NSAlert()
+            alert.messageText = "Close window with running process '\(proc)'?"
+            alert.informativeText = "Closing this window will terminate all active processes running inside it."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Close Window")
+            alert.addButton(withTitle: "Cancel")
+            let response = alert.runModal()
+            return response == .alertFirstButtonReturn
+        }
+        return true
+    }
+
     public func windowWillResize(_ sender: NSWindow, to frameSize: NSSize) -> NSSize {
+        if let win = self.window, win.frame.width >= 140 && win.frame.height >= 60 {
+            previousExpandedFrame = win.frame
+        }
         if frameSize.width < 140 || frameSize.height < 60 {
             return NSSize(width: 80, height: 32)
         }
@@ -271,6 +324,7 @@ public final class TerminalWindowController: NSWindowController, NSWindowDelegat
             self.eventMonitor = nil
         }
         SuqiWindowManager.shared.removeWindow(self)
+        model.tearDownAllSessions()
     }
 
     public func windowDidBecomeKey(_ notification: Notification) {

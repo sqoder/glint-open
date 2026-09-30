@@ -178,13 +178,24 @@ public final class TerminalContextMenuBridge: NSObject {
 }
 
 extension AppTerminalView {
+    private static var originalRightMouseDownIMP: IMP?
+
     /// Enables native Ghostty context menu pipeline
     public static let enableContextMenuPipeline: Void = {
-        // 1. Swizzle rightMouseDown
+        // 1. Swizzle rightMouseDown: preserve Ghostty mouse tracking while presenting full context menu
         if let originalMethod = class_getInstanceMethod(AppTerminalView.self, #selector(NSResponder.rightMouseDown(with:))) {
+            originalRightMouseDownIMP = method_getImplementation(originalMethod)
             let block: @convention(block) (AnyObject, NSEvent) -> Void = { target, event in
                 guard let view = target as? AppTerminalView else { return }
                 view.window?.makeFirstResponder(view)
+
+                // Call original implementation to maintain Ghostty mouse coordinates and selection state
+                if let originalIMP = AppTerminalView.originalRightMouseDownIMP {
+                    typealias Fn = @convention(c) (AnyObject, Selector, NSEvent) -> Void
+                    let fn = unsafeBitCast(originalIMP, to: Fn.self)
+                    fn(view, #selector(NSResponder.rightMouseDown(with:)), event)
+                }
+
                 let menu = TerminalContextMenuBridge.shared.buildMenu(for: view)
                 NSMenu.popUpContextMenu(menu, with: event, for: view)
             }

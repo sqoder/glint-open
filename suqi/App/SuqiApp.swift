@@ -59,7 +59,11 @@ struct SuqiApp: App {
                 .keyboardShortcut("w", modifiers: .command)
 
                 Button("Close Window") {
-                    SuqiWindowManager.shared.activeWindowController?.closeWindow()
+                    if let ctrl = SuqiWindowManager.shared.activeWindowController {
+                        if ctrl.windowShouldClose(ctrl.window ?? NSWindow()) {
+                            ctrl.closeWindow()
+                        }
+                    }
                 }
                 .keyboardShortcut("w", modifiers: [.command, .shift])
             }
@@ -82,6 +86,13 @@ struct SuqiApp: App {
                     SuqiWindowManager.shared.activeWindowController?.handlePaste()
                 }
                 .keyboardShortcut("v", modifiers: .command)
+
+                Button("Paste Image as File Path") {
+                    if let ctrl = SuqiWindowManager.shared.activeWindowController {
+                        TerminalActionBridge.handlePaste(in: ctrl.window, model: ctrl.model, saveImageAsPath: true)
+                    }
+                }
+                .keyboardShortcut("v", modifiers: [.command, .option])
 
                 Divider()
 

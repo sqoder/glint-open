@@ -18,6 +18,11 @@ public final class WindowDragHandleView: NSView {
 
     public override func mouseDown(with event: NSEvent) {
         if event.clickCount == 2 {
+            if let window, window.frame.width <= 100 && window.frame.height <= 36,
+               let wc = window.windowController as? TerminalWindowController {
+                wc.restoreFromCapsule()
+                return
+            }
             let action = UserDefaults.standard.string(forKey: "AppleActionOnDoubleClick")
             if action == "Minimize" {
                 window?.miniaturize(nil)

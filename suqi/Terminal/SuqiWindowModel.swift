@@ -178,6 +178,14 @@ public final class SuqiTab: ObservableObject, Identifiable {
         activeSession?.displayPathFormatted ?? "~"
     }
 
+    public var tabDisplayTitle: String {
+        activeSession?.tabDisplayTitle ?? displayDirectory
+    }
+
+    public var hasActiveProcess: Bool {
+        allSessions.contains { $0.hasActiveProcess }
+    }
+
     public var activeSession: SuqiTerminalSession? {
         rootPane.findSession(id: activeSessionId) ?? rootPane.allSessions.first
     }
@@ -429,6 +437,69 @@ public final class SuqiWindowModel: ObservableObject {
         }
         focusActiveSession()
         return true
+    }
+
+    /// Safely tears down and releases all terminal sessions across all tabs
+    public func tearDownAllSessions() {
+        for tab in tabs {
+            for session in tab.allSessions {
+                session.tearDown()
+            }
+        }
+        tabs.removeAll()
+    }
+
+    /// Closes the active session, prompting user confirmation if a non-shell process is running
+    public func closeActiveSessionWithConfirmation(in window: NSWindow?) {
+        guard let session = activeSession else {
+            _ = closeActiveSession()
+            return
+        }
+
+        if session.hasActiveProcess, let proc = session.activeProcessName {
+            let alert = NSAlert()
+            alert.messageText = "Close session running '\(proc)'?"
+            alert.informativeText = "Closing this session will terminate the running process."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Close")
+            alert.addButton(withTitle: "Cancel")
+
+            if let window {
+                alert.beginSheetModal(for: window) { [weak self] response in
+                    if response == .alertFirstButtonReturn {
+                        self?.closeActiveSession()
+                    }
+                }
+                return
+            }
+        }
+
+        _ = closeActiveSession()
+    }
+
+    /// Closes a tab by ID, prompting user confirmation if any session in the tab has a running process
+    public func closeTabWithConfirmation(id: UUID, in window: NSWindow?) {
+        guard let tab = tabs.first(where: { $0.id == id }) else { return }
+        let running = tab.allSessions.filter { $0.hasActiveProcess }
+        if let first = running.first, let proc = first.activeProcessName {
+            let alert = NSAlert()
+            alert.messageText = "Close tab running '\(proc)'?"
+            alert.informativeText = "There are active processes running in this tab. Closing it will terminate them."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Close Tab")
+            alert.addButton(withTitle: "Cancel")
+
+            if let window {
+                alert.beginSheetModal(for: window) { [weak self] response in
+                    if response == .alertFirstButtonReturn {
+                        _ = self?.closeTab(id: id)
+                    }
+                }
+                return
+            }
+        }
+
+        _ = closeTab(id: id)
     }
 
     @discardableResult

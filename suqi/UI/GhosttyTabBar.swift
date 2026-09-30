@@ -29,14 +29,20 @@ public struct GhosttyTabBar: View {
                         let isHovered = hoveredTabId == tab.id
 
                         HStack(spacing: 6) {
-                            Text(tab.displayDirectory.isEmpty ? tab.title : tab.displayDirectory)
+                            if tab.hasActiveProcess {
+                                Circle()
+                                    .fill(Color(red: 0.95, green: 0.65, blue: 0.25))
+                                    .frame(width: 5, height: 5)
+                            }
+
+                            Text(tab.tabDisplayTitle.isEmpty ? tab.title : tab.tabDisplayTitle)
                                 .font(.system(size: 11, weight: isActive ? .medium : .regular, design: .monospaced))
                                 .foregroundStyle(isActive ? Color.white.opacity(0.92) : Color.white.opacity(0.50))
                                 .lineLimit(1)
 
                             if isHovered || isActive {
                                 Button {
-                                    model.closeTab(id: tab.id)
+                                    model.closeTabWithConfirmation(id: tab.id, in: NSApp.keyWindow)
                                 } label: {
                                     Image(systemName: "xmark")
                                         .font(.system(size: 7.5, weight: .bold))

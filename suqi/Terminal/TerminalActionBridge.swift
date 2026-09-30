@@ -42,34 +42,61 @@ public enum TerminalActionBridge {
         return false
     }
 
-    public static func pasteboardContainsImage(_ pb: NSPasteboard) -> Bool {
-        let imageExtensions: Set<String> = [
-            "png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "tiff", "svg", "ico"
-        ]
-
-        // 1. Check for file URLs first
+    /// Checks whether the pasteboard contains in-memory image data without a file URL
+    public static func pasteboardContainsRawImage(_ pb: NSPasteboard) -> Bool {
         if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
-            return urls.contains { url in
-                imageExtensions.contains(url.pathExtension.lowercased())
-            }
+            return false
         }
-
-        // 2. Check for in-memory image data (e.g., screenshots, web browser copies)
         if pb.canReadObject(forClasses: [NSImage.self], options: nil) {
             return true
         }
-
         if let types = pb.types {
             let imageTypes: Set<NSPasteboard.PasteboardType> = [.png, .tiff]
-            if types.contains(where: { imageTypes.contains($0) || $0.rawValue.lowercased().contains("image") || $0.rawValue.lowercased().contains("png") }) {
-                return true
-            }
+            return types.contains { imageTypes.contains($0) || $0.rawValue.lowercased().contains("image") }
         }
-
         return false
     }
 
-    public static func handlePaste(in window: NSWindow?, model: SuqiWindowModel) {
+    /// Extracts PNG data from the system clipboard
+    public static func getPasteboardImageData(_ pb: NSPasteboard) -> Data? {
+        if let data = pb.data(forType: .png) {
+            return data
+        }
+        if let data = pb.data(forType: .tiff),
+           let rep = NSBitmapImageRep(data: data),
+           let png = rep.representation(using: .png, properties: [:]) {
+            return png
+        }
+        if let images = pb.readObjects(forClasses: [NSImage.self], options: nil) as? [NSImage],
+           let first = images.first,
+           let tiff = first.tiffRepresentation,
+           let rep = NSBitmapImageRep(data: tiff),
+           let png = rep.representation(using: .png, properties: [:]) {
+            return png
+        }
+        return nil
+    }
+
+    /// Automatically writes an in-memory clipboard image to ~/.cache/suqi/pastes/ and returns the file path
+    public static func savePasteboardImageToDisk(_ pb: NSPasteboard) -> String? {
+        guard let imgData = getPasteboardImageData(pb) else { return nil }
+        let cacheDir = NSString(string: "~/.cache/suqi/pastes").expandingTildeInPath
+        try? FileManager.default.createDirectory(atPath: cacheDir, withIntermediateDirectories: true)
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyyMMdd_HHmmss"
+        let filename = "paste_\(formatter.string(from: Date())).png"
+        let filePath = (cacheDir as NSString).appendingPathComponent(filename)
+
+        do {
+            try imgData.write(to: URL(fileURLWithPath: filePath))
+            return filePath
+        } catch {
+            return nil
+        }
+    }
+
+    public static func handlePaste(in window: NSWindow?, model: SuqiWindowModel, saveImageAsPath: Bool = false) {
         guard let window else { return }
         let terminalView = getActiveTerminalView(for: window)
 
@@ -78,42 +105,35 @@ public enum TerminalActionBridge {
         }
 
         let pb = NSPasteboard.general
-        let isImage = pasteboardContainsImage(pb)
 
-        if isImage {
-            // Populate TIFF and PNG pasteboard representations if copied from Finder
-            if !pb.canReadObject(forClasses: [NSImage.self], options: nil) {
-                let imageExtensions: Set<String> = [
-                    "png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "tiff", "svg", "ico"
-                ]
-                if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL],
-                   let firstImgUrl = urls.first(where: { imageExtensions.contains($0.pathExtension.lowercased()) }),
-                   let img = NSImage(contentsOf: firstImgUrl) {
-                    if let tiffData = img.tiffRepresentation {
-                        pb.setData(tiffData, forType: .tiff)
-                        if let rep = NSBitmapImageRep(data: tiffData),
-                           let pngData = rep.representation(using: .png, properties: [:]) {
-                            pb.setData(pngData, forType: .png)
-                        }
-                    }
-                }
-            }
+        // 1. Finder files copied: always paste escaped file paths (e.g. /path/to/cat.png )
+        if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
+            let paths = urls.map { $0.path.replacingOccurrences(of: " ", with: "\\ ") }
+            let text = paths.joined(separator: " ") + " "
+            model.activeSession?.send(text)
+            return
+        }
 
-            if let terminalView {
-                terminalView.triggerImagePasteShortcut()
-            }
-        } else {
-            // Check if ordinary Finder files were copied; paste escaped file paths
-            if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
-                let paths = urls.map { $0.path.replacingOccurrences(of: " ", with: "\\ ") }
-                let text = paths.joined(separator: " ") + " "
-                model.activeSession?.send(text)
+        // 2. Explicitly requested (⌥⌘V): save in-memory screenshot to disk and paste its path
+        if saveImageAsPath {
+            if let savedPath = savePasteboardImageToDisk(pb) {
+                let escaped = savedPath.replacingOccurrences(of: " ", with: "\\ ") + " "
+                model.activeSession?.send(escaped)
                 return
             }
+        }
 
-            if let session = model.activeSession {
-                _ = session.state.performBindingAction("paste_from_clipboard")
+        // 3. Multimodal AI CLI flow: in-memory image (screenshots / browser copies)
+        if pasteboardContainsRawImage(pb) {
+            if let terminalView {
+                terminalView.triggerImagePasteShortcut()
+                return
             }
+        }
+
+        // 4. Standard text paste from clipboard
+        if let session = model.activeSession {
+            _ = session.state.performBindingAction("paste_from_clipboard")
         }
     }
 
@@ -169,9 +189,15 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 1. ⌘V (Smart image or text paste)
+        // 1. ⌥⌘V (Save clipboard image to disk and paste escaped file path)
+        if flags == [.command, .option] && event.charactersIgnoringModifiers?.lowercased() == "v" {
+            handlePaste(in: window, model: model, saveImageAsPath: true)
+            return nil
+        }
+
+        // 1b. ⌘V (Smart image or text paste)
         if flags == .command && event.charactersIgnoringModifiers?.lowercased() == "v" {
-            handlePaste(in: window, model: model)
+            handlePaste(in: window, model: model, saveImageAsPath: false)
             return nil
         }
 

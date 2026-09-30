@@ -71,9 +71,27 @@ public struct ContentView: View {
                 }
 
                 if isMiniCapsule {
-                    // Mini compact state: pure window drag & double-click surface with only traffic light buttons
-                    WindowDragArea()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // Mini compact state: window drag surface with traffic light buttons and expand button
+                    ZStack(alignment: .trailing) {
+                        WindowDragArea()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                        Button {
+                            if let window = NSApp.keyWindow,
+                               let wc = window.windowController as? TerminalWindowController {
+                                wc.restoreFromCapsule()
+                            }
+                        } label: {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(Color.white.opacity(0.65))
+                                .frame(width: 14, height: 14)
+                                .background(Circle().fill(Color.white.opacity(0.12)))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 8)
+                        .help("Restore Window Size (Double-click capsule)")
+                    }
                 } else {
                     VStack(spacing: 0) {
                         // Top title/tab bar area (height: 32): background handles native drag/double-click zoom, foreground renders tabs
@@ -210,6 +228,9 @@ public struct TerminalSearchBar: View {
                 onCommit: {
                     _ = model.activeSession?.state.surface?.navigateSearch(forward: true)
                 },
+                onReverseCommit: {
+                    _ = model.activeSession?.state.surface?.navigateSearch(forward: false)
+                },
                 onCancel: {
                     closeSearch()
                 }
@@ -284,6 +305,7 @@ public struct TerminalSearchBar: View {
 struct SearchFieldRepresentable: NSViewRepresentable {
     @Binding var text: String
     var onCommit: () -> Void
+    var onReverseCommit: () -> Void = {}
     var onCancel: () -> Void
 
     func makeNSView(context: Context) -> NSSearchField {
@@ -325,7 +347,12 @@ struct SearchFieldRepresentable: NSViewRepresentable {
 
         func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
             if commandSelector == #selector(NSResponder.insertNewline(_:)) {
-                parent.onCommit()
+                let isShift = NSApp.currentEvent?.modifierFlags.contains(.shift) == true
+                if isShift {
+                    parent.onReverseCommit()
+                } else {
+                    parent.onCommit()
+                }
                 return true
             } else if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
                 parent.onCancel()

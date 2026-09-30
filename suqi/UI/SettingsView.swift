@@ -11,10 +11,15 @@ import GhosttyTheme
 public struct SettingsView: View {
     @State private var themeName: String
     @State private var backgroundOpacity: Double
+    @State private var backgroundBlur: Double
     @State private var fontFamily: String
     @State private var fontSize: Double
+    @State private var adjustCellHeight: Int
+    @State private var windowPaddingX: Int
+    @State private var windowPaddingY: Int
     @State private var cursorStyle: String
     @State private var cursorBlink: Bool
+    @State private var isAccessibilityTrusted: Bool = QuickTerminalController.isAccessibilityTrusted
 
     private static let popularThemes = [
         "Catppuccin Mocha",
@@ -47,8 +52,12 @@ public struct SettingsView: View {
         let (cfg, _) = GhosttyUserConfig.load()
         _themeName = State(initialValue: cfg.themeName)
         _backgroundOpacity = State(initialValue: cfg.backgroundOpacity)
+        _backgroundBlur = State(initialValue: Double(cfg.backgroundBlur))
         _fontFamily = State(initialValue: cfg.fontFamily)
         _fontSize = State(initialValue: cfg.fontSize)
+        _adjustCellHeight = State(initialValue: cfg.adjustCellHeight)
+        _windowPaddingX = State(initialValue: cfg.windowPaddingX)
+        _windowPaddingY = State(initialValue: cfg.windowPaddingY)
         _cursorStyle = State(initialValue: cfg.cursorStyle)
         _cursorBlink = State(initialValue: cfg.cursorBlink)
     }
@@ -93,6 +102,18 @@ public struct SettingsView: View {
                     GhosttyUserConfig.saveValues(["background-opacity": String(format: "%.2f", newOpacity)])
                     SuqiWindowManager.shared.updateAllThemeBackgrounds()
                 }
+
+                Slider(value: $backgroundBlur, in: 0...50, step: 2) {
+                    Text("Background Blur")
+                } minimumValueLabel: {
+                    Text("0")
+                } maximumValueLabel: {
+                    Text("50")
+                }
+                .onChange(of: backgroundBlur) { _, newBlur in
+                    GhosttyUserConfig.saveValues(["background-blur": "\(Int(newBlur))"])
+                    SuqiWindowManager.shared.updateAllThemeBackgrounds()
+                }
             }
 
             Section("Font & Typography") {
@@ -118,6 +139,47 @@ public struct SettingsView: View {
                             SuqiWindowManager.shared.reloadAllWindows()
                         }
                 }
+
+                HStack {
+                    Text("Adjust Cell Height")
+                    Spacer()
+                    Text("\(adjustCellHeight) pt")
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                    Stepper("", value: $adjustCellHeight, in: -4...12, step: 1)
+                        .onChange(of: adjustCellHeight) { _, newAdj in
+                            GhosttyUserConfig.saveValues(["adjust-cell-height": "\(newAdj)"])
+                            SuqiWindowManager.shared.reloadAllWindows()
+                        }
+                }
+            }
+
+            Section("Window & Spacing") {
+                HStack {
+                    Text("Padding X")
+                    Spacer()
+                    Text("\(windowPaddingX) pt")
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                    Stepper("", value: $windowPaddingX, in: 0...36, step: 2)
+                        .onChange(of: windowPaddingX) { _, newPad in
+                            GhosttyUserConfig.saveValues(["window-padding-x": "\(newPad)"])
+                            SuqiWindowManager.shared.reloadAllWindows()
+                        }
+                }
+
+                HStack {
+                    Text("Padding Y")
+                    Spacer()
+                    Text("\(windowPaddingY) pt")
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                    Stepper("", value: $windowPaddingY, in: 0...36, step: 2)
+                        .onChange(of: windowPaddingY) { _, newPad in
+                            GhosttyUserConfig.saveValues(["window-padding-y": "\(newPad)"])
+                            SuqiWindowManager.shared.reloadAllWindows()
+                        }
+                }
             }
 
             Section("Cursor") {
@@ -137,9 +199,31 @@ public struct SettingsView: View {
                         SuqiWindowManager.shared.reloadAllWindows()
                     }
             }
+
+            Section("Quick Terminal & Global Hotkey (⌃`)") {
+                HStack {
+                    Text("Accessibility Permission")
+                    Spacer()
+                    if isAccessibilityTrusted {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                            Text("Granted")
+                                .foregroundStyle(.secondary)
+                        }
+                    } else {
+                        Button("Request Permission") {
+                            QuickTerminalController.requestAccessibilityPermissions()
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                isAccessibilityTrusted = QuickTerminalController.isAccessibilityTrusted
+                            }
+                        }
+                    }
+                }
+            }
         }
         .formStyle(.grouped)
-        .frame(width: 440, height: 400)
+        .frame(width: 460, height: 500)
         .navigationTitle("Settings")
     }
 }

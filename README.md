@@ -63,7 +63,8 @@ While modern AI command-line assistants—such as **Google Antigravity CLI (`agy
 
 | Shortcut | Action | Description |
 |---|---|---|
-| `⌘ V` | **Smart Paste** | Intelligently pastes text, file paths, or images (multimodal AI CLI support) |
+| `⌘ V` | **Smart Paste** | Intelligently pastes text, file paths, or in-memory images (multimodal AI CLI support) |
+| `⌥ ⌘ V` | **Paste as File Path** | Saves clipboard image to `~/.cache/suqi/pastes/` and pastes escaped path |
 | `⌘ C` | **Copy** | Copies selected terminal text to macOS clipboard |
 | `⌘ A` | **Select All** | Selects all content in the active surface |
 | `⌘ F` | **Find** | Opens scrollback search bar with match highlights |
@@ -133,7 +134,7 @@ copy-on-select = clipboard
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/sqoder/glint.git suqi
+git clone https://github.com/sqoder/suqi.git suqi
 cd suqi
 
 # 2. Generate Xcode project
