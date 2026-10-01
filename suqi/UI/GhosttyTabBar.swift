@@ -21,9 +21,9 @@ public struct GhosttyTabBar: View {
 
     public var body: some View {
         HStack(spacing: 0) {
-            // macOS traffic lights clearance (~76pt)
+            // macOS traffic lights + pin button clearance (~92pt)
             Spacer()
-                .frame(width: 76)
+                .frame(width: 92)
 
             // Equal-width ultra-refined capsule tab segments
             HStack(spacing: 4) {
@@ -35,7 +35,7 @@ public struct GhosttyTabBar: View {
             }
             .padding(.horizontal, 4)
             .padding(.vertical, 6)
-            .padding(.trailing, 32)
+            .padding(.trailing, 6)
         }
         .frame(height: 36)
         .background(Color.clear)

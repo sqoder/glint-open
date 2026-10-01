@@ -106,11 +106,11 @@ public struct ContentView: View {
                                 .allowsHitTesting(false)
                             }
 
-                            if windowWidth > 140 {
-                                HStack {
-                                    Spacer()
+                            if windowWidth > 120 {
+                                HStack(spacing: 0) {
                                     PinButtonView(model: model)
-                                        .padding(.trailing, 6)
+                                        .padding(.leading, 70)
+                                    Spacer()
                                 }
                                 .frame(height: 36)
                             }

@@ -37,7 +37,7 @@ public struct PinButtonView: View {
         } else if isButtonHovered {
             return Color.white.opacity(0.14)
         } else {
-            return Color.white.opacity(0.05)
+            return Color.white.opacity(0.04)
         }
     }
 
@@ -53,9 +53,9 @@ public struct PinButtonView: View {
 
     public var body: some View {
         ZStack {
-            // Invisible hover trigger area in the top-right corner
+            // Invisible hover trigger area right next to the traffic lights
             Color.clear
-                .frame(width: 36, height: 36)
+                .frame(width: 26, height: 36)
                 .contentShape(Rectangle())
                 .onHover { isAreaHovered = $0 }
 
@@ -67,7 +67,7 @@ public struct PinButtonView: View {
             .buttonStyle(.plain)
             .onHover { isButtonHovered = $0 }
             .opacity(shouldShow ? 1.0 : 0.0)
-            .scaleEffect(shouldShow ? 1.0 : 0.82)
+            .scaleEffect(shouldShow ? 1.0 : 0.80)
             .animation(.spring(response: 0.22, dampingFraction: 0.75), value: shouldShow)
             .animation(.spring(response: 0.25, dampingFraction: 0.70), value: model.isPinned)
             .help(model.isPinned ? "Unpin Window (Click to restore normal level)" : "Pin Window on Top (Always on Top)")
@@ -76,10 +76,10 @@ public struct PinButtonView: View {
 
     private var buttonContent: some View {
         Image(systemName: model.isPinned ? "pin.fill" : "pin")
-            .font(.system(size: 10, weight: .semibold))
+            .font(.system(size: 9.5, weight: .semibold))
             .foregroundStyle(pinColor)
             .rotationEffect(.degrees(model.isPinned ? -35 : 0))
-            .frame(width: 22, height: 22)
+            .frame(width: 20, height: 20)
             .background(
                 Circle()
                     .fill(backgroundFill)
