@@ -42,17 +42,24 @@ public enum TerminalActionBridge {
         return false
     }
 
-    /// Checks whether the pasteboard contains in-memory image data without a file URL
-    public static func pasteboardContainsRawImage(_ pb: NSPasteboard) -> Bool {
-        if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
-            return false
-        }
+    /// Checks whether the pasteboard contains image data (in-memory or image file URLs)
+    public static func pasteboardContainsImage(_ pb: NSPasteboard) -> Bool {
+        // 1. Raw image objects in memory
         if pb.canReadObject(forClasses: [NSImage.self], options: nil) {
             return true
         }
         if let types = pb.types {
             let imageTypes: Set<NSPasteboard.PasteboardType> = [.png, .tiff]
-            return types.contains { imageTypes.contains($0) || $0.rawValue.lowercased().contains("image") }
+            if types.contains(where: { imageTypes.contains($0) || $0.rawValue.lowercased().contains("image") || $0.rawValue.lowercased().contains("png") }) {
+                return true
+            }
+        }
+        // 2. Image file URLs (e.g. screenshots saved to disk like Glint, CleanShot, Finder copied images)
+        if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
+            let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "gif", "webp", "bmp", "heic", "tiff", "svg"]
+            if urls.allSatisfy({ imageExtensions.contains($0.pathExtension.lowercased()) }) {
+                return true
+            }
         }
         return false
     }
@@ -73,6 +80,11 @@ public enum TerminalActionBridge {
            let rep = NSBitmapImageRep(data: tiff),
            let png = rep.representation(using: .png, properties: [:]) {
             return png
+        }
+        if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL],
+           let first = urls.first,
+           let data = try? Data(contentsOf: first) {
+            return data
         }
         return nil
     }
@@ -106,16 +118,14 @@ public enum TerminalActionBridge {
 
         let pb = NSPasteboard.general
 
-        // 1. Finder files copied: always paste escaped file paths (e.g. /path/to/cat.png )
-        if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
-            let paths = urls.map { $0.path.replacingOccurrences(of: " ", with: "\\ ") }
-            let text = paths.joined(separator: " ") + " "
-            model.activeSession?.send(text)
-            return
-        }
-
-        // 2. Explicitly requested (⌥⌘V): save in-memory screenshot to disk and paste its path
+        // 1. Explicitly requested (⌥⌘V): save in-memory screenshot to disk and paste its path, or paste file path
         if saveImageAsPath {
+            if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
+                let paths = urls.map { $0.path.replacingOccurrences(of: " ", with: "\\ ") }
+                let text = paths.joined(separator: " ") + " "
+                model.activeSession?.send(text)
+                return
+            }
             if let savedPath = savePasteboardImageToDisk(pb) {
                 let escaped = savedPath.replacingOccurrences(of: " ", with: "\\ ") + " "
                 model.activeSession?.send(escaped)
@@ -123,12 +133,20 @@ public enum TerminalActionBridge {
             }
         }
 
-        // 3. Multimodal AI CLI flow: in-memory image (screenshots / browser copies)
-        if pasteboardContainsRawImage(pb) {
+        // 2. Multimodal AI CLI flow: any image (in-memory screenshots like QQ, or tool screenshots like Glint, or Finder images)
+        if pasteboardContainsImage(pb) {
             if let terminalView {
                 terminalView.triggerImagePasteShortcut()
                 return
             }
+        }
+
+        // 3. Finder non-image files copied: paste escaped file paths (e.g. /path/to/script.py )
+        if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL], !urls.isEmpty {
+            let paths = urls.map { $0.path.replacingOccurrences(of: " ", with: "\\ ") }
+            let text = paths.joined(separator: " ") + " "
+            model.activeSession?.send(text)
+            return
         }
 
         // 4. Standard text paste from clipboard (Safe Paste Guard evaluation)
