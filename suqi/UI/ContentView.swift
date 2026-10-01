@@ -105,6 +105,15 @@ public struct ContentView: View {
                                 .frame(maxWidth: .infinity, maxHeight: 36)
                                 .allowsHitTesting(false)
                             }
+
+                            if windowWidth > 140 {
+                                HStack {
+                                    Spacer()
+                                    PinButtonView(model: model)
+                                        .padding(.trailing, 6)
+                                }
+                                .frame(height: 36)
+                            }
                         }
                         .frame(height: 36)
 

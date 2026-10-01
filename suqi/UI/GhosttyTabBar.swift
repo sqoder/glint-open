@@ -35,7 +35,7 @@ public struct GhosttyTabBar: View {
             }
             .padding(.horizontal, 4)
             .padding(.vertical, 6)
-            .padding(.trailing, 4)
+            .padding(.trailing, 32)
         }
         .frame(height: 36)
         .background(Color.clear)

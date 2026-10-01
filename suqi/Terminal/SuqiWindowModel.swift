@@ -297,6 +297,7 @@ public final class SuqiWindowModel: ObservableObject {
     @Published public private(set) var tabs: [SuqiTab] = []
     @Published public var activeTabId: UUID?
     @Published public var isSearching: Bool = false
+    @Published public var isPinned: Bool = false
     @Published public var pendingSafePaste: SafePasteRequest? = nil
 
     /// Window close callback
@@ -687,6 +688,21 @@ public final class SuqiWindowModel: ObservableObject {
     public func resumeBackgroundRendering() {
         for session in sessions {
             _ = session.state.surface?.performBindingAction("resume")
+        }
+    }
+
+    /// Toggles window stay-on-top pinned status (.floating window level)
+    public func togglePin(in window: NSWindow? = nil) {
+        objectWillChange.send()
+        isPinned.toggle()
+        let target = window ?? activeSession?.terminalView.window ?? NSApp.keyWindow
+        if let target {
+            target.level = isPinned ? .floating : .normal
+            if isPinned {
+                target.collectionBehavior.insert(.canJoinAllSpaces)
+            } else {
+                target.collectionBehavior.remove(.canJoinAllSpaces)
+            }
         }
     }
 }
