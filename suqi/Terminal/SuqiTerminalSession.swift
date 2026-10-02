@@ -43,6 +43,7 @@ public final class SuqiTerminalSession: ObservableObject, Identifiable, Equatabl
         view.delegate = state
         view.controller = state.controller
         view.configuration = state.configuration
+        view.registerTerminalDragTypes()
         self.terminalView = view
 
         bindState()

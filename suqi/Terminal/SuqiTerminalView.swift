@@ -14,10 +14,13 @@ public struct PersistentTerminalSurfaceView: NSViewRepresentable {
 
     public func makeNSView(context: Context) -> AppTerminalView {
         session.terminalView.removeFromSuperview()
+        session.terminalView.registerTerminalDragTypes()
         return session.terminalView
     }
 
-    public func updateNSView(_ nsView: AppTerminalView, context: Context) {}
+    public func updateNSView(_ nsView: AppTerminalView, context: Context) {
+        nsView.registerTerminalDragTypes()
+    }
 }
 
 public struct SuqiTerminalView: View {
