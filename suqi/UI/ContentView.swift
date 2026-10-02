@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 public struct VisualEffectBackground: NSViewRepresentable {
     var material: NSVisualEffectView.Material = .underWindowBackground
@@ -149,14 +150,24 @@ public struct ContentView: View {
         .frame(minWidth: 80, minHeight: 32)
         .ignoresSafeArea()
         .transaction { $0.animation = nil }
-        // Support dragging files from Finder directly into terminal window
-        .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+        // Support dragging files from Finder and text directly into terminal window
+        .onDrop(of: [.fileURL, .plainText, .utf8PlainText, .text], isTargeted: nil) { providers in
             for provider in providers {
-                _ = provider.loadObject(ofClass: URL.self) { url, _ in
-                    if let path = url?.path {
-                        let escaped = path.replacingOccurrences(of: " ", with: "\\ ")
-                        DispatchQueue.main.async {
-                            model.activeSession?.send(escaped + " ")
+                if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                    _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                        if let path = url?.path {
+                            let escaped = path.replacingOccurrences(of: " ", with: "\\ ")
+                            DispatchQueue.main.async {
+                                model.activeSession?.send(escaped + " ")
+                            }
+                        }
+                    }
+                } else {
+                    _ = provider.loadObject(ofClass: String.self) { text, _ in
+                        if let text, !text.isEmpty {
+                            DispatchQueue.main.async {
+                                model.activeSession?.send(text)
+                            }
                         }
                     }
                 }
