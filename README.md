@@ -72,7 +72,7 @@ copy-on-select = clipboard
 
 ```bash
 # Clone & build
-git clone https://github.com/sqoder/glint-open.git suqi
+git clone https://github.com/sqoder/open.git suqi
 cd suqi
 git checkout suqi
 
